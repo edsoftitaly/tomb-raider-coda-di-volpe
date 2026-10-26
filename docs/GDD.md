@@ -101,3 +101,8 @@ Sulla nave c'erano anche **gli Astri dei Dioscuri**, due dischi di bronzo greci 
 
 ## 10. Riferimenti fotografici ricevuti
 Laghetti con canneto e pino davanti alla rupe; santuario da varie distanze (cupola dorata, basilica nuova con campanile, vecchio santuario-fortezza su sperone, cipresso, antenne); Capo Tindari dal mare con grotte al livello dell'acqua; spiaggia di Marinello in ciottoli con barche alla fonda; lingua di sabbia al tramonto; Oliveri dalla spiaggia con colline; uliveti con tralicci e Rocca Novara sullo sfondo; Eolie all'orizzonte da un punto rialzato vicino alla ferrovia; facciata della casa di Via Amodeo (tre piani, persiane verdi, balconi in ferro, terrazza coperta); texture di marciapiede a mattonelle; acqua turchese.
+
+## 11. Stato della costruzione
+- **Repo**: `github.com/edsoftitaly/tomb-raider-coda-di-volpe` (dati, generatori, build). È la fonte di verità tra una sessione e l'altra.
+- **26/10/2026, Zona A generata**: `build/zona_A.prj2`, 330 x 300 settori (660 x 600 m), 110 stanze 32x32 con 398 portali, 658 edifici OSM estrusi, castello sulla rupe a 40 m, Lara davanti a Via Amodeo 1 (edificio OSM way/233746690, 38 settori, tetto di default a 9,5 m). Passa il checker. **Da verificare aprendolo in Tomb Editor.**
+- Prossimi passi: apertura in Tomb Editor e feedback; altezze reali degli edifici chiave; interni della casa e del castello; texture.
