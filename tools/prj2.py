@@ -176,6 +176,54 @@ class Level:
         self.game_level_path = ""
         self.game_exe = ""
         self._obj_counter = 0
+        self.settings_template = None   # list of raw settings sub-chunks from a TombIDE .prj2
+
+    def use_settings_from(self, path):
+        """Reuse game, script, sound and wad settings from a .prj2 created by TombIDE.
+
+        Every settings sub-chunk is copied verbatim except textures, which are generated here.
+        """
+        data = open(path, "rb").read()
+        assert data[:4] == MAGIC, "not a prj2 file"
+        pos = 8
+        out = []
+
+        def read_leb(p):
+            result, shift = 0, 0
+            while True:
+                b = data[p]
+                p += 1
+                result |= (b & 0x7F) << shift
+                shift += 7
+                if not b & 0x80:
+                    if result & (1 << (shift - 1)):
+                        result -= 1 << shift
+                    return result, p
+
+        while True:
+            idlen, pos = read_leb(pos)
+            if idlen == 0:
+                break
+            cid = data[pos:pos + idlen]
+            pos += idlen
+            size, pos = read_leb(pos)
+            if cid == b"TeSettings":
+                p, end = pos, pos + size
+                while p < end:
+                    start = p
+                    l2, p = read_leb(p)
+                    if l2 == 0:
+                        break
+                    c2 = data[p:p + l2]
+                    p += l2
+                    s2, p = read_leb(p)
+                    p += s2
+                    if c2 not in (b"TeTextures", b"TeDefaultTextures"):
+                        out.append((c2, data[start:p]))
+                self.settings_template = out
+                return [c.decode("ascii", "replace") for c, _ in out]
+            pos += size
+        raise ValueError("no settings chunk found")
 
     def add_room(self, room):
         room.index = len(self.rooms)
@@ -227,7 +275,31 @@ class Level:
         room.objects.append(enc)
 
     # Serialization -------------------------------------------------------
+    def _textures_chunk(self):
+        texs = bytearray()
+        for i, t in enumerate(self.textures):
+            fs = t.get("footsteps")  # rows (y) of columns (x), 64 px cells
+            body = c_int("TeI", i) + c_str("TePath", t["path"]) + c_str("TeTextureCustomBumpmapPath", "")
+            body += c_bool("Te512C", False) + c_bool("TeMagentaR", True)
+            if fs:
+                h, w = len(fs), len(fs[0])
+                body += chunk("TeTextureSounds", struct.pack("<ii", w, h) + bytes(v for row in fs for v in row))
+                body += chunk("TeTextureBumpmaps", struct.pack("<ii", w, h) + bytes(w * h))
+            body += END
+            texs += chunk("TeLvlTexture", body)
+        return chunk("TeTextures", bytes(texs) + END)
+
     def _settings(self):
+        if self.settings_template is not None:
+            b = bytearray()
+            for cid, raw in self.settings_template:
+                if cid == b"TeGameVersion":
+                    b += c_int("TeGameVersion", GAME_TOMBENGINE)
+                else:
+                    b += raw
+            b += self._textures_chunk()
+            b += END
+            return chunk("TeSettings", bytes(b))
         b = bytearray()
         b += c_str("TeFontTextureFilePath", "")
         b += c_str("TeSkyTextureFilePath", "")
@@ -250,18 +322,7 @@ class Level:
         b += chunk("TeWads", wads + END)
         b += chunk("TeSoundsCatalogs", END)
         b += chunk("TeSelectedSounds", END)
-        texs = bytearray()
-        for i, t in enumerate(self.textures):
-            fs = t.get("footsteps")  # rows (y) of columns (x), 64 px cells
-            body = c_int("TeI", i) + c_str("TePath", t["path"]) + c_str("TeTextureCustomBumpmapPath", "")
-            body += c_bool("Te512C", False) + c_bool("TeMagentaR", True)
-            if fs:
-                h, w = len(fs), len(fs[0])
-                body += chunk("TeTextureSounds", struct.pack("<ii", w, h) + bytes(v for row in fs for v in row))
-                body += chunk("TeTextureBumpmaps", struct.pack("<ii", w, h) + bytes(w * h))
-            body += END
-            texs += chunk("TeLvlTexture", body)
-        b += chunk("TeTextures", bytes(texs) + END)
+        b += self._textures_chunk()
         b += chunk("TeImportedGeometries", END)
         b += chunk("TeAnimatedTextureSets", END)
         b += chunk("TeGlobalEventSets", END)

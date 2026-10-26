@@ -1,0 +1,2 @@
+Metti qui come template.prj2 il .prj2 vuoto creato da TombIDE nel progetto C:\CodaDiVolpe.
+Il generatore copia da li percorsi di motore, script, suoni e WAD.

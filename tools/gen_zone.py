@@ -194,6 +194,10 @@ def build(zone_key):
 
     # Rooms.
     level = prj2.Level()
+    template = os.path.join(ROOT, "data", "tombide", "template.prj2")
+    if os.path.exists(template):
+        # Game, script, sound and wad paths exactly as TombIDE wrote them for C:\\CodaDiVolpe.
+        level.use_settings_from(template)
     level.textures.append({"path": "$(LevelDirectory)\\textures\\coda_atlas.png",
                            "footsteps": atlas["footsteps_64px"]})
     level.ambient = (0.6, 0.6, 0.6)
