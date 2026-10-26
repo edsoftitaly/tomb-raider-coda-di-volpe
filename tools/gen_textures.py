@@ -240,3 +240,179 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# ---------------------------------------------------------------------------
+# Atlas 2: interiors, caves, underwater, ruins.
+
+def blocks(seed, color, bw=(60, 140), bh=(40, 70), joint=0.55, rough=0.35, moss=0.0, waterline=None):
+    img = np.zeros((S, COL, 3))
+    img[:] = tint(color, noise(S, COL, 32, 4, seed), rough)
+    r = np.random.default_rng(seed)
+    y = 0
+    while y < S:
+        hh = int(r.integers(*bh))
+        x = -int(r.integers(0, bw[0]))
+        img[y:y + 3, :] *= joint
+        while x < COL:
+            ww = int(r.integers(*bw))
+            shade = 1.0 + r.uniform(-0.12, 0.10)
+            img[y + 3:y + hh, max(0, x + 3):max(0, x + ww)] *= shade
+            if 0 <= x < COL:
+                img[y:y + hh, x:x + 3] *= joint
+            x += ww
+        y += hh
+    if moss:
+        m = noise(S, COL, 24, 4, seed + 7) > (1.0 - moss)
+        img[m] = img[m] * 0.5 + np.array([70, 90, 50]) * 0.5
+    if waterline is not None:
+        y0 = S - int(waterline * PX_M)
+        img[y0:, :] *= 0.72
+        img[y0:, :, 2] *= 1.05
+    return np.clip(img, 0, 255)
+
+
+def interior_plaster(seed):
+    img = plaster(S, COL, (232, 226, 210), seed)
+    # Dado: tiled band up to 1.1 m, typical of Sicilian houses.
+    h = int(1.1 * PX_M)
+    band = tint((176, 150, 120), noise(h, COL, 16, 3, seed + 3), 0.2)
+    for i in range(0, COL, 32):
+        band[:, i:i + 2] *= 0.7
+    for j in range(0, h, 32):
+        band[j:j + 2, :] *= 0.7
+    img[S - h:] = band
+    img[S - h - 6:S - h] = (120, 95, 70)
+    return img
+
+
+def cave_rock(seed, color=(88, 80, 72)):
+    n = noise(S, COL, 64, 6, seed)
+    img = tint(color, n, 0.8)
+    flow = noise(S, COL, 8, 2, seed + 1)
+    streaks = (np.sin(np.linspace(0, 300, COL))[None, :] * 0.5 + 0.5) * (flow > 0.55)
+    img *= (1.0 - 0.15 * streaks)[..., None]
+    wet = noise(S, COL, 32, 3, seed + 2) > 0.7
+    img[wet] *= 0.75
+    return np.clip(img, 0, 255)
+
+
+def sea_rock(seed):
+    img = cave_rock(seed, (70, 92, 90))
+    algae = noise(S, COL, 20, 4, seed + 4) > 0.6
+    img[algae] = img[algae] * 0.5 + np.array([60, 100, 60]) * 0.5
+    return img
+
+
+def tile2(kind, seed):
+    T = 256
+    if kind == "cementine":
+        img = np.zeros((T, T, 3))
+        base = tint((205, 196, 178), noise(T, T, 32, 3, seed), 0.15)
+        img[:] = base
+        c = (150, 70, 55)
+        for ty in range(0, T, 64):
+            for tx in range(0, T, 64):
+                yy, xx = np.mgrid[0:64, 0:64]
+                d = np.abs(yy - 31.5) + np.abs(xx - 31.5)
+                m = (d > 18) & (d < 26)
+                img[ty:ty + 64, tx:tx + 64][m] = c
+                img[ty:ty + 2, tx:tx + 64] *= 0.8
+                img[ty:ty + 64, tx:tx + 2] *= 0.8
+    elif kind == "parquet":
+        img = tint((150, 105, 65), noise(T, T, 64, 3, seed), 0.25)
+        for j in range(0, T, 32):
+            img[:, j:j + 2] *= 0.6
+            off = (j // 32) % 3 * 50
+            for i in range((off % 128), T, 128):
+                img[i:i + 2, j:j + 32] *= 0.6
+    elif kind == "soffitto":
+        img = plaster(T, T, (236, 232, 220), seed)
+    elif kind == "grotta_pav":
+        img = tint((96, 88, 78), noise(T, T, 24, 6, seed), 0.7)
+    elif kind == "sabbia_fondo":
+        img = tint((168, 160, 128), noise(T, T, 16, 5, seed), 0.35)
+        ripples = (np.sin(np.linspace(0, 40, T))[:, None] * 0.5 + 0.5) * 0.12
+        img *= (1.0 - ripples)[..., None]
+    elif kind == "posidonia":
+        img = tint((60, 96, 60), noise(T, T, 12, 5, seed), 0.8)
+    elif kind == "mosaico":
+        img = np.zeros((T, T, 3))
+        r = np.random.default_rng(seed)
+        pal = np.array([[230, 220, 200], [40, 40, 40], [170, 60, 40], [200, 170, 90]])
+        for y in range(0, T, 8):
+            for x in range(0, T, 8):
+                yy, xx = y - 128, x - 128
+                ring = int(np.hypot(yy, xx) / 24) % 4
+                img[y:y + 7, x:x + 7] = pal[ring] * r.uniform(0.85, 1.05)
+    elif kind == "lastre_greche":
+        img = tint((178, 160, 128), noise(T, T, 48, 5, seed), 0.35)
+        for i in (0, 128):
+            img[i:i + 3, :] *= 0.55
+        for j in (0, 96, 192):
+            img[:, j:j + 3] *= 0.55
+    elif kind == "pietra_bagnata":
+        img = tint((92, 98, 96), noise(T, T, 32, 5, seed), 0.5)
+    elif kind == "grata":
+        img = np.full((T, T, 3), (255, 0, 255), dtype=np.float64)  # magenta = transparent
+        for i in range(0, T, 32):
+            img[i:i + 6, :] = (60, 58, 55)
+            img[:, i:i + 6] = (60, 58, 55)
+    elif kind == "tavole":
+        img = tint((120, 92, 64), noise(T, T, 64, 4, seed), 0.3)
+        for j in range(0, T, 40):
+            img[:, j:j + 3] *= 0.5
+    elif kind == "cemento":
+        img = tint((150, 148, 142), noise(T, T, 32, 4, seed), 0.25)
+    elif kind == "rete":
+        img = np.full((T, T, 3), (255, 0, 255), dtype=np.float64)
+        for i in range(0, T, 16):
+            img[i:i + 2, :] = (110, 98, 70)
+            img[:, i:i + 2] = (110, 98, 70)
+    elif kind == "soffitto_roccia":
+        img = tint((80, 74, 68), noise(T, T, 32, 6, seed), 0.7)
+    elif kind == "muschio":
+        img = tint((84, 104, 64), noise(T, T, 16, 5, seed), 0.5)
+    elif kind == "intonaco_liscio":
+        img = plaster(T, T, (232, 226, 210), seed)
+    else:
+        img = np.full((T, T, 3), 128.0)
+    return img
+
+
+COLUMNS2 = [("intonaco_interno", lambda: interior_plaster(21)),
+            ("pietra_viva", lambda: blocks(22, (140, 124, 100), moss=0.05)),
+            ("roccia_grotta", lambda: cave_rock(23)),
+            ("canale_saia", lambda: blocks(24, (150, 140, 118), bw=(50, 90), bh=(30, 45), moss=0.12, waterline=0.8)),
+            ("opera_greca", lambda: blocks(25, (196, 172, 128), bw=(110, 200), bh=(50, 64), joint=0.6, rough=0.25)),
+            ("roccia_mare", lambda: sea_rock(26))]
+TILES2 = [("cementine", "marble"), ("parquet", "wood"), ("soffitto", "concrete"), ("grotta_pav", "stone"),
+          ("sabbia_fondo", "sand"), ("posidonia", "grass"), ("mosaico", "marble"), ("lastre_greche", "stone"),
+          ("pietra_bagnata", "stone"), ("grata", "metal"), ("tavole", "wood"), ("cemento", "concrete"),
+          ("rete", "metal"), ("soffitto_roccia", "stone"), ("muschio", "grass"), ("intonaco_liscio", "concrete")]
+FS.update({"wood": 7, "metal": 8})
+
+
+def main2():
+    atlas = np.zeros((S, S, 3))
+    regions = {"px_per_m": PX_M, "size": S, "columns": {}, "tiles": {}}
+    footsteps = np.full((S // 64, S // 64), FS["stone"], dtype=int)
+    for i, (name, fn) in enumerate(COLUMNS2):
+        atlas[:, i * COL:(i + 1) * COL] = fn()
+        regions["columns"][name] = [i * COL, 0, (i + 1) * COL, S]
+    for k, (name, fs) in enumerate(TILES2):
+        cx, cy = 6 * COL + (k % 2) * COL, (k // 2) * COL
+        atlas[cy:cy + COL, cx:cx + COL] = tile2(name, 200 + k)
+        regions["tiles"][name] = [cx, cy, cx + COL, cy + COL]
+        footsteps[cy // 64:(cy + COL) // 64, cx // 64:(cx + COL) // 64] = FS[fs]
+    for name, (x0, y0, x1, y1) in regions["columns"].items():
+        footsteps[:, x0 // 64:x1 // 64] = FS["stone"]
+    regions["footsteps_64px"] = footsteps.tolist()
+    Image.fromarray(np.clip(atlas, 0, 255).astype(np.uint8)).save(os.path.join(OUT, "coda_atlas2.png"))
+    with open(os.path.join(OUT, "coda_atlas2.json"), "w") as f:
+        json.dump(regions, f)
+    print("ok", os.path.join(OUT, "coda_atlas2.png"))
+
+
+if __name__ == "__main__":
+    main2()

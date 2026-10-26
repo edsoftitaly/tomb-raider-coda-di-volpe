@@ -95,6 +95,15 @@ F_WALL_MIDDLE = {"+z": 10, "-z": 11, "-x": 12, "+x": 13}
 _DIR_ORDER = {"+z": 0, "-z": 1, "-x": 2, "+x": 3}
 
 
+def f_wall_ceiling(d, segment):
+    """Face id of the ceiling-part wall segment: 0 = WS, 1 = Ceiling2 ... 8 = Ceiling9."""
+    if segment == 0:
+        return F_WALL_WS[d]
+    if segment == 1:
+        return 20 + _DIR_ORDER[d]
+    return 34 + (segment - 2) * 10 + _DIR_ORDER[d]
+
+
 def f_wall_floor(d, segment):
     """Face id of the floor-part wall segment: 0 = QA, 1 = Floor2 ... 8 = Floor9."""
     if segment == 0:
@@ -106,7 +115,7 @@ F_FLOOR, F_FLOOR_TRI2, F_CEILING, F_CEILING_TRI2 = 25, 26, 27, 28
 
 
 class Sector:
-    __slots__ = ("wall", "floor", "ceil", "fsplit", "csplit", "flags", "tex", "invisible", "fsplits")
+    __slots__ = ("wall", "floor", "ceil", "fsplit", "csplit", "flags", "tex", "invisible", "fsplits", "csplits")
 
     def __init__(self, floor=(0, 0, 0, 0), ceil=(3072, 3072, 3072, 3072), wall=False):
         self.wall = wall          # True = solid wall sector
@@ -118,6 +127,7 @@ class Sector:
         self.tex = None           # {face: ((u,v) x4, texture_index)}
         self.invisible = None     # set of faces
         self.fsplits = []         # extra floor splits, each 4 heights (XnZp, XpZp, XpZn, XnZn), descending
+        self.csplits = []         # extra ceiling splits, ascending
 
     def set_tex(self, face, coords, texture=0):
         if self.tex is None:
@@ -135,7 +145,7 @@ class Sector:
         out += chunk(SEC_FLOOR, leb(1 if self.fsplit else 0) + b"".join(leb(h) for h in self.floor))
         out += chunk(SEC_CEIL, leb(1 if self.csplit else 0) + b"".join(leb(h) for h in self.ceil))
         out += chunk(SEC_FLOOR_SUB, leb(len(self.fsplits)) + b"".join(leb(h) for sp in self.fsplits for h in sp))
-        out += chunk(SEC_CEIL_SUB, leb(0))
+        out += chunk(SEC_CEIL_SUB, leb(len(self.csplits)) + b"".join(leb(h) for sp in self.csplits for h in sp))
         if self.tex:
             for face, (coords, texture) in self.tex.items():
                 us = [c[0] for c in coords]

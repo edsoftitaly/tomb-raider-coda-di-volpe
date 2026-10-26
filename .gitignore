@@ -3,3 +3,7 @@ __pycache__/
 *.pyc
 *.tmp
 tools/render/node_modules/
+# Generated levels: rebuild with tools/episode.py (too big for git)
+build/**/*.prj2
+build/levels/
+build/Oliveri/

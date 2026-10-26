@@ -133,7 +133,7 @@ class Texturer:
         self.bid = building_id
         self.styles = styles
         self.bases = bases
-        self.px = atlas["px_per_m"]
+        self.px = atlas["px_per_m"] * 255.5 / 256.0  # 2 m segment = 255.5 px, inside the 256 px limit
         self.size = atlas["size"]
 
     # Floors -----------------------------------------------------------------
@@ -180,7 +180,7 @@ class Texturer:
             ref = lo - (lo % 14.0)
         v = [self.size - 0.5 - (h - ref) * self.px for h in world]
         span = max(v) - min(v)
-        if span > 256.0:
+        if span > 255.5:
             # Portal (border) walls cannot be split: squeeze into one tile, using plain plaster
             # for facades so shutters do not turn into a ladder.
             plain = {"crema_finestre": "crema_piena", "rosa_finestre": "rosa_piena", "bianco_finestre": "bianco_piena"}
@@ -194,8 +194,8 @@ class Texturer:
             vmax = max(v)
             v = [vmax - (vmax - y) * 255.0 / span for y in v]
         v = [float(np.clip(y, 0.5, self.size - 0.5)) for y in v]
-        if max(v) - min(v) > 256.0:
-            v = [max(min(y, min(v) + 256.0), min(v)) for y in v]
+        if max(v) - min(v) > 255.5:
+            v = [max(min(y, min(v) + 255.5), min(v)) for y in v]
         return [(x0 + 0.5, v[0]), (x1 - 0.5, v[1]), (x1 - 0.5, v[2]), (x0 + 0.5, v[3])]
 
     def make_splits(self, room, lx, lz):

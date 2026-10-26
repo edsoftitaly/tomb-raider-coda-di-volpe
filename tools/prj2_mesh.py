@@ -53,8 +53,9 @@ def read_rooms(path):
                 elif c4 == b"\x12":
                     face = r.leb()
                     tc = r.f(8)
-                    r.f(4); r.leb(); r.leb()
+                    r.f(4); r.leb(); ti = r.leb()
                     sec["tex"][face] = [(tc[i], tc[i + 1]) for i in range(0, 8, 2)]
+                    sec.setdefault("ti", {})[face] = ti
                 elif c4 == b"\x11":
                     sec["inv"].add(r.leb())
                 else:
@@ -106,12 +107,14 @@ def read_rooms(path):
 
 
 def build_mesh(rooms, prefixes):
-    pos, uv = [], []
+    pos, uv, tix = [], [], []
+    cur = [0]
 
     def tri(p, t):
         for a, b in zip(p, t):
             pos.extend(a)
             uv.extend(b)
+        tix.append(cur[0])
 
     for rm in rooms:
         if prefixes and not any(rm["name"].startswith(p) for p in prefixes):
@@ -120,8 +123,12 @@ def build_mesh(rooms, prefixes):
         for (x, z), s in rm["sectors"].items():
             f = s["floor"]
             P = [((rx + x + dx) * 2.0, (ry + f[k]) / 512.0, (rz + z + dz) * 2.0) for k, (dx, dz) in enumerate(CORNER_XZ)]
+            # Floor portal to a water room (sea level, units 0): not drawn by the engine.
+            if rm["name"].startswith("T_") and all(ry + h == 0 for h in f):
+                s = dict(s, tex={k: v for k, v in s["tex"].items() if k not in (25, 26)})
             if 25 in s["tex"]:
                 t = s["tex"][25]
+                cur[0] = s.get("ti", {}).get(25, 0)
                 quad = f[1] - f[2] == f[0] - f[3] and f[1] - f[0] == f[2] - f[3]
                 if quad:
                     tri([P[0], P[1], P[2]], [t[0], t[1], t[2]])
@@ -155,18 +162,19 @@ def build_mesh(rooms, prefixes):
                 A = lambda c, h: ((rx + x + c[0]) * 2.0, (ry + h) / 512.0, (rz + z + c[1]) * 2.0)  # noqa: E731
                 tl, tr, br, bl = A(ox, top[0]), A(oz, top[1]), A(oz, bot[1]), A(ox, bot[0])
                 t = s["tex"][face]
+                cur[0] = s.get("ti", {}).get(face, 0)
                 tri([tl, tr, br], [t[0], t[1], t[2]])
                 tri([tl, br, bl], [t[0], t[2], t[3]])
-    return pos, uv
+    return pos, uv, tix
 
 
 if __name__ == "__main__":
     rooms, objects = read_rooms(sys.argv[1])
-    pos, uv = build_mesh(rooms, sys.argv[3:])
+    pos, uv, tix = build_mesh(rooms, sys.argv[3:])
     lara = None
     for ob in objects:
         rx, ry, rz = ob["room"]["pos"]
         p = ob["pos"]
         lara = [(rx * 1024 + p[0]) / 512.0, (ry + p[1]) / 512.0, (rz * 1024 + p[2]) / 512.0, ob["rot"]]
-    json.dump({"pos": pos, "uv": uv, "lara": lara}, open(sys.argv[2], "w"))
+    json.dump({"pos": pos, "uv": uv, "tix": tix, "lara": lara}, open(sys.argv[2], "w"))
     print("triangles", len(pos) // 9, "lara", lara)
