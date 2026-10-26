@@ -75,7 +75,8 @@ def build_terrain_level(key):
 
     atlas1 = json.load(open(os.path.join(ROOT, "build", "textures", "coda_atlas.json")))
     atlas2 = json.load(open(os.path.join(ROOT, "build", "textures", "coda_atlas2.json")))
-    atlases = walls.Atlases([atlas1, atlas2])
+    atlas3 = json.load(open(os.path.join(ROOT, "build", "textures", "coda_atlas3.json")))
+    atlases = walls.Atlases([atlas1, atlas2, atlas3])
 
     casa = (38.1241474, 15.0599826)
     hx, hz = world.sector_of(*casa)
@@ -92,8 +93,8 @@ def build_terrain_level(key):
     level = prj2.Level()
     level.use_tombide_ten(key + ".ten")
     level.ambient = (0.6, 0.6, 0.6)
-    for i, a in enumerate((atlas1, atlas2)):
-        level.textures.append({"path": "$(LevelDirectory)\\textures\\coda_atlas%s.png" % ("" if i == 0 else "2"),
+    for i, a in enumerate((atlas1, atlas2, atlas3)):
+        level.textures.append({"path": "$(LevelDirectory)\\textures\\coda_atlas%s.png" % ("" if i == 0 else str(i + 1)),
                                "footsteps": a["footsteps_64px"]})
     terrain, water = W.build_rooms(world, level, atlases, texer)
     print("%s: %dx%d sectors, %d terrain + %d water rooms (%.1fs)" % (
@@ -128,11 +129,96 @@ def default_start(ctx):
 def save(ctx):
     out = os.path.join(OUT, ctx.key)
     os.makedirs(os.path.join(out, "textures"), exist_ok=True)
-    for f in ("coda_atlas.png", "coda_atlas2.png"):
+    for f in ("coda_atlas.png", "coda_atlas2.png", "coda_atlas3.png"):
         shutil.copy(os.path.join(ROOT, "build", "textures", f), os.path.join(out, "textures", f))
     size = ctx.level.save(os.path.join(out, ctx.key + ".prj2"))
+    write_lua(ctx, out)
     print("%s saved: %.1f MB, %d rooms" % (ctx.key, size / 1e6, len(ctx.level.rooms)))
     return size
+
+
+LUA_TEMPLATE = """-- Coda di Volpe - script del livello {title} (TombEngine).
+-- Va in C:\\CodaDiVolpe\\Engine\\Scripts\\Levels\\{key}.lua  (generato da tools/episode.py)
+
+{body}
+
+-- Called when entering a level, either after leveljump, new game or loading game
+LevelFuncs.OnStart = function()
+{on_start}
+end
+
+-- Called after loading from a save
+LevelFuncs.OnLoad = function() end
+
+-- Called after saving game
+LevelFuncs.OnSave = function() end
+
+-- Called on every frame of the game
+LevelFuncs.OnLoop = function()
+{on_loop}
+end
+
+-- Called when level is ended, either after leveljump, quitting to title or loading game
+LevelFuncs.OnEnd = function() end
+"""
+
+
+def write_lua(ctx, out):
+    lua = getattr(ctx, "lua_parts", {})
+    text = LUA_TEMPLATE.format(title=LEVELS[ctx.key]["title"], key=ctx.key,
+                               body="\n".join(ctx.lua) if ctx.lua else "-- (nessuna logica extra)",
+                               on_start="\n".join(lua.get("start", [])),
+                               on_loop="\n".join(lua.get("loop", [])))
+    with open(os.path.join(out, ctx.key + ".lua"), "w", newline="\r\n") as f:
+        f.write(text)
+
+
+GAMEFLOW_HEAD = """-- Coda di Volpe - Gameflow.lua (generato da tools/episode.py)
+-- Va in C:\\CodaDiVolpe\\Engine\\Scripts\\Gameflow.lua
+
+Flow.SetIntroImagePath("Screens\\\\intro.jpg")
+Flow.SetTotalSecretCount(12)
+Flow.EnablePointFilter(false)
+Flow.EnableLoadSave(true)
+Flow.EnableFlyCheat(true)      -- sviluppo: da disattivare per la release
+Flow.EnableLaraInTitle(false)
+Flow.EnableLevelSelect(true)   -- sviluppo: comodo per provare i singoli livelli
+Flow.EnableMassPickup(true)
+
+--------------------------------------------------
+
+title = Level.new()
+title.ambientTrack = "108"
+title.levelFile = "Data\\\\title.ten"
+title.scriptFile = "Scripts\\\\Levels\\\\title.lua"
+title.loadScreenFile = "Screens\\\\main.png"
+Flow.AddLevel(title)
+"""
+
+
+def write_gameflow(only=None):
+    parts = [GAMEFLOW_HEAD]
+    for k in ORDER:
+        if only is not None and k not in only:
+            continue
+        if not os.path.exists(os.path.join(OUT, k, k + ".prj2")):
+            continue  # level not generated yet: keep it out of the level select
+        parts.append('''
+--------------------------------------------------
+
+{k} = TEN.Flow.Level()
+{k}.nameKey = "{k}"
+{k}.scriptFile = "Scripts\\\\Levels\\\\{k}.lua"
+{k}.ambientTrack = "108"
+{k}.horizon1.enabled = true
+{k}.levelFile = "Data\\\\{k}.ten"
+{k}.loadScreenFile = "Screens\\\\loading.png"
+{k}.farView = 128 -- distanza di visibilita' in settori (128 = 256 m)
+TEN.Flow.AddLevel({k})
+'''.format(k=k))
+    os.makedirs(OUT, exist_ok=True)
+    with open(os.path.join(OUT, "Gameflow.lua"), "w", newline="\r\n") as f:
+        f.write("".join(parts))
 
 
 def build(key):
@@ -156,3 +242,4 @@ def build(key):
 if __name__ == "__main__":
     for k in (sys.argv[1:] or ORDER):
         build(k)
+    write_gameflow()

@@ -129,10 +129,11 @@ class Sector:
         self.fsplits = []         # extra floor splits, each 4 heights (XnZp, XpZp, XpZn, XnZn), descending
         self.csplits = []         # extra ceiling splits, ascending
 
-    def set_tex(self, face, coords, texture=0):
+    def set_tex(self, face, coords, texture=0, blend=0, double_sided=False):
+        """blend = TombLib BlendMode (0 Normal, 2 Additive, 11 AlphaBlend)."""
         if self.tex is None:
             self.tex = {}
-        self.tex[face] = (coords, texture)
+        self.tex[face] = (coords, texture, (1 if double_sided else 0) | (blend << 1))
 
     def set_invisible(self, face):
         if self.invisible is None:
@@ -147,11 +148,11 @@ class Sector:
         out += chunk(SEC_FLOOR_SUB, leb(len(self.fsplits)) + b"".join(leb(h) for sp in self.fsplits for h in sp))
         out += chunk(SEC_CEIL_SUB, leb(len(self.csplits)) + b"".join(leb(h) for sp in self.csplits for h in sp))
         if self.tex:
-            for face, (coords, texture) in self.tex.items():
+            for face, (coords, texture, mode) in self.tex.items():
                 us = [c[0] for c in coords]
                 vs = [c[1] for c in coords]
                 body = leb(face) + f32(*[v for c in coords for v in c])
-                body += f32(min(us), min(vs), max(us), max(vs)) + leb(0) + leb(texture)
+                body += f32(min(us), min(vs), max(us), max(vs)) + leb(mode) + leb(texture)
                 out += chunk(TEX_LEVEL2, body)
         if self.invisible:
             for face in self.invisible:
@@ -175,7 +176,8 @@ class Room:
         self.outside = False
         self.horizon = False
         self.no_lensflare = False
-        self.room_type = 0        # 0 normal, 1 water (RoomType)
+        self.room_type = 0        # RoomType: 0 Normal, 1 Rain, 2 Snow, 3 Water, 4 Quicksand
+        self.light_effect = 1     # RoomLightEffect: 0 None, 1 Default (editor default)
         self.reverb = 0
         self.tags = []
         self.objects = []         # encoded object chunks (callables taking id maps)
@@ -274,7 +276,8 @@ class Level:
 
     # Objects -------------------------------------------------------------
     def add_portal(self, room, area, direction, other, opacity=0):
-        """area = (x0, z0, x1, z1) in room-local sector coordinates."""
+        """area = (x0, z0, x1, z1) in room-local sector coordinates.
+        opacity: 0 None, 1 SolidFaces, 2 TraversableFaces (textured portal faces are drawn, e.g. water)."""
         def enc(oid=self._next_obj()):
             body = leb(oid) + b"".join(leb(v) for v in area) + leb(other.index)
             body += bytes([direction, opacity, 0])
@@ -391,7 +394,7 @@ class Level:
         b += c_bool("TeNoPath", False)
         b += c_int("TeRoomType", r.room_type)
         b += c_int("TeRoomTypeStrength", 0)
-        b += c_int("TeRoomLightEffect", 0)
+        b += c_int("TeRoomLightEffect", r.light_effect)
         b += c_int("TeRoomLightEffectStrength2", 1)
         b += c_int("TeReverb", r.reverb)
         b += c_int("TeRoomLightInt", 0)

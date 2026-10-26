@@ -414,5 +414,97 @@ def main2():
     print("ok", os.path.join(OUT, "coda_atlas2.png"))
 
 
+T = COL
+
+
+# Atlas 3 (1024 x 1024, 16 tiles): water surfaces (additive blend) and gameplay surfaces.
+def water(seed, deep, light):
+    n = noise(T, T, 32, 5, seed)
+    yy, xx = np.mgrid[0:T, 0:T] / T * 2 * np.pi
+    caust = (np.sin(xx * 3 + n * 4) * np.sin(yy * 3 - n * 4)) ** 8
+    img = np.array(deep, float)[None, None, :] * (0.8 + 0.4 * n[..., None])
+    return img + np.array(light, float)[None, None, :] * caust[..., None]
+
+
+def tile3(kind, seed):
+    if kind == "acqua_mare":
+        return water(seed, (14, 46, 70), (40, 70, 70))
+    if kind == "acqua_laguna":
+        return water(seed, (22, 62, 52), (40, 70, 50))
+    if kind == "acqua_scura":
+        return water(seed, (10, 22, 24), (16, 28, 26))
+    if kind == "porta_legno":
+        img = tint((96, 62, 36), noise(T, T, 64, 4, seed), 0.3)
+        for j in range(0, T, 64):
+            img[:, j:j + 4] *= 0.5
+        img[20:28, :] *= 0.5
+        img[T - 28:T - 20, :] *= 0.5
+        return img
+    if kind == "ferro":
+        img = tint((70, 72, 74), noise(T, T, 24, 5, seed), 0.35)
+        for i in range(16, T, 64):
+            for j in range(16, T, 64):
+                img[i:i + 6, j:j + 6] = (40, 40, 42)
+        return img
+    if kind == "ruggine":
+        return tint((120, 66, 36), noise(T, T, 16, 6, seed), 0.6)
+    if kind == "maiolica":
+        img = np.zeros((T, T, 3))
+        yy, xx = np.mgrid[0:64, 0:64] - 31.5
+        r = np.hypot(yy, xx)
+        motif = np.where(r < 12, 1, np.where(np.abs(np.abs(yy) - np.abs(xx)) < 4, 2, 0))
+        pal = np.array([[236, 230, 212], [210, 160, 40], [40, 80, 150]])
+        for y in range(0, T, 64):
+            for x in range(0, T, 64):
+                img[y:y + 64, x:x + 64] = pal[motif]
+                img[y:y + 64, x:x + 2] = img[y:y + 2, x:x + 64] = (150, 150, 140)
+        return img
+    if kind == "pietra_lavica":
+        return tint((62, 60, 58), noise(T, T, 12, 6, seed), 0.45)
+    if kind == "stella_dioscuri":
+        img = tint((150, 128, 90), noise(T, T, 32, 5, seed), 0.3)
+        yy, xx = np.mgrid[0:T, 0:T] - 127.5
+        ang = np.arctan2(yy, xx)
+        r = np.hypot(yy, xx)
+        star = r < 40 + 60 * np.abs(np.cos(4 * ang)) ** 6
+        img[star] = img[star] * 0.4 + np.array([210, 170, 60]) * 0.6
+        img[(r > 110) & (r < 118)] *= 0.5
+        return img
+    if kind == "tegole":
+        img = tint((168, 84, 52), noise(T, T, 32, 4, seed), 0.3)
+        for i in range(0, T, 32):
+            img[i:i + 4, :] *= 0.55
+        return img
+    if kind == "tela":
+        return tint((190, 178, 150), noise(T, T, 4, 3, seed), 0.15)
+    if kind == "affresco":
+        img = plaster(T, T, (200, 160, 120), seed)
+        img[: T // 3] = img[: T // 3] * 0.5 + np.array([60, 90, 140]) * 0.5
+        return img
+    return np.full((T, T, 3), 128.0)
+
+
+TILES3 = [("acqua_mare", "sand"), ("acqua_laguna", "sand"), ("acqua_scura", "stone"), ("porta_legno", "wood"),
+          ("ferro", "metal"), ("ruggine", "metal"), ("maiolica", "marble"), ("pietra_lavica", "stone"),
+          ("stella_dioscuri", "stone"), ("tegole", "stone"), ("tela", "concrete"), ("affresco", "concrete")]
+
+
+def main3():
+    S3 = 1024
+    atlas = np.zeros((S3, S3, 3))
+    regions = {"px_per_m": PX_M, "size": S3, "columns": {}, "tiles": {}}
+    footsteps = np.full((S3 // 64, S3 // 64), FS["stone"], dtype=int)
+    for k, (name, fs) in enumerate(TILES3):
+        cx, cy = (k % 4) * COL, (k // 4) * COL
+        atlas[cy:cy + COL, cx:cx + COL] = tile3(name, 300 + k)
+        regions["tiles"][name] = [cx, cy, cx + COL, cy + COL]
+        footsteps[cy // 64:(cy + COL) // 64, cx // 64:(cx + COL) // 64] = FS[fs]
+    regions["footsteps_64px"] = footsteps.tolist()
+    Image.fromarray(np.clip(atlas, 0, 255).astype(np.uint8)).save(os.path.join(OUT, "coda_atlas3.png"))
+    with open(os.path.join(OUT, "coda_atlas3.json"), "w") as f:
+        json.dump(regions, f)
+    print("ok", os.path.join(OUT, "coda_atlas3.png"))
+
+
 if __name__ == "__main__":
-    main2()
+    main3()

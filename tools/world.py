@@ -328,7 +328,7 @@ def build_rooms(world, level, atlases, texer):
             corners = np.nan_to_num(corners, nan=0.4)
             ymin = -int(math.ceil(np.nanmax(dsub[wsub]) * M / prj2.CLICK + 1)) * prj2.CLICK
             wr = prj2.Room("W_%02d_%02d" % (i, j), n, n, x=sx0, y=ymin, z=sz0)
-            wr.room_type = 1
+            wr.room_type = 3  # Water
             wr.ambient = (0.35, 0.5, 0.55)
             wr.tags = ["acqua"]
             top = 0 - ymin
@@ -355,8 +355,16 @@ def build_rooms(world, level, atlases, texer):
             inner[0, :] = inner[-1, :] = False
             inner[:, 0] = inner[:, -1] = False
             for (x0, z0, x1, z1) in rectangles(inner):
-                level.add_portal(room, (x0, z0, x1, z1), prj2.P_FLOOR, wr)
-                level.add_portal(wr, (x0, z0, x1, z1), prj2.P_CEILING, room)
+                # Traversable faces = visible water surface (TRLE "opacity 2"), additive water texture.
+                level.add_portal(room, (x0, z0, x1, z1), prj2.P_FLOOR, wr, opacity=2)
+                level.add_portal(wr, (x0, z0, x1, z1), prj2.P_CEILING, room, opacity=2)
+            for lx in range(1, n - 1):
+                for lz in range(1, n - 1):
+                    if inner[lx, lz]:
+                        name = "acqua_laguna" if world.lagoon[sx0 + lx, sz0 + lz] else "acqua_mare"
+                        rot = walls.rot_for(sx0 + lx, sz0 + lz)
+                        walls.set_floor(room.sectors[lx][lz], atlases, name, rot, blend=2)
+                        walls.set_ceiling(wr.sectors[lx][lz], atlases, name, rot, blend=2)
 
     # Horizontal portals and edges.
     for group in (terrain, water):

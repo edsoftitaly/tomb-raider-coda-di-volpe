@@ -65,16 +65,16 @@ def floor_face_coords(f, split, coords):
     return [(0, [tl, tr, br, br]), (1, [br, bl, tl, tl])]
 
 
-def set_floor(sector, atlases, name, rot=0):
+def set_floor(sector, atlases, name, rot=0, blend=0):
     ti, coords = atlases.tile_coords(name, rot)
     for k, c in floor_face_coords(sector.floor, sector.fsplit, coords):
-        sector.set_tex(prj2.F_FLOOR if k == 0 else prj2.F_FLOOR_TRI2, c, ti)
+        sector.set_tex(prj2.F_FLOOR if k == 0 else prj2.F_FLOOR_TRI2, c, ti, blend)
 
 
-def set_ceiling(sector, atlases, name, rot=0):
+def set_ceiling(sector, atlases, name, rot=0, blend=0):
     ti, coords = atlases.tile_coords(name, rot)
     for k, c in floor_face_coords(sector.ceil, sector.csplit, coords):
-        sector.set_tex(prj2.F_CEILING if k == 0 else prj2.F_CEILING_TRI2, c, ti)
+        sector.set_tex(prj2.F_CEILING if k == 0 else prj2.F_CEILING_TRI2, c, ti, blend)
 
 
 def _is_open(room, x, z):
