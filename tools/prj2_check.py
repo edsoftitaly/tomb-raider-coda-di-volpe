@@ -97,7 +97,7 @@ def check(path):
                     r.chunks(lt, "TeLvlTexture")
                     info["settings"]["textures"] = info["settings"].get("textures", 0) + 1
                     return True
-                if c2 == b"TeWad":
+                if c2 in (b"TeWad", b"TeOldWadSoundPath", b"TeSoundsCatalog"):
                     r.chunks(lambda c3, s3: bool(r.raw(s3)) or True, "TeWad")
                     return True
                 return False

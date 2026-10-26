@@ -1,0 +1,16 @@
+-- Voce del livello come la genera TombIDE (va in Engine\Scripts\Gameflow.lua, dopo il Title).
+-- Se hai creato il livello "Oliveri" da TombIDE con la sezione di script, c'e' gia'.
+
+Oliveri = TEN.Flow.Level()
+
+Oliveri.nameKey = "Oliveri"
+Oliveri.scriptFile = "Scripts\\Levels\\Oliveri.lua"
+Oliveri.ambientTrack = "108"
+Oliveri.horizon1.enabled = true
+Oliveri.levelFile = "Data\\Oliveri.ten"
+Oliveri.loadScreenFile = "Screens\\loading.png"
+
+TEN.Flow.AddLevel(Oliveri)
+
+-- In Strings.lua, nella tabella delle stringhe:
+--	Oliveri = { "Oliveri" }

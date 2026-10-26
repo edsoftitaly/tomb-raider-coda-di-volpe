@@ -10,6 +10,7 @@ Usage: python3 gen_zone.py A   (zones are defined in ZONES below)
 import json
 import math
 import os
+import shutil
 import sys
 import xml.etree.ElementTree as ET
 
@@ -30,6 +31,7 @@ M = 512            # units per metre (1024 units = 2 m)
 QUANT = 64         # height quantization: 1/4 click = 12.5 cm
 ROOM_N = 30        # interior sectors per room side
 HEADROOM = 12 * prj2.CLICK  # ceiling above the highest floor of a room
+LEVEL_NAME = "Oliveri"      # TombIDE level in C:\\CodaDiVolpe\\Levels\\Oliveri
 
 # Zone boxes (lat_min, lon_min, lat_max, lon_max) and points of interest.
 ZONES = {
@@ -198,6 +200,9 @@ def build(zone_key):
     if os.path.exists(template):
         # Game, script, sound and wad paths exactly as TombIDE wrote them for C:\\CodaDiVolpe.
         level.use_settings_from(template)
+    else:
+        # Same settings TombIDE writes for C:\\CodaDiVolpe\\Levels\\Oliveri\\Oliveri.prj2.
+        level.use_tombide_ten(LEVEL_NAME + ".ten")
     level.textures.append({"path": "$(LevelDirectory)\\textures\\coda_atlas.png",
                            "footsteps": atlas["footsteps_64px"]})
     level.ambient = (0.6, 0.6, 0.6)
@@ -255,7 +260,11 @@ def build(zone_key):
 
     out_dir = os.path.join(ROOT, "build")
     os.makedirs(out_dir, exist_ok=True)
-    path = os.path.join(out_dir, "zona_%s.prj2" % zone_key)
+    # The TombIDE level folder: copy build/Oliveri/* into C:\\CodaDiVolpe\\Levels\\Oliveri\\.
+    level_dir = os.path.join(out_dir, LEVEL_NAME)
+    os.makedirs(os.path.join(level_dir, "textures"), exist_ok=True)
+    shutil.copy(os.path.join(out_dir, "textures", "coda_atlas.png"), os.path.join(level_dir, "textures", "coda_atlas.png"))
+    path = os.path.join(level_dir, LEVEL_NAME + ".prj2")
     report["bytes"] = level.save(path)
     with open(os.path.join(out_dir, "zona_%s_report.json" % zone_key), "w") as f:
         json.dump({"report": report, "buildings": buildings}, f, indent=1, ensure_ascii=False)

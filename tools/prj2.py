@@ -175,8 +175,23 @@ class Level:
         self.game_directory = ""
         self.game_level_path = ""
         self.game_exe = ""
+        self.script_directory = ""
+        self.wad_sound_paths = []
+        self.sound_catalogs = []
         self._obj_counter = 0
         self.settings_template = None   # list of raw settings sub-chunks from a TombIDE .prj2
+
+    def use_tombide_ten(self, data_file, wads=("TombEngine.wad2",)):
+        """Same settings TombIDE writes for a TEN level in <project>/Levels/<name>/<name>.prj2."""
+        root = "$(LevelDirectory)\\..\\.."
+        self.game_directory = root + "\\Engine"
+        self.game_exe = root + "\\Engine\\Bin\\x64\\TombEngine.exe"
+        self.script_directory = root + "\\Engine\\Scripts"
+        self.game_level_path = root + "\\Engine\\Data\\" + data_file
+        self.lua_script = "$(ScriptDirectory)\\Levels\\$(LevelName).lua"
+        self.wad_sound_paths = [root + "\\Sounds"]
+        self.sound_catalogs = ["$(EditorDirectory)\\Catalogs\\TEN Sound Catalogs\\TEN_ALL_SOUNDS.xml"]
+        self.wads = [root + "\\Assets\\Wads\\" + w for w in wads]
 
     def use_settings_from(self, path):
         """Reuse game, script, sound and wad settings from a .prj2 created by TombIDE.
@@ -304,7 +319,10 @@ class Level:
         b += c_str("TeFontTextureFilePath", "")
         b += c_str("TeSkyTextureFilePath", "")
         b += c_str("TeTr5ExtraSpritesFilePath", "")
-        b += chunk("TeOldWadSoundPaths", chunk("TeOldWadSoundUpdateTag1_0_8") + END)
+        sp = b"".join(chunk("TeOldWadSoundPath", c_str("TePath", w) + END) for w in self.wad_sound_paths)
+        b += chunk("TeOldWadSoundPaths", chunk("TeOldWadSoundUpdateTag1_0_8") + sp + END)
+        if self.script_directory:
+            b += c_str("TeScriptDirectory", self.script_directory)
         # Game paths and the Lua script are left to Tomb Editor defaults unless set.
         if self.game_directory:
             b += c_str("TeGameDirectory", self.game_directory)
@@ -320,7 +338,8 @@ class Level:
             b += c_str("TenLuaScriptFile", self.lua_script)
         wads = b"".join(chunk("TeWad", c_str("TePath", w) + END) for w in self.wads)
         b += chunk("TeWads", wads + END)
-        b += chunk("TeSoundsCatalogs", END)
+        cats = b"".join(chunk("TeSoundsCatalog", c_str("TeSoundsCatalogPath", c) + END) for c in self.sound_catalogs)
+        b += chunk("TeSoundsCatalogs", cats + END)
         b += chunk("TeSelectedSounds", END)
         b += self._textures_chunk()
         b += chunk("TeImportedGeometries", END)

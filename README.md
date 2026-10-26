@@ -26,7 +26,7 @@ Il design document completo è in [`docs/GDD.md`](docs/GDD.md).
 4. `tools/gen_textures.py` genera l'atlas `build/textures/coda_atlas.png` (2048 px, 128 px/m): facciate, pietra, roccia e 16 pavimenti con i rispettivi suoni dei passi. `tools/texturing.py` assegna i materiali: strade OSM, marciapiedi, uso del suolo, roccia sui pendii, facciate per stile, soffitti invisibili.
 5. `tools/prj2_mesh.py` + `tools/render/` ricostruiscono la geometria dal .prj2 e fanno un render di verifica con three.js.
 
-**Il .prj2 cerca le texture in `textures\coda_atlas.png` accanto a sé**: copia sempre la cartella `build/` intera.
+**Il livello pronto per TombIDE è `build/Oliveri/`**: copia `Oliveri.prj2` e la cartella `textures` in `C:\CodaDiVolpe\Levels\Oliveri\`. Le impostazioni (motore, script, suoni, WAD `Assets\Wads\TombEngine.wad2`) sono le stesse che scrive TombIDE. Lo script del livello è in `scripts/Levels/Oliveri.lua`.
 
 `tools/prj2.py` è il writer `.prj2`, portato in Python da `Prj2Writer.cs` di [Tomb Editor](https://github.com/TombEngine/Tomb-Editor).
 
