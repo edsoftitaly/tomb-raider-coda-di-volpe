@@ -10,8 +10,15 @@ import sys
 
 from prj2_check import Reader
 
-DIRS = {0: ((0, 1), (3, 2), (0, 1)), 1: ((2, 3), (1, 0), (0, -1)),
-        3: ((1, 2), (0, 3), (1, 0)), 2: ((3, 0), (2, 1), (-1, 0))}   # face id -> owner/other corners
+DIRS = {0: ((1, 0), (2, 3), (0, 1)), 1: ((3, 2), (0, 1), (0, -1)),
+        3: ((2, 1), (3, 0), (1, 0)), 2: ((0, 3), (1, 2), (-1, 0))}   # face id -> owner/other corners
+# Wall face id -> (QA face id of its direction, segment index).
+FACE_SEG = {}
+for _qa, _o in ((0, 0), (1, 1), (2, 2), (3, 3)):
+    FACE_SEG[_qa] = (_qa, 0)
+    FACE_SEG[5 + _o] = (_qa, 1)
+    for _k in range(2, 9):
+        FACE_SEG[29 + (_k - 2) * 10 + _o] = (_qa, _k)
 CORNER_XZ = [(0, 1), (1, 1), (1, 0), (0, 0)]  # XnZp, XpZp, XpZn, XnZn offsets
 
 
@@ -37,7 +44,10 @@ def read_rooms(path):
                 elif c4 == b"\x08":
                     r.leb()
                     [r.leb() for _ in range(4)]
-                elif c4 in (b"\x09", b"\x0a"):
+                elif c4 == b"\x09":
+                    n = r.leb()
+                    sec["fsplits"] = [[r.leb() for _ in range(4)] for _ in range(n)]
+                elif c4 == b"\x0a":
                     for _ in range(4 * r.leb()):
                         r.leb()
                 elif c4 == b"\x12":
@@ -124,18 +134,26 @@ def build_mesh(rooms, prefixes):
                     tri([P[0], P[1], P[2]], t[:3])
                     t2 = s["tex"].get(26, t)
                     tri([P[2], P[3], P[0]], t2[:3])
-            for face, (oi, pi, (dx, dz)) in DIRS.items():
+            for face, d in FACE_SEG.items():
                 if face not in s["tex"]:
                     continue
+                qa_face, seg = d
+                oi, pi, (dx, dz) = DIRS[qa_face]
                 o = rm["sectors"].get((x + dx, z + dz))
                 if o is None:
                     continue
                 g = o["floor"]
+                nb = (g[pi[0]], g[pi[1]])
+                tops = [(f[oi[0]], f[oi[1]])] + [(sp[oi[0]], sp[oi[1]]) for sp in s.get("fsplits", [])]
+                if seg >= len(tops):
+                    continue
+                top = tops[seg]
+                bot = nb
+                if seg + 1 < len(tops) and tops[seg + 1][0] >= nb[0] and tops[seg + 1][1] >= nb[1]:
+                    bot = tops[seg + 1]
                 ox, oz = CORNER_XZ[oi[0]], CORNER_XZ[oi[1]]
-                ya = sorted([f[oi[0]], g[pi[0]]])
-                yb = sorted([f[oi[1]], g[pi[1]]])
                 A = lambda c, h: ((rx + x + c[0]) * 2.0, (ry + h) / 512.0, (rz + z + c[1]) * 2.0)  # noqa: E731
-                tl, tr, br, bl = A(ox, ya[1]), A(oz, yb[1]), A(oz, yb[0]), A(ox, ya[0])
+                tl, tr, br, bl = A(ox, top[0]), A(oz, top[1]), A(oz, bot[1]), A(ox, bot[0])
                 t = s["tex"][face]
                 tri([tl, tr, br], [t[0], t[1], t[2]])
                 tri([tl, br, bl], [t[0], t[2], t[3]])

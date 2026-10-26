@@ -92,11 +92,21 @@ TEX_INVISIBLE = bytes([17])
 F_WALL_QA = {"+z": 0, "-z": 1, "-x": 2, "+x": 3}
 F_WALL_WS = {"+z": 15, "-z": 16, "-x": 17, "+x": 18}
 F_WALL_MIDDLE = {"+z": 10, "-z": 11, "-x": 12, "+x": 13}
+_DIR_ORDER = {"+z": 0, "-z": 1, "-x": 2, "+x": 3}
+
+
+def f_wall_floor(d, segment):
+    """Face id of the floor-part wall segment: 0 = QA, 1 = Floor2 ... 8 = Floor9."""
+    if segment == 0:
+        return F_WALL_QA[d]
+    if segment == 1:
+        return 5 + _DIR_ORDER[d]
+    return 29 + (segment - 2) * 10 + _DIR_ORDER[d]
 F_FLOOR, F_FLOOR_TRI2, F_CEILING, F_CEILING_TRI2 = 25, 26, 27, 28
 
 
 class Sector:
-    __slots__ = ("wall", "floor", "ceil", "fsplit", "csplit", "flags", "tex", "invisible")
+    __slots__ = ("wall", "floor", "ceil", "fsplit", "csplit", "flags", "tex", "invisible", "fsplits")
 
     def __init__(self, floor=(0, 0, 0, 0), ceil=(3072, 3072, 3072, 3072), wall=False):
         self.wall = wall          # True = solid wall sector
@@ -107,6 +117,7 @@ class Sector:
         self.flags = 0
         self.tex = None           # {face: ((u,v) x4, texture_index)}
         self.invisible = None     # set of faces
+        self.fsplits = []         # extra floor splits, each 4 heights (XnZp, XpZp, XpZn, XnZn), descending
 
     def set_tex(self, face, coords, texture=0):
         if self.tex is None:
@@ -123,7 +134,7 @@ class Sector:
         out += c_int(SEC_PROPS, (1 if self.wall else 0) | (self.flags << 2))
         out += chunk(SEC_FLOOR, leb(1 if self.fsplit else 0) + b"".join(leb(h) for h in self.floor))
         out += chunk(SEC_CEIL, leb(1 if self.csplit else 0) + b"".join(leb(h) for h in self.ceil))
-        out += chunk(SEC_FLOOR_SUB, leb(0))
+        out += chunk(SEC_FLOOR_SUB, leb(len(self.fsplits)) + b"".join(leb(h) for sp in self.fsplits for h in sp))
         out += chunk(SEC_CEIL_SUB, leb(0))
         if self.tex:
             for face, (coords, texture) in self.tex.items():

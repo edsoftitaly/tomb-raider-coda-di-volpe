@@ -195,6 +195,10 @@ def tile(kind, seed):
         img[green] = img[green] * 0.5 + np.array([108, 118, 76]) * 0.5
     elif kind == "sabbia":
         img = tint((178, 164, 140), noise(T, T, 16, 4, seed) * 0.5 + rng.random((T, T)) * 0.5, 0.3)
+    elif kind == "rosa_piena":
+        img = plaster(T, T, (222, 170, 158), seed)
+    elif kind == "bianco_piena":
+        img = plaster(T, T, (228, 222, 206), seed)
     elif kind == "castello_pav":
         img = tint((150, 136, 112), noise(T, T, 24, 5, seed), 0.45)
     else:
@@ -211,7 +215,7 @@ FACADES = [("crema_finestre", lambda: facade("crema", True, 11)),
 TILES = [("asfalto", "concrete"), ("marciapiede", "stone"), ("lastricato", "stone"), ("erba_secca", "grass"),
          ("terra", "mud"), ("roccia", "stone"), ("terrazza", "concrete"), ("ciottoli", "gravel"),
          ("macchia", "grass"), ("uliveto", "grass"), ("sabbia", "sand"), ("castello_pav", "stone"),
-         ("asfalto2", "concrete"), ("erba_secca2", "grass"), ("terra2", "mud"), ("roccia2", "stone")]
+         ("asfalto2", "concrete"), ("erba_secca2", "grass"), ("rosa_piena", "stone"), ("bianco_piena", "stone")]
 
 
 def main():

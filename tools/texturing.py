@@ -29,9 +29,11 @@ NATURAL_TILES = {"erba_secca", "erba_secca2", "terra", "terra2", "roccia", "rocc
                  "ciottoli", "sabbia", "asfalto", "asfalto2"}
 STYLES = ["crema", "rosa", "bianco"]
 
-# Directions: owner/other corner indices (start, end) as seen from the owner looking at the other.
-DIRS = {"+z": ((0, 1), (3, 2), (0, 1)), "-z": ((2, 3), (1, 0), (0, -1)),
-        "+x": ((1, 2), (0, 3), (1, 0)), "-x": ((3, 0), (2, 1), (-1, 0))}
+# Vertical floor faces (TombLib RoomExtensionMethods.Get*WallData): the face belongs to the HIGHER
+# sector and faces the lower neighbour. Corner indices (start, end) for owner and neighbour;
+# start is on the left of a viewer standing in the lower sector.
+DIRS = {"+z": ((1, 0), (2, 3), (0, 1)), "-z": ((3, 2), (0, 1), (0, -1)),
+        "+x": ((2, 1), (3, 0), (1, 0)), "-x": ((0, 3), (1, 2), (-1, 0))}
 OPPOSITE = {"+z": "-z", "-z": "+z", "+x": "-x", "-x": "+x"}
 
 
@@ -137,7 +139,7 @@ class Texturer:
     # Floors -----------------------------------------------------------------
     def floor_coords(self, wi, wj, f, split):
         name = self.mat[wi, wj]
-        if name in ("asfalto", "erba_secca", "terra", "roccia") and h32("t2", wi, wj) % 2:
+        if name in ("asfalto", "erba_secca") and h32("t2", wi, wj) % 2:
             name = name + "2"
         x0, y0, x1, y1 = self.a["tiles"][name]
         tl, tr, br, bl = (x0 + 0.5, y0 + 0.5), (x1 - 0.5, y0 + 0.5), (x1 - 0.5, y1 - 0.5), (x0 + 0.5, y1 - 0.5)
@@ -153,40 +155,76 @@ class Texturer:
         return [(prj2.F_FLOOR, [tl, tr, br, br]), (prj2.F_FLOOR_TRI2, [br, bl, tl, tl])]
 
     # Walls ------------------------------------------------------------------
-    def wall_coords(self, d, own_f, oth_f, own_w, oth_w, room_y):
-        (oi, pi, _) = DIRS[d]
-        ha = [own_f[oi[0]], oth_f[pi[0]]]
-        hb = [own_f[oi[1]], oth_f[pi[1]]]
-        top_a, bot_a = max(ha), min(ha)
-        top_b, bot_b = max(hb), min(hb)
-        if top_a <= bot_a and top_b <= bot_b:
-            return None
-        # The higher side decides the material.
-        own_high = (own_f[oi[0]] + own_f[oi[1]]) > (oth_f[pi[0]] + oth_f[pi[1]])
-        wi, wj = own_w if own_high else oth_w
-        b = self.bid[wi, wj]
-        world = lambda h: (h + room_y) / M  # noqa: E731
-        if b >= 0:
-            style = self.styles[b]
-            if style == "castello":
-                col = "pietra_castello"
-            elif style == "crema":
-                col = "crema_piena" if h32("w", wi, wj, d) % 3 == 0 else "crema_finestre"
-            else:
-                col = style + "_finestre"
-            ref = self.bases[b]
-        else:
-            col = "roccia_parete"
-            ref = math.floor(world(min(bot_a, bot_b)) / 16.0) * 16.0
-        x0, _, x1, _ = self.a["columns"][col]
+    # Tomb Editor accepts at most 256 x 256 px per face, i.e. 2 m of facade at 128 px/m.
+    # Tall walls are split with extra floor splits (up to 8, so 9 segments = 18 m).
+    MAX_SPLITS = 8
+    SEG = 1024  # 2 m per segment
 
-        def v(h):
-            return float(np.clip(self.size - 0.5 - (world(h) - ref) * self.px, 0.5, self.size - 0.5))
-        return [(x0 + 0.5, v(top_a)), (x1 - 0.5, v(top_b)), (x1 - 0.5, v(bot_b)), (x0 + 0.5, v(bot_a))]
+    def column_for(self, wi, wj, d):
+        b = self.bid[wi, wj]
+        if b < 0:
+            return "roccia_parete", None
+        style = self.styles[b]
+        if style == "castello":
+            return "pietra_castello", self.bases[b]
+        if style == "crema":
+            return ("crema_piena" if h32("w", wi, wj, d) % 3 == 0 else "crema_finestre"), self.bases[b]
+        return style + "_finestre", self.bases[b]
+
+    def segment_coords(self, col, ref, top, bot, room_y):
+        """top/bot: (start, end) heights in room units. Returns TL, TR, BR, BL pixel coords."""
+        x0, _, x1, _ = self.a["columns"][col]
+        world = [(h + room_y) / M for h in (top[0], top[1], bot[1], bot[0])]
+        if ref is None:  # rock: keep the segment inside the 16 m column
+            lo = min(world[2], world[3])
+            ref = lo - (lo % 14.0)
+        v = [self.size - 0.5 - (h - ref) * self.px for h in world]
+        span = max(v) - min(v)
+        if span > 256.0:
+            # Portal (border) walls cannot be split: squeeze into one tile, using plain plaster
+            # for facades so shutters do not turn into a ladder.
+            plain = {"crema_finestre": "crema_piena", "rosa_finestre": "rosa_piena", "bianco_finestre": "bianco_piena"}
+            p = plain.get(col)
+            if p in self.a["tiles"]:
+                tx0, ty0, tx1, ty1 = self.a["tiles"][p]
+                hs = [world[0], world[1], world[2], world[3]]
+                lo, hi = min(hs), max(hs)
+                vv = [ty1 - 0.5 - (h - lo) / (hi - lo) * 255.0 for h in hs]
+                return [(tx0 + 0.5, vv[0]), (tx1 - 0.5, vv[1]), (tx1 - 0.5, vv[2]), (tx0 + 0.5, vv[3])]
+            vmax = max(v)
+            v = [vmax - (vmax - y) * 255.0 / span for y in v]
+        v = [float(np.clip(y, 0.5, self.size - 0.5)) for y in v]
+        if max(v) - min(v) > 256.0:
+            v = [max(min(y, min(v) + 256.0), min(v)) for y in v]
+        return [(x0 + 0.5, v[0]), (x1 - 0.5, v[1]), (x1 - 0.5, v[2]), (x0 + 0.5, v[3])]
+
+    def make_splits(self, room, lx, lz):
+        s = room.sectors[lx][lz]
+        lowest = min(min(room.sectors[lx + dx][lz + dz].floor) for _, _, (dx, dz) in DIRS.values())
+        drop = max(s.floor) - lowest
+        n = min(self.MAX_SPLITS, max(0, -(-drop // self.SEG) - 1))
+        s.fsplits = [[h - self.SEG * k for h in s.floor] for k in range(1, n + 1)]
+
+    def wall_faces(self, room, s, other, d, wi, wj):
+        (oi, pi, _) = DIRS[d]
+        nb = (other.floor[pi[0]], other.floor[pi[1]])
+        tops = [(s.floor[oi[0]], s.floor[oi[1]])] + [(sp[oi[0]], sp[oi[1]]) for sp in s.fsplits]
+        col, ref = self.column_for(wi, wj, d)
+        for k, top in enumerate(tops):
+            bot = nb
+            if k + 1 < len(tops) and tops[k + 1][0] >= nb[0] and tops[k + 1][1] >= nb[1]:
+                bot = tops[k + 1]
+            if top[0] <= bot[0] and top[1] <= bot[1]:
+                continue
+            s.set_tex(prj2.f_wall_floor(d, k), self.segment_coords(col, ref, top, bot, room.y))
 
     def apply_room(self, room, wx0, wz0):
         """wx0, wz0: world array index of the room's local sector (0, 0)."""
         n_x, n_z = room.nx, room.nz
+        # Splits first: only interior sectors can have them (portal sectors are ignored by the editor).
+        for lx in range(1, n_x - 1):
+            for lz in range(1, n_z - 1):
+                self.make_splits(room, lx, lz)
         for lx in range(n_x):
             for lz in range(n_z):
                 s = room.sectors[lx][lz]
@@ -197,26 +235,20 @@ class Texturer:
                         s.set_tex(face, coords)
                     s.set_invisible(prj2.F_CEILING)
                     s.set_invisible(prj2.F_CEILING_TRI2)
-                for d, (_, _, (dx, dz)) in DIRS.items():
+                for d, (oi, pi, (dx, dz)) in DIRS.items():
                     nx_, nz_ = lx + dx, lz + dz
                     if not (0 <= nx_ < n_x and 0 <= nz_ < n_z):
                         continue
                     other = room.sectors[nx_][nz_]
                     other_border = nx_ in (0, n_x - 1) or nz_ in (0, n_z - 1)
-                    if border and other_border:
-                        continue
                     if other_border:
-                        continue  # Faces towards a border sector are owned by the border sector.
+                        continue  # No faces towards border sectors (border-to-border included).
                     if border:
                         # Border sectors draw the faces towards the room interior; ceiling steps are hidden.
                         s.set_invisible(prj2.F_WALL_WS[d])
-                    else:
-                        (oi, pi, _) = DIRS[d]
-                        if not any(other.floor[pi[k]] > s.floor[oi[k]] for k in (0, 1)):
-                            continue  # The face exists only on the lower side.
-                    coords = self.wall_coords(d, s.floor, other.floor, (wi, wj), (wi + dx, wj + dz), room.y)
-                    if coords is not None:
-                        s.set_tex(prj2.F_WALL_QA[d], coords)
+                    if not any(s.floor[oi[k]] > other.floor[pi[k]] for k in (0, 1)):
+                        continue  # The face exists only on the higher side.
+                    self.wall_faces(room, s, other, d, wi, wj)
 
 
 def prj2_is_quad(f):

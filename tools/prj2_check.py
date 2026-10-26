@@ -5,8 +5,12 @@ to its declared size, known chunk ids only, and the room/portal graph must be co
 Usage: python3 prj2_check.py file.prj2
 """
 import io
+import os
 import struct
 import sys
+
+
+TEX_SIZE = int(os.environ.get("PRJ2_TEX_SIZE", "2048"))
 
 
 class Reader:
@@ -129,8 +133,21 @@ def check(path):
                     room["hmin"] = min(room["hmin"], min(hs))
                     room["hmax"] = max(room.get("hmax", -1 << 60), max(hs))
                 elif c4 == b"\x12":
-                    face = r.leb(); r.f(8); r.f(4); r.leb(); tex = r.leb()
+                    face = r.leb(); tc = r.f(8); r.f(4); r.leb(); tex = r.leb()
                     assert 0 <= face < 99 and tex >= 0, "bad texture face"
+                    # Same rule as TombLib TextureArea.QuadCoordsOutOfBounds / TriangleCoordsOutOfBounds.
+                    pts = [(tc[i], tc[i + 1]) for i in range(0, 8, 2)]
+                    if pts[2] == pts[3] or face in (25, 26, 27, 28):
+                        tri = pts[:3]
+                        quad_or_tri = [tri] if pts[2] == pts[3] else [tri, pts]
+                    else:
+                        quad_or_tri = [pts]
+                    for poly in quad_or_tri:
+                        us = [p[0] for p in poly]; vs = [p[1] for p in poly]
+                        if min(us) < 0 or min(vs) < 0 or max(us) > TEX_SIZE or max(vs) > TEX_SIZE or \
+                                max(us) - min(us) > 256 or max(vs) - min(vs) > 256:
+                            r.errors.append("texture out of bounds: room %s face %d %s" % (room.get("name"), face, pts))
+                            break
                     room["textured"] = room.get("textured", 0) + 1
                 elif c4 == b"\x11":
                     r.leb()
