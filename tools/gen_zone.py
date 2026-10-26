@@ -20,6 +20,7 @@ from pyproj import Transformer
 
 sys.path.insert(0, os.path.dirname(__file__))
 import prj2  # noqa: E402
+import texturing  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DTM = os.path.join(ROOT, "data", "dtm", "dtm_2m_3004.tif")
@@ -152,12 +153,13 @@ def build(zone_key):
         idx = np.nonzero(inside)[0]
         cx, cz = idx // nwz, idx % nwz
         ground = floor[cx, cz].max() / M
+        base = floor[cx, cz].min() / M
         top = ground + building_height(tags)
         bid = len(buildings)
         building_id[idx] = bid
         roof[idx] = top
         buildings.append({"id": ident, "tags": tags, "sectors": int(len(idx)), "ground_m": round(float(ground), 2),
-                          "roof_m": round(float(top), 2)})
+                          "base_m": round(float(base), 2), "roof_m": round(float(top), 2)})
 
     for wid, (refs, tags) in ways.items():
         if "building" in tags and refs and refs[0] == refs[-1]:
@@ -171,11 +173,29 @@ def build(zone_key):
 
     building_id = building_id.reshape(nwx, nwz)
     roof = roof.reshape(nwx, nwz)
+    floor_terrain = floor.copy()
     is_b = building_id >= 0
     floor[is_b] = (np.round(roof[is_b] * M / QUANT) * QUANT).astype(np.int64)[:, None]
 
+    # House in Via Amodeo 1: building sector nearest to the civic number.
+    casa_id = None
+    hx, hz = world_to_sector(*to3004.transform(POI["casa_amodeo_1"][1], POI["casa_amodeo_1"][0]))
+    bi, bj = np.nonzero(building_id >= 0)
+    if len(bi):
+        k = ((bi - (hx + 1)) ** 2 + (bj - (hz + 1)) ** 2).argmin()
+        if (bi[k] - hx - 1) ** 2 + (bj[k] - hz - 1) ** 2 < 4:
+            casa_id = int(building_id[bi[k], bj[k]])
+
+    # Materials and textures.
+    atlas = json.load(open(os.path.join(ROOT, "build", "textures", "coda_atlas.json")))
+    mat = texturing.materials(floor_terrain, building_id, buildings, (origin_x, origin_z), ways, ring_xy, nodes)
+    styles = texturing.building_styles(buildings, casa_id)
+    texer = texturing.Texturer(atlas, floor, mat, building_id, styles, [b["base_m"] for b in buildings])
+
     # Rooms.
     level = prj2.Level()
+    level.textures.append({"path": "$(LevelDirectory)\\textures\\coda_atlas.png",
+                           "footsteps": atlas["footsteps_64px"]})
     level.ambient = (0.6, 0.6, 0.6)
     nrx, nrz = nsx // ROOM_N, nsz // ROOM_N
     grid = {}
@@ -199,7 +219,8 @@ def build(zone_key):
                     s.floor = [int(v) for v in f]
                     s.ceil = [ceil] * 4
                     # Split along the flatter diagonal.
-                    s.fsplit = abs(int(f[0]) - int(f[2])) < abs(int(f[1]) - int(f[3]))
+                    s.fsplit = abs(int(f[1]) - int(f[3])) <= abs(int(f[0]) - int(f[2]))
+            texer.apply_room(room, sx0, sz0)
             grid[i, j] = level.add_room(room)
 
     for (i, j), room in grid.items():
@@ -226,10 +247,7 @@ def build(zone_key):
         # Face south-east towards the house door (rotation in degrees, 0 = +Z).
         level.add_moveable(room, 0, (lx * 1024, float(fy), lz * 1024), rot_y=170.0, lua_name="lara_start")
         report["lara"] = {"room": room.name, "local_sector": [round(lx, 2), round(lz, 2)], "floor_m": round((fy + room.y) / M, 2)}
-        la_h, lo_h = POI["casa_amodeo_1"]
-        hx, hz = world_to_sector(*to3004.transform(lo_h, la_h))
-        bid = building_id[int(hx) + 1, int(hz) + 1] if building_id[int(hx) + 1, int(hz) + 1] >= 0 else None
-        report["casa"] = buildings[bid] if bid is not None else "civico 1 sul bordo dell'edificio"
+        report["casa"] = buildings[casa_id] if casa_id is not None else "non trovata"
 
     out_dir = os.path.join(ROOT, "build")
     os.makedirs(out_dir, exist_ok=True)
@@ -239,6 +257,7 @@ def build(zone_key):
         json.dump({"report": report, "buildings": buildings}, f, indent=1, ensure_ascii=False)
     np.save(os.path.join(out_dir, "zona_%s_floor.npy" % zone_key), floor)
     np.save(os.path.join(out_dir, "zona_%s_buildings.npy" % zone_key), building_id)
+    np.save(os.path.join(out_dir, "zona_%s_mat.npy" % zone_key), mat.astype(str))
     return report
 
 

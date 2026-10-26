@@ -2,3 +2,4 @@ build/*.npy
 __pycache__/
 *.pyc
 *.tmp
+tools/render/node_modules/

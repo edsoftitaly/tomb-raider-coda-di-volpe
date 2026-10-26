@@ -23,6 +23,10 @@ Il design document completo è in [`docs/GDD.md`](docs/GDD.md).
    - Lara davanti alla casa di Via Gaspare Amodeo 1 (zona A).
 2. `tools/prj2_check.py <file>` rilegge il .prj2 con le stesse regole del loader di Tomb Editor: chunk letti per intero, settori completi, portali con controparte.
 3. `tools/preview_zone.py <zona>` disegna l'anteprima dall'alto.
+4. `tools/gen_textures.py` genera l'atlas `build/textures/coda_atlas.png` (2048 px, 128 px/m): facciate, pietra, roccia e 16 pavimenti con i rispettivi suoni dei passi. `tools/texturing.py` assegna i materiali: strade OSM, marciapiedi, uso del suolo, roccia sui pendii, facciate per stile, soffitti invisibili.
+5. `tools/prj2_mesh.py` + `tools/render/` ricostruiscono la geometria dal .prj2 e fanno un render di verifica con three.js.
+
+**Il .prj2 cerca le texture in `textures\coda_atlas.png` accanto a sé**: copia sempre la cartella `build/` intera.
 
 `tools/prj2.py` è il writer `.prj2`, portato in Python da `Prj2Writer.cs` di [Tomb Editor](https://github.com/TombEngine/Tomb-Editor).
 

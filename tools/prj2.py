@@ -85,10 +85,18 @@ SEC_FLOOR = bytes([7])
 SEC_CEIL = bytes([8])
 SEC_FLOOR_SUB = bytes([9])
 SEC_CEIL_SUB = bytes([10])
+TEX_LEVEL2 = bytes([18])
+TEX_INVISIBLE = bytes([17])
+
+# SectorFace ids (TombLib SectorFace)
+F_WALL_QA = {"+z": 0, "-z": 1, "-x": 2, "+x": 3}
+F_WALL_WS = {"+z": 15, "-z": 16, "-x": 17, "+x": 18}
+F_WALL_MIDDLE = {"+z": 10, "-z": 11, "-x": 12, "+x": 13}
+F_FLOOR, F_FLOOR_TRI2, F_CEILING, F_CEILING_TRI2 = 25, 26, 27, 28
 
 
 class Sector:
-    __slots__ = ("wall", "floor", "ceil", "fsplit", "csplit", "flags")
+    __slots__ = ("wall", "floor", "ceil", "fsplit", "csplit", "flags", "tex", "invisible")
 
     def __init__(self, floor=(0, 0, 0, 0), ceil=(3072, 3072, 3072, 3072), wall=False):
         self.wall = wall          # True = solid wall sector
@@ -97,6 +105,18 @@ class Sector:
         self.fsplit = False       # SplitDirectionIsXEqualsZ
         self.csplit = False
         self.flags = 0
+        self.tex = None           # {face: ((u,v) x4, texture_index)}
+        self.invisible = None     # set of faces
+
+    def set_tex(self, face, coords, texture=0):
+        if self.tex is None:
+            self.tex = {}
+        self.tex[face] = (coords, texture)
+
+    def set_invisible(self, face):
+        if self.invisible is None:
+            self.invisible = set()
+        self.invisible.add(face)
 
     def encode(self, index):
         out = bytearray(struct.pack("<i", index))
@@ -105,6 +125,16 @@ class Sector:
         out += chunk(SEC_CEIL, leb(1 if self.csplit else 0) + b"".join(leb(h) for h in self.ceil))
         out += chunk(SEC_FLOOR_SUB, leb(0))
         out += chunk(SEC_CEIL_SUB, leb(0))
+        if self.tex:
+            for face, (coords, texture) in self.tex.items():
+                us = [c[0] for c in coords]
+                vs = [c[1] for c in coords]
+                body = leb(face) + f32(*[v for c in coords for v in c])
+                body += f32(min(us), min(vs), max(us), max(vs)) + leb(0) + leb(texture)
+                out += chunk(TEX_LEVEL2, body)
+        if self.invisible:
+            for face in self.invisible:
+                out += c_int(TEX_INVISIBLE, face)
         out += END
         return chunk("TeS", bytes(out))
 
@@ -203,19 +233,35 @@ class Level:
         b += c_str("TeSkyTextureFilePath", "")
         b += c_str("TeTr5ExtraSpritesFilePath", "")
         b += chunk("TeOldWadSoundPaths", chunk("TeOldWadSoundUpdateTag1_0_8") + END)
-        b += c_str("TeGameDirectory", self.game_directory)
-        b += c_str("TeGameLevelFilePath", self.game_level_path)
-        b += c_str("TeGameExecutableFilePath", self.game_exe)
+        # Game paths and the Lua script are left to Tomb Editor defaults unless set.
+        if self.game_directory:
+            b += c_str("TeGameDirectory", self.game_directory)
+        if self.game_level_path:
+            b += c_str("TeGameLevelFilePath", self.game_level_path)
+        if self.game_exe:
+            b += c_str("TeGameExecutableFilePath", self.game_exe)
         b += c_int("TeGameVersion", GAME_TOMBENGINE)
         b += c_vec3("TeDefaultAmbientLight", self.ambient)
         b += c_int("TeSoundSystem", SOUND_SYSTEM_XML)
         b += c_int("TeLastRoom", 0)
-        b += c_str("TenLuaScriptFile", self.lua_script)
+        if self.lua_script:
+            b += c_str("TenLuaScriptFile", self.lua_script)
         wads = b"".join(chunk("TeWad", c_str("TePath", w) + END) for w in self.wads)
         b += chunk("TeWads", wads + END)
         b += chunk("TeSoundsCatalogs", END)
         b += chunk("TeSelectedSounds", END)
-        b += chunk("TeTextures", END)
+        texs = bytearray()
+        for i, t in enumerate(self.textures):
+            fs = t.get("footsteps")  # rows (y) of columns (x), 64 px cells
+            body = c_int("TeI", i) + c_str("TePath", t["path"]) + c_str("TeTextureCustomBumpmapPath", "")
+            body += c_bool("Te512C", False) + c_bool("TeMagentaR", True)
+            if fs:
+                h, w = len(fs), len(fs[0])
+                body += chunk("TeTextureSounds", struct.pack("<ii", w, h) + bytes(v for row in fs for v in row))
+                body += chunk("TeTextureBumpmaps", struct.pack("<ii", w, h) + bytes(w * h))
+            body += END
+            texs += chunk("TeLvlTexture", body)
+        b += chunk("TeTextures", bytes(texs) + END)
         b += chunk("TeImportedGeometries", END)
         b += chunk("TeAnimatedTextureSets", END)
         b += chunk("TeGlobalEventSets", END)

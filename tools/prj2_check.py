@@ -85,6 +85,18 @@ def check(path):
             def inner(c2, s2):
                 if c2 == b"TeOldWadSoundUpdateTag1_0_8":
                     return True
+                if c2 == b"TeLvlTexture":
+                    def lt(c3, s3):
+                        if c3 in (b"TeTextureSounds", b"TeTextureBumpmaps"):
+                            w, h = r.i32(), r.i32()
+                            r.raw(w * h)
+                            info["settings"]["texgrid"] = (w, h)
+                        else:
+                            r.raw(s3)
+                        return True
+                    r.chunks(lt, "TeLvlTexture")
+                    info["settings"]["textures"] = info["settings"].get("textures", 0) + 1
+                    return True
                 if c2 == b"TeWad":
                     r.chunks(lambda c3, s3: bool(r.raw(s3)) or True, "TeWad")
                     return True
@@ -116,6 +128,13 @@ def check(path):
                     room.setdefault("hmin", min(hs))
                     room["hmin"] = min(room["hmin"], min(hs))
                     room["hmax"] = max(room.get("hmax", -1 << 60), max(hs))
+                elif c4 == b"\x12":
+                    face = r.leb(); r.f(8); r.f(4); r.leb(); tex = r.leb()
+                    assert 0 <= face < 99 and tex >= 0, "bad texture face"
+                    room["textured"] = room.get("textured", 0) + 1
+                elif c4 == b"\x11":
+                    r.leb()
+                    room["invisible"] = room.get("invisible", 0) + 1
                 elif c4 in (b"\x09", b"\x0a"):
                     n = r.leb()
                     for _ in range(4 * n):
@@ -211,7 +230,9 @@ if __name__ == "__main__":
     info, errors = check(sys.argv[1])
     print("settings:", info["settings"])
     print("rooms:", len(info["rooms"]), "portals:", sum(len(r["portals"]) for r in info["rooms"]),
-          "objects:", sum(len(r["objects"]) for r in info["rooms"]))
+          "objects:", sum(len(r["objects"]) for r in info["rooms"]),
+          "textured faces:", sum(r.get("textured", 0) for r in info["rooms"]),
+          "invisible faces:", sum(r.get("invisible", 0) for r in info["rooms"]))
     for e in errors[:30]:
         print("ERROR:", e)
     print("OK" if not errors else "%d errors" % len(errors))
