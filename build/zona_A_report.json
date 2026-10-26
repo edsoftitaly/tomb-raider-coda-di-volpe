@@ -1,0 +1,5998 @@
+{
+ "report": {
+  "zone": "A",
+  "name": "Oliveri centro",
+  "sectors": [
+   330,
+   300
+  ],
+  "rooms": 110,
+  "size_m": [
+   660,
+   600
+  ],
+  "origin_3004": [
+   2524865.0,
+   4219217.0
+  ],
+  "buildings": 658,
+  "lara": {
+   "room": "A_06_06",
+   "local_sector": [
+    16.41,
+    12.01
+   ],
+   "floor_m": 2.56
+  },
+  "casa": "civico 1 sul bordo dell'edificio",
+  "bytes": 5612357
+ },
+ "buildings": [
+  {
+   "id": "way/165407492",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 12,
+   "ground_m": 30.75,
+   "roof_m": 40.25
+  },
+  {
+   "id": "way/165407494",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 4,
+   "ground_m": 28.0,
+   "roof_m": 37.5
+  },
+  {
+   "id": "way/165407495",
+   "tags": {
+    "abandoned": "yes",
+    "building": "yes"
+   },
+   "sectors": 46,
+   "ground_m": 19.62,
+   "roof_m": 29.12
+  },
+  {
+   "id": "way/165407496",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 8,
+   "ground_m": 33.88,
+   "roof_m": 43.38
+  },
+  {
+   "id": "way/165407498",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 12,
+   "ground_m": 29.0,
+   "roof_m": 38.5
+  },
+  {
+   "id": "way/165407499",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 7,
+   "ground_m": 31.12,
+   "roof_m": 40.62
+  },
+  {
+   "id": "way/165407500",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 55,
+   "ground_m": 34.25,
+   "roof_m": 43.75
+  },
+  {
+   "id": "way/165408274",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 48,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233654488",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 40,
+   "ground_m": 5.0,
+   "roof_m": 14.5
+  },
+  {
+   "id": "way/233654492",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 60,
+   "ground_m": 3.88,
+   "roof_m": 13.38
+  },
+  {
+   "id": "way/233654493",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 44,
+   "ground_m": 5.0,
+   "roof_m": 14.5
+  },
+  {
+   "id": "way/233654498",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 57,
+   "ground_m": 4.12,
+   "roof_m": 13.62
+  },
+  {
+   "id": "way/233654499",
+   "tags": {
+    "building": "yes",
+    "name": "Centro diurno"
+   },
+   "sectors": 83,
+   "ground_m": 5.0,
+   "roof_m": 14.5
+  },
+  {
+   "id": "way/233654502",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 103,
+   "ground_m": 4.88,
+   "roof_m": 14.38
+  },
+  {
+   "id": "way/233654508",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 28,
+   "ground_m": 4.75,
+   "roof_m": 14.25
+  },
+  {
+   "id": "way/233654510",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 7,
+   "ground_m": 3.88,
+   "roof_m": 13.38
+  },
+  {
+   "id": "way/233654511",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 26,
+   "ground_m": 3.88,
+   "roof_m": 13.38
+  },
+  {
+   "id": "way/233654515",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 1,
+   "ground_m": 3.75,
+   "roof_m": 13.25
+  },
+  {
+   "id": "way/233654517",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 26,
+   "ground_m": 4.25,
+   "roof_m": 13.75
+  },
+  {
+   "id": "way/233654526",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 12,
+   "ground_m": 4.75,
+   "roof_m": 14.25
+  },
+  {
+   "id": "way/233654527",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 11,
+   "ground_m": 4.0,
+   "roof_m": 13.5
+  },
+  {
+   "id": "way/233654536",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 19,
+   "ground_m": 4.25,
+   "roof_m": 13.75
+  },
+  {
+   "id": "way/233654540",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 40,
+   "ground_m": 4.88,
+   "roof_m": 14.38
+  },
+  {
+   "id": "way/233654562",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 16,
+   "ground_m": 4.38,
+   "roof_m": 13.88
+  },
+  {
+   "id": "way/233654566",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 37,
+   "ground_m": 5.5,
+   "roof_m": 15.0
+  },
+  {
+   "id": "way/233654567",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 22,
+   "ground_m": 3.75,
+   "roof_m": 13.25
+  },
+  {
+   "id": "way/233654575",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 22,
+   "ground_m": 3.88,
+   "roof_m": 13.38
+  },
+  {
+   "id": "way/233654587",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 41,
+   "ground_m": 4.0,
+   "roof_m": 13.5
+  },
+  {
+   "id": "way/233654588",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 14,
+   "ground_m": 3.88,
+   "roof_m": 13.38
+  },
+  {
+   "id": "way/233654598",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 18,
+   "ground_m": 5.5,
+   "roof_m": 15.0
+  },
+  {
+   "id": "way/233654606",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 41,
+   "ground_m": 4.88,
+   "roof_m": 14.38
+  },
+  {
+   "id": "way/233654613",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 41,
+   "ground_m": 5.25,
+   "roof_m": 14.75
+  },
+  {
+   "id": "way/233654615",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 18,
+   "ground_m": 4.12,
+   "roof_m": 13.62
+  },
+  {
+   "id": "way/233654621",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 36,
+   "ground_m": 4.5,
+   "roof_m": 14.0
+  },
+  {
+   "id": "way/233654624",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 38,
+   "ground_m": 5.0,
+   "roof_m": 14.5
+  },
+  {
+   "id": "way/233654625",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 31,
+   "ground_m": 4.62,
+   "roof_m": 14.12
+  },
+  {
+   "id": "way/233654626",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 29,
+   "ground_m": 4.88,
+   "roof_m": 14.38
+  },
+  {
+   "id": "way/233654628",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 36,
+   "ground_m": 4.75,
+   "roof_m": 14.25
+  },
+  {
+   "id": "way/233654632",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 15,
+   "ground_m": 4.5,
+   "roof_m": 14.0
+  },
+  {
+   "id": "way/233654637",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 55,
+   "ground_m": 4.75,
+   "roof_m": 14.25
+  },
+  {
+   "id": "way/233661139",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 40,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233661140",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 71,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233661141",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 48,
+   "ground_m": 3.38,
+   "roof_m": 12.88
+  },
+  {
+   "id": "way/233661143",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 67,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233661144",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 68,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233661145",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 28,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233661147",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 24,
+   "ground_m": 3.62,
+   "roof_m": 13.12
+  },
+  {
+   "id": "way/233661148",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 12,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233661150",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 6,
+   "ground_m": 3.75,
+   "roof_m": 13.25
+  },
+  {
+   "id": "way/233661151",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 37,
+   "ground_m": 3.38,
+   "roof_m": 12.88
+  },
+  {
+   "id": "way/233661152",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 9,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233661153",
+   "tags": {
+    "building": "apartments"
+   },
+   "sectors": 31,
+   "ground_m": 3.62,
+   "roof_m": 16.12
+  },
+  {
+   "id": "way/233661154",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 9,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233661155",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 56,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233661158",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 60,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233661159",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 12,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233661160",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 41,
+   "ground_m": 3.75,
+   "roof_m": 13.25
+  },
+  {
+   "id": "way/233661161",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 8,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233661162",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 41,
+   "ground_m": 3.75,
+   "roof_m": 13.25
+  },
+  {
+   "id": "way/233661163",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 69,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233661164",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 30,
+   "ground_m": 3.62,
+   "roof_m": 13.12
+  },
+  {
+   "id": "way/233661167",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 24,
+   "ground_m": 3.75,
+   "roof_m": 13.25
+  },
+  {
+   "id": "way/233661168",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 66,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233661169",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 21,
+   "ground_m": 3.75,
+   "roof_m": 13.25
+  },
+  {
+   "id": "way/233661170",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 37,
+   "ground_m": 3.75,
+   "roof_m": 13.25
+  },
+  {
+   "id": "way/233661171",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 15,
+   "ground_m": 4.38,
+   "roof_m": 13.88
+  },
+  {
+   "id": "way/233661172",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 10,
+   "ground_m": 3.5,
+   "roof_m": 13.0
+  },
+  {
+   "id": "way/233661173",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 24,
+   "ground_m": 3.75,
+   "roof_m": 13.25
+  },
+  {
+   "id": "way/233661174",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 106,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233661177",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 13,
+   "ground_m": 3.5,
+   "roof_m": 13.0
+  },
+  {
+   "id": "way/233661178",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 28,
+   "ground_m": 3.5,
+   "roof_m": 13.0
+  },
+  {
+   "id": "way/233661179",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 39,
+   "ground_m": 3.5,
+   "roof_m": 13.0
+  },
+  {
+   "id": "way/233661180",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 29,
+   "ground_m": 3.5,
+   "roof_m": 13.0
+  },
+  {
+   "id": "way/233661181",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 6,
+   "ground_m": 3.38,
+   "roof_m": 12.88
+  },
+  {
+   "id": "way/233661183",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 105,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233661184",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 11,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233661187",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 58,
+   "ground_m": 3.38,
+   "roof_m": 12.88
+  },
+  {
+   "id": "way/233661188",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 22,
+   "ground_m": 5.12,
+   "roof_m": 14.62
+  },
+  {
+   "id": "way/233661189",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 25,
+   "ground_m": 3.88,
+   "roof_m": 13.38
+  },
+  {
+   "id": "way/233661191",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 20,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233661192",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 20,
+   "ground_m": 3.75,
+   "roof_m": 13.25
+  },
+  {
+   "id": "way/233661194",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 34,
+   "ground_m": 3.5,
+   "roof_m": 13.0
+  },
+  {
+   "id": "way/233661195",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 24,
+   "ground_m": 3.75,
+   "roof_m": 13.25
+  },
+  {
+   "id": "way/233661197",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 44,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233661198",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 49,
+   "ground_m": 4.38,
+   "roof_m": 13.88
+  },
+  {
+   "id": "way/233661199",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 40,
+   "ground_m": 3.5,
+   "roof_m": 13.0
+  },
+  {
+   "id": "way/233661200",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 127,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233661202",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 34,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233661203",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 24,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233661204",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 49,
+   "ground_m": 5.88,
+   "roof_m": 15.38
+  },
+  {
+   "id": "way/233661205",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 5,
+   "ground_m": 3.38,
+   "roof_m": 12.88
+  },
+  {
+   "id": "way/233661206",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 9,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233661208",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 82,
+   "ground_m": 3.5,
+   "roof_m": 13.0
+  },
+  {
+   "id": "way/233661211",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 27,
+   "ground_m": 3.38,
+   "roof_m": 12.88
+  },
+  {
+   "id": "way/233661212",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 47,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233661214",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 11,
+   "ground_m": 3.5,
+   "roof_m": 13.0
+  },
+  {
+   "id": "way/233661215",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 32,
+   "ground_m": 3.5,
+   "roof_m": 13.0
+  },
+  {
+   "id": "way/233661216",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 38,
+   "ground_m": 3.62,
+   "roof_m": 13.12
+  },
+  {
+   "id": "way/233661217",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 20,
+   "ground_m": 3.5,
+   "roof_m": 13.0
+  },
+  {
+   "id": "way/233661218",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 16,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233661219",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 9,
+   "ground_m": 3.38,
+   "roof_m": 12.88
+  },
+  {
+   "id": "way/233661220",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 26,
+   "ground_m": 3.38,
+   "roof_m": 12.88
+  },
+  {
+   "id": "way/233661221",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 36,
+   "ground_m": 5.0,
+   "roof_m": 14.5
+  },
+  {
+   "id": "way/233661222",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 64,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233661223",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 29,
+   "ground_m": 3.5,
+   "roof_m": 13.0
+  },
+  {
+   "id": "way/233661224",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 1,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233661227",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 72,
+   "ground_m": 3.38,
+   "roof_m": 12.88
+  },
+  {
+   "id": "way/233661231",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 68,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233661232",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 37,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233661233",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 38,
+   "ground_m": 3.38,
+   "roof_m": 12.88
+  },
+  {
+   "id": "way/233661234",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 23,
+   "ground_m": 3.38,
+   "roof_m": 12.88
+  },
+  {
+   "id": "way/233661235",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 37,
+   "ground_m": 3.5,
+   "roof_m": 13.0
+  },
+  {
+   "id": "way/233661236",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 21,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233661239",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 20,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233661240",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 15,
+   "ground_m": 3.88,
+   "roof_m": 13.38
+  },
+  {
+   "id": "way/233661241",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 26,
+   "ground_m": 3.38,
+   "roof_m": 12.88
+  },
+  {
+   "id": "way/233661242",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 17,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233661243",
+   "tags": {
+    "building": "apartments"
+   },
+   "sectors": 21,
+   "ground_m": 3.0,
+   "roof_m": 15.5
+  },
+  {
+   "id": "way/233661244",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 23,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233661245",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 41,
+   "ground_m": 3.38,
+   "roof_m": 12.88
+  },
+  {
+   "id": "way/233661246",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 23,
+   "ground_m": 5.38,
+   "roof_m": 14.88
+  },
+  {
+   "id": "way/233661247",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 31,
+   "ground_m": 3.75,
+   "roof_m": 13.25
+  },
+  {
+   "id": "way/233661248",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 5,
+   "ground_m": 3.38,
+   "roof_m": 12.88
+  },
+  {
+   "id": "way/233661249",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 15,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233661250",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 36,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233661251",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 76,
+   "ground_m": 3.5,
+   "roof_m": 13.0
+  },
+  {
+   "id": "way/233661252",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 33,
+   "ground_m": 3.62,
+   "roof_m": 13.12
+  },
+  {
+   "id": "way/233661253",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 10,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233661254",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 36,
+   "ground_m": 5.25,
+   "roof_m": 14.75
+  },
+  {
+   "id": "way/233661256",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 10,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233661257",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 40,
+   "ground_m": 4.62,
+   "roof_m": 14.12
+  },
+  {
+   "id": "way/233661258",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 12,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233661259",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 34,
+   "ground_m": 4.75,
+   "roof_m": 14.25
+  },
+  {
+   "id": "way/233661260",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 25,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233661261",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 73,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233661263",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 13,
+   "ground_m": 4.62,
+   "roof_m": 14.12
+  },
+  {
+   "id": "way/233661264",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 70,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233661265",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 33,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233661266",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 20,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233661267",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 29,
+   "ground_m": 3.75,
+   "roof_m": 13.25
+  },
+  {
+   "id": "way/233661269",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 35,
+   "ground_m": 3.75,
+   "roof_m": 13.25
+  },
+  {
+   "id": "way/233661270",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 45,
+   "ground_m": 3.62,
+   "roof_m": 13.12
+  },
+  {
+   "id": "way/233661271",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 36,
+   "ground_m": 3.62,
+   "roof_m": 13.12
+  },
+  {
+   "id": "way/233661272",
+   "tags": {
+    "amenity": "place_of_worship",
+    "building": "church",
+    "denomination": "catholic",
+    "name": "San Giuseppe",
+    "religion": "christian",
+    "wheelchair": "no",
+    "wikidata": "Q120258179"
+   },
+   "sectors": 49,
+   "ground_m": 3.0,
+   "roof_m": 15.0
+  },
+  {
+   "id": "way/233661273",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 31,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233661274",
+   "tags": {
+    "building": "apartments"
+   },
+   "sectors": 49,
+   "ground_m": 3.88,
+   "roof_m": 16.38
+  },
+  {
+   "id": "way/233661275",
+   "tags": {
+    "building": "apartments"
+   },
+   "sectors": 66,
+   "ground_m": 4.25,
+   "roof_m": 16.75
+  },
+  {
+   "id": "way/233661276",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 51,
+   "ground_m": 4.5,
+   "roof_m": 14.0
+  },
+  {
+   "id": "way/233661277",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 49,
+   "ground_m": 3.38,
+   "roof_m": 12.88
+  },
+  {
+   "id": "way/233661278",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 33,
+   "ground_m": 3.5,
+   "roof_m": 13.0
+  },
+  {
+   "id": "way/233661279",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 37,
+   "ground_m": 3.5,
+   "roof_m": 13.0
+  },
+  {
+   "id": "way/233661280",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 36,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233661281",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 48,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233661282",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 26,
+   "ground_m": 3.75,
+   "roof_m": 13.25
+  },
+  {
+   "id": "way/233661283",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 43,
+   "ground_m": 3.38,
+   "roof_m": 12.88
+  },
+  {
+   "id": "way/233661284",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 72,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233661285",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 70,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233704719",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 9,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233704720",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 16,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233704721",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 6,
+   "ground_m": 3.88,
+   "roof_m": 13.38
+  },
+  {
+   "id": "way/233704723",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 9,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233704726",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 20,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233704727",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 20,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233704728",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 22,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233704729",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 11,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233704731",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 14,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233704732",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 20,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233704733",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 4,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233704734",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 20,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233704735",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 54,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233704736",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 8,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233704737",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 7,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233704738",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 10,
+   "ground_m": 3.88,
+   "roof_m": 13.38
+  },
+  {
+   "id": "way/233704739",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 30,
+   "ground_m": 3.75,
+   "roof_m": 13.25
+  },
+  {
+   "id": "way/233704742",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 8,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233704743",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 43,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233704744",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 7,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233704745",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 10,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233704746",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 13,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233704747",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 8,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233704748",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 20,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233704750",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 16,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233704752",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 11,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233704753",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 9,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233704755",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 17,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233704758",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 12,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233704764",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 21,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233704766",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 23,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233704769",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 25,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233704770",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 19,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233704772",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 11,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233704774",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 26,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233704775",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 13,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233704776",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 12,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233704778",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 8,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233704780",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 23,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233704782",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 38,
+   "ground_m": 3.38,
+   "roof_m": 12.88
+  },
+  {
+   "id": "way/233704783",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 23,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233704784",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 17,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233704786",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 17,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233704788",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 19,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233704789",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 20,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233704790",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 45,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233704793",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 15,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233704795",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 17,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233704797",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 4,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233704801",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 46,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233704802",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 21,
+   "ground_m": 3.75,
+   "roof_m": 13.25
+  },
+  {
+   "id": "way/233704803",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 48,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233704804",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 32,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233704805",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 12,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233704806",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 44,
+   "ground_m": 3.88,
+   "roof_m": 13.38
+  },
+  {
+   "id": "way/233704807",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 14,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233704809",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 13,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233704815",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 118,
+   "ground_m": 3.88,
+   "roof_m": 13.38
+  },
+  {
+   "id": "way/233734739",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 38,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233734741",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 29,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233734757",
+   "tags": {
+    "building": "yes",
+    "name": "Mercato Coperto"
+   },
+   "sectors": 349,
+   "ground_m": 3.88,
+   "roof_m": 13.38
+  },
+  {
+   "id": "way/233734761",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 65,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233734764",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 39,
+   "ground_m": 3.38,
+   "roof_m": 12.88
+  },
+  {
+   "id": "way/233734769",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 7,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233734770",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 7,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233734772",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 14,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233734777",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 8,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233734778",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 12,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233734779",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 14,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233734782",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 20,
+   "ground_m": 3.38,
+   "roof_m": 12.88
+  },
+  {
+   "id": "way/233734787",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 10,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233734788",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 10,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233734789",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 17,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233734790",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 9,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233734792",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 16,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233734795",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 4,
+   "ground_m": 2.38,
+   "roof_m": 11.88
+  },
+  {
+   "id": "way/233734798",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 16,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233734801",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 10,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233734802",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 8,
+   "ground_m": 3.75,
+   "roof_m": 13.25
+  },
+  {
+   "id": "way/233734809",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 14,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233734811",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 8,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233734821",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 22,
+   "ground_m": 3.38,
+   "roof_m": 12.88
+  },
+  {
+   "id": "way/233734822",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 9,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233734824",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 14,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233734828",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 4,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233734829",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 18,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233734830",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 16,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233734836",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 7,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233734837",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 10,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233734838",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 29,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233734840",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 17,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233734841",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 19,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233734843",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 9,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233734844",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 27,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233734849",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 26,
+   "ground_m": 3.62,
+   "roof_m": 13.12
+  },
+  {
+   "id": "way/233734850",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 20,
+   "ground_m": 3.38,
+   "roof_m": 12.88
+  },
+  {
+   "id": "way/233734851",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 23,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233734865",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 6,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233734866",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 18,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233734867",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 23,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233734869",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 20,
+   "ground_m": 3.38,
+   "roof_m": 12.88
+  },
+  {
+   "id": "way/233734874",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 21,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233734876",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 19,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233734877",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 19,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233734878",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 20,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233734882",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 15,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233734883",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 27,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233734891",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 54,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233734892",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 38,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233734896",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 34,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233734904",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 38,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233734905",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 17,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233734907",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 24,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233734908",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 18,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233734910",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 26,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233734914",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 19,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233734916",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 42,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233734919",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 41,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233736588",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 9,
+   "ground_m": 6.5,
+   "roof_m": 16.0
+  },
+  {
+   "id": "way/233736602",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 13,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233736603",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 15,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233736604",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 12,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233736605",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 14,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233736607",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 8,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233736609",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 19,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233736613",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 21,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233736616",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 28,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233736617",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 23,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233736619",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 16,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233736626",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 9,
+   "ground_m": 2.38,
+   "roof_m": 11.88
+  },
+  {
+   "id": "way/233736628",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 19,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233736629",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 13,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233736630",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 11,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233736631",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 4,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233736632",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 13,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233736633",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 28,
+   "ground_m": 2.38,
+   "roof_m": 11.88
+  },
+  {
+   "id": "way/233736634",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 11,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233736635",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 25,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233736636",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 36,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233736638",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 17,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233736641",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 29,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233736642",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 1,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233736643",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 17,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233736644",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 12,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233736647",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 32,
+   "ground_m": 4.0,
+   "roof_m": 13.5
+  },
+  {
+   "id": "way/233736649",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 13,
+   "ground_m": 2.38,
+   "roof_m": 11.88
+  },
+  {
+   "id": "way/233736651",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 33,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233736652",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 11,
+   "ground_m": 2.25,
+   "roof_m": 11.75
+  },
+  {
+   "id": "way/233736654",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 13,
+   "ground_m": 2.38,
+   "roof_m": 11.88
+  },
+  {
+   "id": "way/233736655",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 17,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233736656",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 12,
+   "ground_m": 2.25,
+   "roof_m": 11.75
+  },
+  {
+   "id": "way/233736657",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 23,
+   "ground_m": 5.0,
+   "roof_m": 14.5
+  },
+  {
+   "id": "way/233736658",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 17,
+   "ground_m": 2.25,
+   "roof_m": 11.75
+  },
+  {
+   "id": "way/233736659",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 25,
+   "ground_m": 2.38,
+   "roof_m": 11.88
+  },
+  {
+   "id": "way/233736660",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 15,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233736662",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 11,
+   "ground_m": 2.38,
+   "roof_m": 11.88
+  },
+  {
+   "id": "way/233736663",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 17,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233736665",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 31,
+   "ground_m": 2.38,
+   "roof_m": 11.88
+  },
+  {
+   "id": "way/233736666",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 25,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233736667",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 26,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233736674",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 82,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233736675",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 44,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233736677",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 35,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233736679",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 23,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233736680",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 24,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233736682",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 70,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233736683",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 21,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233740817",
+   "tags": {
+    "building": "civic"
+   },
+   "sectors": 115,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233740831",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 40,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233740832",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 23,
+   "ground_m": 4.38,
+   "roof_m": 13.88
+  },
+  {
+   "id": "way/233740833",
+   "tags": {
+    "building": "apartments"
+   },
+   "sectors": 102,
+   "ground_m": 9.25,
+   "roof_m": 21.75
+  },
+  {
+   "id": "way/233740834",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 58,
+   "ground_m": 4.5,
+   "roof_m": 14.0
+  },
+  {
+   "id": "way/233740835",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 108,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233740836",
+   "tags": {
+    "building": "house",
+    "building:levels": "1",
+    "roof:levels": "0"
+   },
+   "sectors": 14,
+   "ground_m": 3.62,
+   "roof_m": 7.83
+  },
+  {
+   "id": "way/233740837",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 8,
+   "ground_m": 3.5,
+   "roof_m": 13.0
+  },
+  {
+   "id": "way/233740838",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 16,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233740839",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 13,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233740840",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 9,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233740841",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 17,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233740842",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 16,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233740843",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 12,
+   "ground_m": 3.88,
+   "roof_m": 13.38
+  },
+  {
+   "id": "way/233740844",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 20,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233740845",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 18,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233740846",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 10,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233740847",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 19,
+   "ground_m": 2.38,
+   "roof_m": 11.88
+  },
+  {
+   "id": "way/233740848",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 11,
+   "ground_m": 2.38,
+   "roof_m": 11.88
+  },
+  {
+   "id": "way/233740849",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 29,
+   "ground_m": 5.0,
+   "roof_m": 14.5
+  },
+  {
+   "id": "way/233740850",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 29,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233740851",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 23,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233740852",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 13,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233740853",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 11,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233740854",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 15,
+   "ground_m": 3.88,
+   "roof_m": 13.38
+  },
+  {
+   "id": "way/233740855",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 12,
+   "ground_m": 2.38,
+   "roof_m": 11.88
+  },
+  {
+   "id": "way/233740856",
+   "tags": {
+    "building": "apartments"
+   },
+   "sectors": 17,
+   "ground_m": 3.12,
+   "roof_m": 15.62
+  },
+  {
+   "id": "way/233740858",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 14,
+   "ground_m": 2.25,
+   "roof_m": 11.75
+  },
+  {
+   "id": "way/233740859",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 6,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233740860",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 21,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233740861",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 12,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233740862",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 11,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233740863",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 10,
+   "ground_m": 5.38,
+   "roof_m": 14.88
+  },
+  {
+   "id": "way/233740864",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 14,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233740865",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 8,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233740866",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 26,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233740867",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 4,
+   "ground_m": 4.5,
+   "roof_m": 14.0
+  },
+  {
+   "id": "way/233740868",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 16,
+   "ground_m": 4.62,
+   "roof_m": 14.12
+  },
+  {
+   "id": "way/233740869",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 17,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233740870",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 9,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233740871",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 13,
+   "ground_m": 3.38,
+   "roof_m": 12.88
+  },
+  {
+   "id": "way/233740872",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 18,
+   "ground_m": 3.5,
+   "roof_m": 13.0
+  },
+  {
+   "id": "way/233740873",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 15,
+   "ground_m": 2.38,
+   "roof_m": 11.88
+  },
+  {
+   "id": "way/233740874",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 7,
+   "ground_m": 3.38,
+   "roof_m": 12.88
+  },
+  {
+   "id": "way/233740875",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 15,
+   "ground_m": 2.38,
+   "roof_m": 11.88
+  },
+  {
+   "id": "way/233740876",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 6,
+   "ground_m": 2.38,
+   "roof_m": 11.88
+  },
+  {
+   "id": "way/233740877",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 9,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233740878",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 3,
+   "ground_m": 4.88,
+   "roof_m": 14.38
+  },
+  {
+   "id": "way/233740879",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 31,
+   "ground_m": 3.38,
+   "roof_m": 12.88
+  },
+  {
+   "id": "way/233740880",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 13,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233740881",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 15,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233740882",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 5,
+   "ground_m": 5.38,
+   "roof_m": 14.88
+  },
+  {
+   "id": "way/233740883",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 14,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233740884",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 12,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233740885",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 12,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233740886",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 24,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233740887",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 27,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233740888",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 10,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233740889",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 11,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233740890",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 9,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233740891",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 18,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233740892",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 14,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233740893",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 18,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233740894",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 12,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233740895",
+   "tags": {
+    "building": "apartments"
+   },
+   "sectors": 20,
+   "ground_m": 4.0,
+   "roof_m": 16.5
+  },
+  {
+   "id": "way/233740896",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 42,
+   "ground_m": 5.0,
+   "roof_m": 14.5
+  },
+  {
+   "id": "way/233740897",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 18,
+   "ground_m": 2.25,
+   "roof_m": 11.75
+  },
+  {
+   "id": "way/233740898",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 11,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233740899",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 5,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233740900",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 20,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233740901",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 6,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233740902",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 7,
+   "ground_m": 5.0,
+   "roof_m": 14.5
+  },
+  {
+   "id": "way/233740903",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 14,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233740904",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 27,
+   "ground_m": 32.38,
+   "roof_m": 41.88
+  },
+  {
+   "id": "way/233740905",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 21,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233740906",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 16,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233740907",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 15,
+   "ground_m": 3.88,
+   "roof_m": 13.38
+  },
+  {
+   "id": "way/233740908",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 13,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233740909",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 15,
+   "ground_m": 3.75,
+   "roof_m": 13.25
+  },
+  {
+   "id": "way/233740910",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 15,
+   "ground_m": 2.38,
+   "roof_m": 11.88
+  },
+  {
+   "id": "way/233740911",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 19,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233740912",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 9,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233740913",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 12,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233740914",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 14,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233740915",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 16,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233740916",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 42,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233740917",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 10,
+   "ground_m": 2.38,
+   "roof_m": 11.88
+  },
+  {
+   "id": "way/233740918",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 8,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233740919",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 25,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233740920",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 3,
+   "ground_m": 5.38,
+   "roof_m": 14.88
+  },
+  {
+   "id": "way/233740921",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 12,
+   "ground_m": 3.5,
+   "roof_m": 13.0
+  },
+  {
+   "id": "way/233740922",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 16,
+   "ground_m": 2.38,
+   "roof_m": 11.88
+  },
+  {
+   "id": "way/233740923",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 13,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233740924",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 10,
+   "ground_m": 2.38,
+   "roof_m": 11.88
+  },
+  {
+   "id": "way/233740925",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 13,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233740926",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 10,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233740927",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 6,
+   "ground_m": 4.38,
+   "roof_m": 13.88
+  },
+  {
+   "id": "way/233740928",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 12,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233740929",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 17,
+   "ground_m": 3.5,
+   "roof_m": 13.0
+  },
+  {
+   "id": "way/233740930",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 14,
+   "ground_m": 5.0,
+   "roof_m": 14.5
+  },
+  {
+   "id": "way/233740931",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 11,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233740932",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 15,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233740933",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 11,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233740934",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 10,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233740935",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 11,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233740936",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 14,
+   "ground_m": 2.38,
+   "roof_m": 11.88
+  },
+  {
+   "id": "way/233740937",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 32,
+   "ground_m": 2.38,
+   "roof_m": 11.88
+  },
+  {
+   "id": "way/233740938",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 15,
+   "ground_m": 2.38,
+   "roof_m": 11.88
+  },
+  {
+   "id": "way/233740939",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 19,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233740940",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 13,
+   "ground_m": 4.38,
+   "roof_m": 13.88
+  },
+  {
+   "id": "way/233740941",
+   "tags": {
+    "building": "apartments"
+   },
+   "sectors": 63,
+   "ground_m": 5.5,
+   "roof_m": 18.0
+  },
+  {
+   "id": "way/233740942",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 7,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233740943",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 9,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233740944",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 21,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233740945",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 14,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233740946",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 7,
+   "ground_m": 4.5,
+   "roof_m": 14.0
+  },
+  {
+   "id": "way/233740947",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 26,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233740948",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 20,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233740949",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 29,
+   "ground_m": 4.38,
+   "roof_m": 13.88
+  },
+  {
+   "id": "way/233740950",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 10,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233740951",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 19,
+   "ground_m": 4.5,
+   "roof_m": 14.0
+  },
+  {
+   "id": "way/233740952",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 17,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233740953",
+   "tags": {
+    "building": "apartments"
+   },
+   "sectors": 24,
+   "ground_m": 3.62,
+   "roof_m": 16.12
+  },
+  {
+   "id": "way/233740954",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 8,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233740955",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 12,
+   "ground_m": 3.75,
+   "roof_m": 13.25
+  },
+  {
+   "id": "way/233740956",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 8,
+   "ground_m": 4.0,
+   "roof_m": 13.5
+  },
+  {
+   "id": "way/233740957",
+   "tags": {
+    "building": "apartments"
+   },
+   "sectors": 31,
+   "ground_m": 4.0,
+   "roof_m": 16.5
+  },
+  {
+   "id": "way/233740958",
+   "tags": {
+    "building": "apartments"
+   },
+   "sectors": 27,
+   "ground_m": 3.38,
+   "roof_m": 15.88
+  },
+  {
+   "id": "way/233740959",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 30,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233740960",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 35,
+   "ground_m": 4.25,
+   "roof_m": 13.75
+  },
+  {
+   "id": "way/233740961",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 10,
+   "ground_m": 4.0,
+   "roof_m": 13.5
+  },
+  {
+   "id": "way/233740962",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 37,
+   "ground_m": 5.0,
+   "roof_m": 14.5
+  },
+  {
+   "id": "way/233740963",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 60,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233740964",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 15,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233740965",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 17,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233740966",
+   "tags": {
+    "building": "apartments"
+   },
+   "sectors": 76,
+   "ground_m": 6.0,
+   "roof_m": 18.5
+  },
+  {
+   "id": "way/233740967",
+   "tags": {
+    "building": "apartments"
+   },
+   "sectors": 29,
+   "ground_m": 3.12,
+   "roof_m": 15.62
+  },
+  {
+   "id": "way/233740968",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 20,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233740969",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 41,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233740970",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 19,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233740971",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 15,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233740972",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 24,
+   "ground_m": 3.5,
+   "roof_m": 13.0
+  },
+  {
+   "id": "way/233740973",
+   "tags": {
+    "building": "apartments"
+   },
+   "sectors": 29,
+   "ground_m": 3.88,
+   "roof_m": 16.38
+  },
+  {
+   "id": "way/233740974",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 41,
+   "ground_m": 5.75,
+   "roof_m": 15.25
+  },
+  {
+   "id": "way/233740975",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 20,
+   "ground_m": 4.62,
+   "roof_m": 14.12
+  },
+  {
+   "id": "way/233740976",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 71,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233740977",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 28,
+   "ground_m": 3.75,
+   "roof_m": 13.25
+  },
+  {
+   "id": "way/233740978",
+   "tags": {
+    "building": "apartments"
+   },
+   "sectors": 39,
+   "ground_m": 4.0,
+   "roof_m": 16.5
+  },
+  {
+   "id": "way/233740979",
+   "tags": {
+    "building": "apartments"
+   },
+   "sectors": 48,
+   "ground_m": 5.5,
+   "roof_m": 18.0
+  },
+  {
+   "id": "way/233740980",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 34,
+   "ground_m": 4.88,
+   "roof_m": 14.38
+  },
+  {
+   "id": "way/233740981",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 35,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233740982",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 35,
+   "ground_m": 4.62,
+   "roof_m": 14.12
+  },
+  {
+   "id": "way/233740983",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 84,
+   "ground_m": 4.25,
+   "roof_m": 13.75
+  },
+  {
+   "id": "way/233746451",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 22,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233746452",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 24,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746456",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 40,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746462",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 23,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746465",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 8,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233746466",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 27,
+   "ground_m": 2.38,
+   "roof_m": 11.88
+  },
+  {
+   "id": "way/233746469",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 23,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233746470",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 14,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746472",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 15,
+   "ground_m": 2.25,
+   "roof_m": 11.75
+  },
+  {
+   "id": "way/233746473",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 22,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233746474",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 16,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233746475",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 36,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233746478",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 18,
+   "ground_m": 2.38,
+   "roof_m": 11.88
+  },
+  {
+   "id": "way/233746479",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 7,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746484",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 6,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233746485",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 14,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746486",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 34,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233746487",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 14,
+   "ground_m": 2.38,
+   "roof_m": 11.88
+  },
+  {
+   "id": "way/233746490",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 17,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746491",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 25,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233746492",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 21,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233746493",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 15,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746496",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 28,
+   "ground_m": 2.25,
+   "roof_m": 11.75
+  },
+  {
+   "id": "way/233746497",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 26,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233746499",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 27,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233746500",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 44,
+   "ground_m": 2.38,
+   "roof_m": 11.88
+  },
+  {
+   "id": "way/233746502",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 23,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233746504",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 21,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233746505",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 22,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746506",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 15,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233746508",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 7,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233746510",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 18,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233746512",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 5,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233746514",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 35,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233746516",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 27,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233746518",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 32,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233746519",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 9,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746520",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 28,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233746522",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 19,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746524",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 6,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746525",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 25,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233746528",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 21,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233746529",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 21,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233746530",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 21,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233746531",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 12,
+   "ground_m": 3.12,
+   "roof_m": 12.62
+  },
+  {
+   "id": "way/233746532",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 39,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746533",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 24,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233746536",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 21,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746537",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 16,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233746538",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 28,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746539",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 15,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746541",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 13,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233746542",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 13,
+   "ground_m": 2.25,
+   "roof_m": 11.75
+  },
+  {
+   "id": "way/233746544",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 17,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233746545",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 15,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233746546",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 14,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233746549",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 12,
+   "ground_m": 2.25,
+   "roof_m": 11.75
+  },
+  {
+   "id": "way/233746551",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 11,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233746552",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 10,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233746553",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 12,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233746555",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 13,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233746556",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 22,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746557",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 14,
+   "ground_m": 2.25,
+   "roof_m": 11.75
+  },
+  {
+   "id": "way/233746558",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 22,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233746559",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 16,
+   "ground_m": 2.25,
+   "roof_m": 11.75
+  },
+  {
+   "id": "way/233746560",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 52,
+   "ground_m": 2.12,
+   "roof_m": 11.62
+  },
+  {
+   "id": "way/233746561",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 11,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746563",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 16,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746564",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 21,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233746566",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 36,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233746568",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 8,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746569",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 11,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233746570",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 15,
+   "ground_m": 2.38,
+   "roof_m": 11.88
+  },
+  {
+   "id": "way/233746571",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 21,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233746573",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 11,
+   "ground_m": 2.25,
+   "roof_m": 11.75
+  },
+  {
+   "id": "way/233746574",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 23,
+   "ground_m": 3.62,
+   "roof_m": 13.12
+  },
+  {
+   "id": "way/233746575",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 10,
+   "ground_m": 3.62,
+   "roof_m": 13.12
+  },
+  {
+   "id": "way/233746577",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 6,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233746578",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 23,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746580",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 49,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233746583",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 32,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746586",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 24,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233746588",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 28,
+   "ground_m": 3.5,
+   "roof_m": 13.0
+  },
+  {
+   "id": "way/233746594",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 13,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746598",
+   "tags": {
+    "addr:city": "Oliveri",
+    "addr:postcode": "98060",
+    "addr:street": "Via Roma",
+    "amenity": "restaurant",
+    "building": "yes",
+    "cuisine": "italian",
+    "name": "L'Aragosta",
+    "phone": "+39 0941 313831",
+    "smoking": "no",
+    "website": "https://www.ristorantepizzerialaragosta.it/",
+    "wheelchair": "yes"
+   },
+   "sectors": 82,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233746600",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 12,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746602",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 32,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233746610",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 24,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233746612",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 9,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233746614",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 21,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233746619",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 19,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233746623",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 28,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233746625",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 23,
+   "ground_m": 3.38,
+   "roof_m": 12.88
+  },
+  {
+   "id": "way/233746627",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 23,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746630",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 26,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233746633",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 8,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233746635",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 20,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746638",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 8,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746639",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 16,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233746640",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 13,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233746644",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 21,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233746646",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 6,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233746653",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 28,
+   "ground_m": 2.25,
+   "roof_m": 11.75
+  },
+  {
+   "id": "way/233746654",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 26,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233746656",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 16,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233746658",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 34,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746659",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 46,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233746660",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 16,
+   "ground_m": 2.12,
+   "roof_m": 11.62
+  },
+  {
+   "id": "way/233746661",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 17,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746662",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 24,
+   "ground_m": 2.12,
+   "roof_m": 11.62
+  },
+  {
+   "id": "way/233746663",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 16,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233746665",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 10,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233746666",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 35,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233746667",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 28,
+   "ground_m": 2.38,
+   "roof_m": 11.88
+  },
+  {
+   "id": "way/233746668",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 23,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233746669",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 34,
+   "ground_m": 3.38,
+   "roof_m": 12.88
+  },
+  {
+   "id": "way/233746670",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 15,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233746671",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 31,
+   "ground_m": 3.75,
+   "roof_m": 13.25
+  },
+  {
+   "id": "way/233746672",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 14,
+   "ground_m": 2.25,
+   "roof_m": 11.75
+  },
+  {
+   "id": "way/233746673",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 22,
+   "ground_m": 2.38,
+   "roof_m": 11.88
+  },
+  {
+   "id": "way/233746675",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 44,
+   "ground_m": 3.75,
+   "roof_m": 13.25
+  },
+  {
+   "id": "way/233746677",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 9,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233746679",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 18,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746680",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 17,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233746681",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 12,
+   "ground_m": 2.25,
+   "roof_m": 11.75
+  },
+  {
+   "id": "way/233746682",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 28,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233746683",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 19,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233746684",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 24,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746685",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 38,
+   "ground_m": 3.5,
+   "roof_m": 13.0
+  },
+  {
+   "id": "way/233746686",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 29,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233746687",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 12,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233746689",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 23,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746690",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 38,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746692",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 24,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746693",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 12,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233746694",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 17,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746695",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 22,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233746696",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 12,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233746697",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 14,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746698",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 29,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233746699",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 28,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233746700",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 20,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233746701",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 17,
+   "ground_m": 2.25,
+   "roof_m": 11.75
+  },
+  {
+   "id": "way/233746703",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 19,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233746704",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 25,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233746705",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 30,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233746706",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 25,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233746709",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 13,
+   "ground_m": 3.5,
+   "roof_m": 13.0
+  },
+  {
+   "id": "way/233746710",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 18,
+   "ground_m": 2.38,
+   "roof_m": 11.88
+  },
+  {
+   "id": "way/233746711",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 25,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233746713",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 29,
+   "ground_m": 3.38,
+   "roof_m": 12.88
+  },
+  {
+   "id": "way/233746714",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 21,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746715",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 40,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233746717",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 28,
+   "ground_m": 2.25,
+   "roof_m": 11.75
+  },
+  {
+   "id": "way/233746718",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 35,
+   "ground_m": 2.88,
+   "roof_m": 12.38
+  },
+  {
+   "id": "way/233746721",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 32,
+   "ground_m": 2.25,
+   "roof_m": 11.75
+  },
+  {
+   "id": "way/233746722",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 26,
+   "ground_m": 3.38,
+   "roof_m": 12.88
+  },
+  {
+   "id": "way/233746723",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 24,
+   "ground_m": 3.5,
+   "roof_m": 13.0
+  },
+  {
+   "id": "way/233746725",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 28,
+   "ground_m": 3.38,
+   "roof_m": 12.88
+  },
+  {
+   "id": "way/233746726",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 33,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233746727",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 29,
+   "ground_m": 3.75,
+   "roof_m": 13.25
+  },
+  {
+   "id": "way/233746728",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 29,
+   "ground_m": 2.25,
+   "roof_m": 11.75
+  },
+  {
+   "id": "way/233746730",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 44,
+   "ground_m": 2.25,
+   "roof_m": 11.75
+  },
+  {
+   "id": "way/233746731",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 13,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746732",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 61,
+   "ground_m": 3.0,
+   "roof_m": 12.5
+  },
+  {
+   "id": "way/233746735",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 26,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746737",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 35,
+   "ground_m": 2.12,
+   "roof_m": 11.62
+  },
+  {
+   "id": "way/233746738",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 16,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/233746739",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 27,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746741",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 31,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746742",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 45,
+   "ground_m": 2.75,
+   "roof_m": 12.25
+  },
+  {
+   "id": "way/233746743",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 35,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746746",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 19,
+   "ground_m": 3.88,
+   "roof_m": 13.38
+  },
+  {
+   "id": "way/233746747",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 31,
+   "ground_m": 3.25,
+   "roof_m": 12.75
+  },
+  {
+   "id": "way/233746748",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 28,
+   "ground_m": 2.62,
+   "roof_m": 12.12
+  },
+  {
+   "id": "way/233746750",
+   "tags": {
+    "building": "yes"
+   },
+   "sectors": 32,
+   "ground_m": 2.5,
+   "roof_m": 12.0
+  },
+  {
+   "id": "way/283936579",
+   "tags": {
+    "addr:city": "Oliveri",
+    "addr:housenumber": "50",
+    "addr:postcode": "98060",
+    "addr:street": "Via Roma",
+    "amenity": "restaurant",
+    "building": "yes",
+    "cuisine": "italian",
+    "name": "La Ficarazza 2.0",
+    "phone": "+39 0941 314517",
+    "smoking": "no",
+    "wheelchair": "yes"
+   },
+   "sectors": 47,
+   "ground_m": 4.62,
+   "roof_m": 14.12
+  },
+  {
+   "id": "way/912987963",
+   "tags": {
+    "amenity": "place_of_worship",
+    "building": "yes",
+    "denomination": "catholic",
+    "name": "Chiesa della Natività",
+    "religion": "christian"
+   },
+   "sectors": 167,
+   "ground_m": 6.25,
+   "roof_m": 15.75
+  },
+  {
+   "id": "way/916838459",
+   "tags": {
+    "amenity": "restaurant",
+    "building": "yes",
+    "name": "Ristorante Donna roaa (Giardino interno)"
+   },
+   "sectors": 141,
+   "ground_m": 2.12,
+   "roof_m": 11.62
+  },
+  {
+   "id": "way/952168341",
+   "tags": {
+    "building": "yes",
+    "building:levels": "2",
+    "name": "Gaglio Vignaioli Winery Tasting"
+   },
+   "sectors": 6,
+   "ground_m": 3.0,
+   "roof_m": 10.4
+  },
+  {
+   "id": "relation",
+   "tags": {
+    "building": "yes",
+    "historic": "castle",
+    "name": "Castello di Oliveri",
+    "type": "multipolygon",
+    "wikidata": "Q20009107",
+    "wikipedia": "it:Castello di Oliveri"
+   },
+   "sectors": 300,
+   "ground_m": 40.38,
+   "roof_m": 48.38
+  }
+ ]
+}
