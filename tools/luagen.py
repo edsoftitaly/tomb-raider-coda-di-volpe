@@ -20,10 +20,17 @@ local function St()
 end
 CDV.St = St
 
+-- Riprese (trailer): Engine\Scripts\CdvRiprese.lua -> return { attivo = true, ciclo = false, solo = nil }
+local okRip, RIP = pcall(require, "CdvRiprese")
+if not okRip or type(RIP) ~= "table" then RIP = { attivo = false } end
+CDV.RIP = RIP
+CDV.SHOTS = 0      -- flyby sequences 1..SHOTS placed by tools/shots.py
+
 local msg = nil
 local msgTimer = 0
 
 function CDV.Say(text, seconds)
+    if RIP.attivo then return end
     if msg ~= nil then
         TEN.Strings.HideString(msg)
     end
@@ -135,8 +142,45 @@ function CDV.Secret(s) secrets[#secrets + 1] = s end
 -- loop function called every frame
 function CDV.Loop(f) loops[#loops + 1] = f end
 
+-- Full-screen video from Engine\FMV (mp4/mkv/mov/avi). A missing file only writes a warning in the log.
+function CDV.Video(name)
+    if RIP.attivo then return end
+    TEN.View.PlayVideo(name)
+end
+
+local rip = { t = 0, cur = 0, wait = 60 }
+local function RipreseTick()
+    if not RIP.attivo or CDV.SHOTS == 0 then return end
+    if TEN.View.GetCameraType() == TEN.View.CameraType.FLYBY then
+        rip.wait = 45
+        return
+    end
+    if rip.wait > 0 then
+        rip.wait = rip.wait - 1
+        return
+    end
+    local first = RIP.solo or 1
+    local last = RIP.solo or CDV.SHOTS
+    if rip.cur == 0 then
+        rip.cur = first
+    else
+        rip.cur = rip.cur + 1
+        if rip.cur > last then
+            if not RIP.ciclo then
+                rip.cur = last + 1
+                rip.wait = 1e9
+                return
+            end
+            rip.cur = first
+        end
+    end
+    TEN.View.PlayFlyby(rip.cur)
+end
+CDV.RipreseTick = RipreseTick
+
 function CDV.Tick()
     local S = St()
+    RipreseTick()
     TeleportStep()
     for _, z in ipairs(zones) do
         if not (z.once and S.done[z.id]) then
@@ -195,6 +239,7 @@ FOOTER = r'''
 if CDV_TEST ~= nil then CDV_TEST(CDV, zones, uses) end
 
 LevelFuncs.OnStart = function()
+    if CDV.VIDEO then CDV.Video(CDV.VIDEO) end
     if CDV.Start then CDV.Start() end
 end
 LevelFuncs.OnLoad = function() end
@@ -227,6 +272,8 @@ class LuaLevel:
         self.title = title
         self.key = key
         self.parts = []
+        self.video = None      # FMV played when the level starts (not on savegame load)
+        self.shots = 0         # flyby sequences for the riprese mode
 
     def add(self, code):
         self.parts.append(code.strip("\n"))
@@ -275,5 +322,10 @@ class LuaLevel:
     def text(self):
         head = "-- Coda di Volpe - %s (TombEngine level script)\n" % self.title
         head += "-- Va in C:\\CodaDiVolpe\\Engine\\Scripts\\Levels\\%s.lua (generato da tools/episode.py)\n" % self.key
+        data = []
+        if self.video:
+            data.append("CDV.VIDEO = %s" % lua_str(self.video))
+        if self.shots:
+            data.append("CDV.SHOTS = %d" % self.shots)
         return head + RUNTIME + "\n-- ----------------------------------------------------------------- level data\n\n" + \
-            "\n\n".join(self.parts) + "\n" + FOOTER
+            "\n\n".join((["\n".join(data)] if data else []) + self.parts) + "\n" + FOOTER

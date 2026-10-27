@@ -141,7 +141,8 @@ if t ~= nil then
     CDV.Flag("finale", t)
     if t == 200 then CDV.Say("All'alba, la lingua di sabbia di Marinello e' di nuovo li'. Come quando salvo' la bambina caduta dalla rupe.", 8) end
     if t == 470 then CDV.Say("Gli Astri dei Dioscuri restano a Tindari. Donna Villa tace. FINE - Coda di Volpe.", 8) end
-    if t == 740 then TEN.Flow.EndLevel() end
+    if t == 740 then CDV.Video("cdv_finale") end
+    if t == 750 then TEN.Flow.EndLevel() end
 end''')
     lua.secret(10, k.lua_pos(*sea.anchors["Y"], SEA_FLOOR + 2 * CLICK), r=1000, text="Tra le rovine sommerse: una Stella dei Dioscuri!")
     lua.secret(11, k.lua_pos(tx0 + 10, tz0 + 11, CLICK), r=900, text="Dietro l'altare: l'ultima Stella dei Dioscuri!")

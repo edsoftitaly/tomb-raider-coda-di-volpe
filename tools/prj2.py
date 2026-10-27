@@ -347,6 +347,17 @@ class Level:
         room.objects.append(enc)
         return oid0
 
+    def add_flyby(self, room, pos, seq, number, rot_y=0.0, rot_x=0.0, roll=0.0, speed=1.0, fov=80.0,
+                  flags=0, timer=0):
+        """Flyby camera (TeFly). pos is room-relative (Y up); rot_y 0 = +Z, rot_x > 0 looks up."""
+        room.meta.append(("flyby", seq, number))
+
+        def enc(oid=self._next_obj()):
+            body = leb(oid) + f32(*pos) + f32(rot_y % 360.0, max(-90.0, min(90.0, rot_x)), roll % 360.0)
+            body += leb(-1) + f32(max(0.0, speed), fov) + leb(flags) + leb(number) + leb(seq) + leb(timer)
+            return chunk("TeFly", body)
+        room.objects.append(enc)
+
     def add_static(self, room, type_id, pos, rot_y=0.0, scale=1.0, ocb=0, lua_name=""):
         oid0 = self._next_obj()
 

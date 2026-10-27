@@ -15,11 +15,15 @@ LEGGIMI = r"""TOMB RAIDER - CODA DI VOLPE  (episodio completo, 6 livelli, TombEn
 INSTALLAZIONE
 1. Estrai lo zip DENTRO C:\CodaDiVolpe e sovrascrivi tutto. Vengono aggiunti/sostituiti:
    - Levels\<livello>\<livello>.prj2 + textures   (i 6 livelli di Tomb Editor)
+   - Levels\Titolo\Titolo.prj2                      (nuovo title level: Capo Tindari sui Laghetti, diventa Data\title.ten)
+   - Engine\Scripts\CdvRiprese.lua                  (interruttore della modalita' riprese)
+   - Engine\FMV\LEGGIMI_VIDEO.txt                    (nomi dei video che il gioco cerca)
+   - Presentazione\                                  (readme inglese per TRLE.net e anteprime delle inquadrature)
    - Assets\Wads\CodaDiVolpe\*.wad2                 (nemici, porte, leve, oggetti: libreria ufficiale TombEngine/Resources)
    - Engine\Scripts\Gameflow.lua                     (6 livelli, nomi degli oggetti, 12 segreti)
    - Engine\Scripts\Levels\<livello>.lua             (logica di enigmi, nemici, messaggi, segreti, fine livello)
 2. Doppio clic su COMPILA_TUTTO.bat: lancia Tomb Editor (C:\Tomb Editor) in modalita' batch e compila
-   i sei livelli uno dopo l'altro in Engine\Data. Ci mette qualche minuto per livello.
+   i sei livelli + il titolo uno dopo l'altro in Engine\Data. Ci mette qualche minuto per livello.
    In alternativa: apri ogni .prj2 in Tomb Editor e premi F5.
 3. Avvia da TombIDE (Play) o con Engine\Bin\x64\TombEngine.exe. Dal menu: Nuova partita, oppure Selezione livello.
 
@@ -43,6 +47,14 @@ DECORAZIONI (CdV_Decorazioni.wad2, 46 statici, ID 100-145, texture procedurali)
 - Alberi, lampioni, veicoli e arredi hanno collisione; cespugli ed elicriso no (Lara ci passa attraverso).
 - Se il gioco rallenta, dimmelo e abbasso la densita' della vegetazione.
 
+PRESENTAZIONE E VIDEO
+- Modalita' riprese: in Engine\Scripts\CdvRiprese.lua metti attivo = true. In ogni livello partono da sole
+  le inquadrature (flyby 1, 2, 3...) senza messaggi e con Lara nascosta: le registri con OBS.
+  Le telecamere sono normali flyby di Tomb Editor: le puoi spostare e ritoccare (Speed, FOV) a mano.
+- Video: metti i file in Engine\FMV con i nomi di LEGGIMI_VIDEO.txt. Se manca un video il gioco va avanti.
+- Per la release: in Gameflow.lua CDV_RELEASE = true (niente fly cheat e selezione livello),
+  CDV_SCHERMATE = true quando hai le schermate di caricamento, CdvRiprese attivo = false.
+
 COSE DA GUARDARE PER PRIME IN GIOCO (non le ho potute provare nel motore)
 - Leve a pavimento (Saia, Basilica, Torre, cripta): si spingono da sud e si riportano indietro da nord.
 - Le casse sotto i buchi nei soffitti: salto + aggrappo per risalire (casa, cisterna, Saia, cripta, grotta).
@@ -62,8 +74,34 @@ def bat():
             "pause\r\n")
 
 
+RIPRESE = """-- Modalita' riprese di Coda di Volpe (per registrare trailer, intro e screenshot).
+-- attivo = true : all'inizio di ogni livello partono da sole le inquadrature (flyby 1, 2, 3...),
+--                 senza messaggi a schermo e senza video. Lara e' nascosta durante le inquadrature.
+-- ciclo  = true : finita l'ultima, ricomincia dalla prima.
+-- solo   = 2    : solo l'inquadratura numero 2 (nil = tutte).
+-- Ricordarsi di rimettere attivo = false prima di creare l'archivio per TRLE.net!
+return { attivo = false, ciclo = false, solo = nil }
+"""
+
+FMV = """Cartella dei video di Coda di Volpe (TombEngine li cerca qui: mp4, mkv, mov o avi).
+Se un file manca il gioco va avanti lo stesso (scrive solo un avviso nel log).
+
+cdv_intro.mp4         intro della storia, all'inizio di Oliveri (non quando si carica un salvataggio)
+cdv_02_lungomare.mp4  apertura del livello 2 (facoltativo)
+cdv_03_marinello.mp4  apertura del livello 3 (facoltativo)
+cdv_04_laghetti.mp4   apertura del livello 4 (facoltativo)
+cdv_05_tindari.mp4    apertura del livello 5 (facoltativo)
+cdv_06_sommersa.mp4   apertura del livello 6 (facoltativo)
+cdv_finale.mp4        finale, dopo l'ultimo messaggio della Citta' Sommersa, prima dei titoli del motore
+cdv_logo.mp4          logo all'avvio del gioco: si attiva in Gameflow.lua (CDV_LOGO)
+
+Il giocatore puo' saltare il video con il tasto Deselect o Look.
+Formato consigliato: H.264 + AAC, 1920x1080, 30 fps.
+"""
+
+
 def xml():
-    files = "\n".join("    <string>%s\\Levels\\%s\\%s.prj2</string>" % (PROJECT, k, k) for k in ORDER)
+    files = "\n".join("    <string>%s\\Levels\\%s\\%s.prj2</string>" % (PROJECT, k, k) for k in ORDER + ["Titolo"])
     return ('<?xml version="1.0" encoding="utf-8"?>\n'
             '<BatchCompileList xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" '
             'xmlns:xsd="http://www.w3.org/2001/XMLSchema">\n  <Files>\n%s\n  </Files>\n</BatchCompileList>\n' % files)
@@ -82,9 +120,21 @@ def main(out):
             for f in sorted(os.listdir(os.path.join(d, "textures"))):
                 z.write(os.path.join(d, "textures", f), "Levels/%s/textures/%s" % (k, f))
             z.write(os.path.join(d, k + ".lua"), "Engine/Scripts/Levels/%s.lua" % k)
+        d = os.path.join(B, "Titolo")
+        z.write(os.path.join(d, "Titolo.prj2"), "Levels/Titolo/Titolo.prj2")
+        for f in sorted(os.listdir(os.path.join(d, "textures"))):
+            z.write(os.path.join(d, "textures", f), "Levels/Titolo/textures/%s" % f)
         z.write(os.path.join(B, "Gameflow.lua"), "Engine/Scripts/Gameflow.lua")
+        z.writestr("Engine/Scripts/CdvRiprese.lua", RIPRESE.replace("\n", "\r\n"))
+        z.writestr("Engine/FMV/LEGGIMI_VIDEO.txt", FMV.replace("\n", "\r\n"))
+        pres = os.path.join(ROOT, "build", "presentazione")
+        if os.path.isdir(pres):
+            for f in sorted(os.listdir(pres)):
+                z.write(os.path.join(pres, f), "Presentazione/" + f)
         wd = os.path.join(ROOT, "assets", "wads")
         for f in sorted(os.listdir(wd)):
+            if f.endswith(".png"):
+                continue
             z.write(os.path.join(wd, f), "Assets/Wads/CodaDiVolpe/" + f)
         z.writestr("LEGGIMI.txt", LEGGIMI.replace("\n", "\r\n"))
         z.writestr("SOLUZIONE.txt", "\r\n".join(sol) + "\r\n")

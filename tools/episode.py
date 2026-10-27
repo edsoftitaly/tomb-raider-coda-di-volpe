@@ -35,9 +35,14 @@ LEVELS = {
     "Laghetti":  {"title": "I Laghetti", "box": (38.1388, 15.0474, 38.1456, 15.0562)},
     "Tindari":   {"title": "Tindari", "box": (38.1378, 15.0412, 38.1446, 15.0496)},
     "Sommersa":  {"title": "La Citta' Sommersa", "box": None},
+    "Titolo":    {"title": "Coda di Volpe", "box": (38.1378, 15.0412, 38.1446, 15.0496), "ten": "title.ten"},
 }
 ORDER = ["Oliveri", "Lungomare", "Marinello", "Laghetti", "Tindari", "Sommersa"]
 INDEX = {k: i + 1 for i, k in enumerate(ORDER)}   # Gameflow: 0 = title
+
+# Full-screen videos (Engine\FMV\<name>.mp4) played when a level starts; missing files are skipped by the engine.
+VIDEOS = {"Oliveri": "cdv_intro", "Lungomare": "cdv_02_lungomare", "Marinello": "cdv_03_marinello",
+          "Laghetti": "cdv_04_laghetti", "Tindari": "cdv_05_tindari", "Sommersa": "cdv_06_sommersa"}
 
 WADS = ["TombEngine.wad2"] + ["CodaDiVolpe\\%s.wad2" % w for w in (
     "CdV_Oggetti_A", "CdV_Oggetti_B", "TR4_Baddy1", "TR4_Baddy2", "TR2_Doberman", "TR1_Rat", "TR4_Bat",
@@ -134,7 +139,7 @@ def build_terrain_level(key, content):
                                [b["base_m"] for b in world.buildings])
 
     level = make_level()
-    level.use_tombide_ten(key + ".ten", wads=WADS)
+    level.use_tombide_ten(LEVELS[key].get("ten", key + ".ten"), wads=WADS)
     setup_textures(level, atlas_list)
     terrain, water = W.build_rooms(world, level, atlases, texer)
     print("%s: %dx%d sectors, %d terrain + %d water rooms (%.1fs)" % (
@@ -152,6 +157,8 @@ def save(ctx):
         f.write(ctx.lua.text())
     with open(os.path.join(out, ctx.key + ".names.json"), "w") as f:
         json.dump(ctx.kit.names, f, indent=0)
+    import shots
+    shots.save(ctx, out)
     if ctx.notes:
         with open(os.path.join(out, "soluzione.txt"), "w") as f:
             f.write("\n".join(ctx.notes) + "\n")
@@ -163,14 +170,26 @@ def save(ctx):
 GAMEFLOW_HEAD = """-- Coda di Volpe - Gameflow.lua (generato da tools/episode.py)
 -- Va in C:\\CodaDiVolpe\\Engine\\Scripts\\Gameflow.lua
 
+-- ============ IMPOSTAZIONI (cambiare solo queste tre righe) ============
+local CDV_RELEASE = false     -- true per la versione da pubblicare: niente fly cheat, niente selezione livello
+local CDV_SCHERMATE = false   -- true quando ci sono Screens\\cdv_oliveri.jpg ... cdv_sommersa.jpg (schermate di caricamento)
+local CDV_LOGO = nil          -- es. "FMV\\\\cdv_logo.mp4": video all'avvio del gioco, prima del titolo
+-- ======================================================================
+
 Flow.SetIntroImagePath("Screens\\\\intro.jpg")
+if CDV_LOGO then Flow.SetIntroVideoPath(CDV_LOGO) end
 Flow.SetTotalSecretCount(12)
 Flow.EnablePointFilter(false)
 Flow.EnableLoadSave(true)
-Flow.EnableFlyCheat(true)      -- comodo per i test: mettere false per la release
+Flow.EnableFlyCheat(not CDV_RELEASE)
 Flow.EnableLaraInTitle(false)
-Flow.EnableLevelSelect(true)
+Flow.EnableLevelSelect(not CDV_RELEASE)
 Flow.EnableMassPickup(true)
+
+local function Schermata(name)
+    if CDV_SCHERMATE then return "Screens\\\\cdv_" .. name .. ".jpg" end
+    return "Screens\\\\loading.png"
+end
 
 -- Nomi degli oggetti e dei livelli (si sommano a Strings.lua).
 TEN.Flow.SetStrings({
@@ -225,7 +244,7 @@ def write_gameflow(only=None):
 {k}.ambientTrack = "{track}"
 {k}.horizon1.enabled = {hz}
 {k}.levelFile = "Data\\\\{k}.ten"
-{k}.loadScreenFile = "Screens\\\\loading.png"
+{k}.loadScreenFile = Schermata("{lk}")
 {k}.farView = {far}
 {k}.objects = CdvObjects()
 """.format(k=k, lk=k.lower(), track=lf["track"], far=lf["far"], hz="false" if k == "Sommersa" else "true")
@@ -251,8 +270,11 @@ def build(key):
     else:
         ctx = build_terrain_level(key, content)
         content.build(ctx)
+        import shots
+        shots.place_level(ctx, key)
         import decorate
         decorate.decorate(ctx, **getattr(content, "DECOR", {}))
+    ctx.lua.video = VIDEOS.get(key)
     ctx.kit.finish_interiors()
     probs = K.validate(ctx.level, ctx.kit.names)
     for pr in probs:

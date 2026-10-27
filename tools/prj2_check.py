@@ -196,6 +196,9 @@ def check(path):
             elif c3 == b"TeStaTen2":
                 pos = r.f(3); r.f(4); r.leb(); t = r.u32(); r.f(3); r.i16(); r.ustr()
                 room["objects"].append(("static", t, pos))
+            elif c3 == b"TeFly":
+                pos = r.f(3); r.f(3); r.leb(); r.f(2); fl = r.leb(); num = r.leb(); seq = r.leb(); r.leb()
+                room["objects"].append(("flyby", seq, num, pos, fl))
             elif c3 == b"TeLig5":
                 t = r.leb(); pos = r.f(3); r.f(3); r.f(3); r.f(4); r.raw(7)
                 room["objects"].append(("light", t, pos))

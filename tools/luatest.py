@@ -29,6 +29,10 @@ TEN.Strings.HideString = function() end
 TEN.Util.PercentToScreen = function() return 0, 0 end
 TEN.View.FadeOut = function() end
 TEN.View.FadeIn = function() end
+TEN.View.CameraType = { NORMAL = 0, FLYBY = 4 }
+TEN.View.GetCameraType = function() return 0 end
+TEN.View.PlayFlyby = function(n) CDV_LOG_FLYBY = n end
+TEN.View.PlayVideo = function(name) CDV_LOG_VIDEO = name end
 TEN.Flow.EndLevel = function(i, p) log("end", tostring(i) .. ":" .. tostring(p)) end
 TEN.Flow.AddSecret = function(i) log("secret", tostring(i)) end
 TEN.Sound.PlaySound = function() end
@@ -81,8 +85,10 @@ return H
 
 
 class Harness:
-    def __init__(self, script_path, names):
+    def __init__(self, script_path, names, preload=None):
         self.lua = lupa.LuaRuntime(unpack_returned_tuples=True)
+        for mod, code in (preload or {}).items():
+            self.lua.execute("package.preload[%r] = function() %s end" % (mod, code))
         self.events = []
         tbl = self.lua.table_from({n: True for n in names})
         self.H = self.lua.execute(MOCK, tbl, lambda kind, val: self.events.append((kind, val)))
