@@ -2,17 +2,23 @@
 <script type="module">
 import * as THREE from './three.module.min.js';
 const W=1280,H=720;
+const q=new URLSearchParams(location.search);
 const r=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});r.setSize(W,H);document.body.appendChild(r.domElement);
-const scene=new THREE.Scene();scene.background=new THREE.Color(0x9cc4e4);scene.fog=new THREE.Fog(0x9cc4e4,150,700);
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x9cc4e4);scene.fog=new THREE.Fog(0x9cc4e4,150,900);
 const m=await (await fetch('mesh.json')).json();
 const g=new THREE.BufferGeometry();
+const tix=m.tix||[];
 const p=new Float32Array(m.pos.length);for(let i=0;i<m.pos.length;i+=3){p[i]=m.pos[i];p[i+1]=m.pos[i+1];p[i+2]=-m.pos[i+2];}
-const uv=new Float32Array(m.uv.length);for(let i=0;i<m.uv.length;i+=2){uv[i]=m.uv[i]/2048;uv[i+1]=1-m.uv[i+1]/2048;}
+const uv=new Float32Array(m.uv.length);for(let i=0;i<m.uv.length;i+=2){uv[i]=m.uv[i];uv[i+1]=1-m.uv[i+1];}
 g.setAttribute('position',new THREE.BufferAttribute(p,3));g.setAttribute('uv',new THREE.BufferAttribute(uv,2));g.computeVertexNormals();
-const tex=await new THREE.TextureLoader().loadAsync('coda_atlas.png');tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=8;
-scene.add(new THREE.Mesh(g,new THREE.MeshLambertMaterial({map:tex,side:THREE.DoubleSide})));
+let start=0;for(let i=1;i<=tix.length;i++){if(i==tix.length||tix[i]!=tix[start]){g.addGroup(start*3,(i-start)*3,tix[start]||0);start=i;}}
+const mats=[];
+for(const f of ['coda_atlas.png','coda_atlas2.png','coda_atlas3.png']){const t=await new THREE.TextureLoader().loadAsync(f);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=8;mats.push(new THREE.MeshLambertMaterial({map:t,side:THREE.DoubleSide}));}
+if(q.get('sea')!=='0'){const water=new THREE.Mesh(new THREE.PlaneGeometry(4000,4000),new THREE.MeshLambertMaterial({color:0x2a7fa8,transparent:true,opacity:0.55}));water.rotation.x=-Math.PI/2;water.position.y=0.0;scene.add(water);}
+scene.add(new THREE.Mesh(g,mats));
 scene.add(new THREE.HemisphereLight(0xffffff,0x887766,1.6));const sun=new THREE.DirectionalLight(0xfff2dd,1.4);sun.position.set(-200,300,150);scene.add(sun);
-const L=m.lara; const lara=new THREE.Mesh(new THREE.CylinderGeometry(0.25,0.25,1.7,12),new THREE.MeshLambertMaterial({color:0x2a6fb0}));lara.position.set(L[0],L[1]+0.85,-L[2]);scene.add(lara);
+for(const o of (m.objects||[])){const c=new THREE.Mesh(new THREE.BoxGeometry(0.6,1.2,0.6),new THREE.MeshLambertMaterial({color:o[3]||0xff3030}));c.position.set(o[0],o[1]+0.6,-o[2]);scene.add(c);}
+const L=m.lara; if(L){const lara=new THREE.Mesh(new THREE.CylinderGeometry(0.25,0.25,1.7,12),new THREE.MeshLambertMaterial({color:0x2a6fb0}));lara.position.set(L[0],L[1]+0.85,-L[2]);scene.add(lara);}
 const cam=new THREE.PerspectiveCamera(70,W/H,0.1,2000);
 window.view=(ex,ey,ez,tx,ty,tz)=>{cam.position.set(ex,ey,-ez);cam.lookAt(tx,ty,-tz);r.render(scene,cam);return true;};
 window.L=L;window.ready=true;

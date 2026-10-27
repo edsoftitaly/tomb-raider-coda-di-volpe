@@ -172,9 +172,27 @@ if __name__ == "__main__":
     rooms, objects = read_rooms(sys.argv[1])
     pos, uv, tix = build_mesh(rooms, sys.argv[3:])
     lara = None
+    marks = []
+    keep = set(sys.argv[3:])
+    import kit
     for ob in objects:
+        if keep and not any(ob["room"]["name"].startswith(p) for p in keep):
+            continue
         rx, ry, rz = ob["room"]["pos"]
         p = ob["pos"]
-        lara = [(rx * 1024 + p[0]) / 512.0, (ry + p[1]) / 512.0, (rz * 1024 + p[2]) / 512.0, ob["rot"]]
-    json.dump({"pos": pos, "uv": uv, "tix": tix, "lara": lara}, open(sys.argv[2], "w"))
+        w = [(rx * 1024 + p[0]) / 512.0, (ry + p[1]) / 512.0, (rz * 1024 + p[2]) / 512.0]
+        t = ob["type"]
+        if t == 0:
+            lara = w + [ob["rot"]]
+            continue
+        color = 0xff2020 if t in kit.ENEMIES else 0xffd020 if (950 <= t <= 990 or 500 <= t < 520) else \
+            0x20e020 if 800 <= t < 830 else 0xffffff
+        marks.append(w + [color])
+    sizes = [2048.0, 2048.0, 1024.0]
+    for i, t in enumerate(tix):
+        for k in range(3):
+            j = (i * 3 + k) * 2
+            uv[j] /= sizes[t] if t < len(sizes) else 2048.0
+            uv[j + 1] /= sizes[t] if t < len(sizes) else 2048.0
+    json.dump({"pos": pos, "uv": uv, "tix": tix, "lara": lara, "objects": marks}, open(sys.argv[2], "w"))
     print("triangles", len(pos) // 9, "lara", lara)

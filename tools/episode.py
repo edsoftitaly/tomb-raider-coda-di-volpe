@@ -1,8 +1,11 @@
 """Coda di Volpe episode: six TombEngine levels, each a real-scale piece of the map (< 800 m).
 
 Usage: python3 episode.py [level ...]      (default: all)
-Each level is written to build/levels/<Name>/<Name>.prj2 with its textures folder.
-Level content (interiors, objects, triggers, Lua) lives in content_<name>.py modules.
+Each level is written to build/levels/<Name>/<Name>.prj2 with its textures and Lua script.
+Level content (interiors, objects, triggers, Lua) lives in content_<name>.py modules:
+  prepare(world)  optional, edits terrain arrays before rooms are built (paths, gates, holes)
+  build(ctx)      adds rooms, objects, triggers and the level script
+  build_standalone(ctx) for levels without terrain (Sommersa)
 """
 import importlib
 import json
@@ -14,6 +17,8 @@ import time
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(__file__))
+import kit as K  # noqa: E402
+import luagen  # noqa: E402
 import prj2  # noqa: E402
 import texturing  # noqa: E402
 import walls  # noqa: E402
@@ -28,10 +33,28 @@ LEVELS = {
     "Lungomare": {"title": "Il Lungomare", "box": (38.1272, 15.0508, 38.1340, 15.0590)},
     "Marinello": {"title": "Marinello", "box": (38.1336, 15.0482, 38.1404, 15.0566)},
     "Laghetti":  {"title": "I Laghetti", "box": (38.1388, 15.0474, 38.1456, 15.0562)},
-    "Tindari":   {"title": "Tindari", "box": (38.1370, 15.0418, 38.1438, 15.0502)},
+    "Tindari":   {"title": "Tindari", "box": (38.1378, 15.0412, 38.1446, 15.0496)},
     "Sommersa":  {"title": "La Citta' Sommersa", "box": None},
 }
 ORDER = ["Oliveri", "Lungomare", "Marinello", "Laghetti", "Tindari", "Sommersa"]
+INDEX = {k: i + 1 for i, k in enumerate(ORDER)}   # Gameflow: 0 = title
+
+WADS = ["TombEngine.wad2"] + ["CodaDiVolpe\\%s.wad2" % w for w in (
+    "CdV_Oggetti_A", "CdV_Oggetti_B", "TR4_Baddy1", "TR4_Baddy2", "TR2_Doberman", "TR1_Rat", "TR4_Bat",
+    "TEN_Wraith", "TR5_Lagoon_Witch", "TR2_Shark", "TR4_Skeleton", "TR4_Doors", "TR5_Floor_Trapdoor",
+    "TR4_Lever_Switch", "TR4_Rolling_Ball", "TR1_Teeth_Spikes", "TEN_Fish_Emitter", "TEN_Firefly")]
+
+# Puzzle items: slot -> (Strings key, Italian name). Same slots in every level (inventory carries over).
+ITEMS = {
+    1: ("cdv_diario", "Diario bizantino"),
+    2: ("cdv_chiave_terrazza", "Chiave della terrazza"),
+    3: ("cdv_mappa_maree", "Mappa delle maree"),
+    4: ("cdv_chiave_casello", "Chiave del Casello"),
+    5: ("cdv_conchiglia", "Conchiglia del canto"),
+    6: ("cdv_sigillo", "Sigillo della tonnara"),
+    7: ("cdv_astro_castore", "Astro di Castore"),
+    8: ("cdv_astro_polluce", "Astro di Polluce"),
+}
 
 
 class Ctx:
@@ -44,40 +67,59 @@ class Ctx:
         self.atlases = atlases
         self.terrain = terrain
         self.water = water
-        self.lua = []          # extra Lua lines for the level script
-        self.notes = []        # walkthrough notes
+        self.kit = K.Kit(self)
+        self.lua = luagen.LuaLevel(LEVELS[key]["title"], key)
+        self.notes = []        # walkthrough lines
 
-    # Coordinates
     def sector(self, lat, lon):
-        return self.world.sector_of(lat, lon)
+        x, z = self.world.sector_of(lat, lon)
+        return int(x), int(z)
 
     def ground(self, wx, wz):
         """Terrain floor (units, absolute) at world sector (wx, wz)."""
         return int(self.world.floor[int(wx), int(wz)].mean())
 
     def terrain_room_at(self, wx, wz):
-        i, j = int(wx // W.N), int(wz // W.N)
+        i, j = (int(wx) - 1) // W.N, (int(wz) - 1) // W.N
         if (i, j) in self.terrain:
             return self.terrain[i, j]
         raise KeyError("no terrain room at %s" % ((wx, wz),))
 
-    def local(self, room, wx, wz, y_abs):
-        return ((wx - room.x) * 1024.0, float(y_abs - room.y), (wz - room.z) * 1024.0)
+    def water_room_at(self, wx, wz):
+        i, j = (int(wx) - 1) // W.N, (int(wz) - 1) // W.N
+        return self.water.get((i, j))
 
 
-def build_terrain_level(key):
+def make_level():
+    level = prj2.Level()
+    level.ambient = (0.6, 0.6, 0.6)
+    return level
+
+
+def load_atlases():
+    out = []
+    for name in ("coda_atlas", "coda_atlas2", "coda_atlas3"):
+        out.append(json.load(open(os.path.join(ROOT, "build", "textures", name + ".json"))))
+    return out
+
+
+def setup_textures(level, atlas_list):
+    for i, a in enumerate(atlas_list):
+        level.textures.append({"path": "$(LevelDirectory)\\textures\\coda_atlas%s.png" % ("" if i == 0 else str(i + 1)),
+                               "footsteps": a["footsteps_64px"]})
+
+
+def build_terrain_level(key, content):
     t0 = time.time()
     la0, lo0, la1, lo1 = LEVELS[key]["box"]
-    zones = {key: [(la0, lo0), (la0, lo1), (la1, lo1), (la1, lo0)]}
-    world = W.World(zones)
+    world = W.World({key: [(la0, lo0), (la0, lo1), (la1, lo1), (la1, lo0)]})
     world.build_terrain()
     world.build_materials()
+    if content is not None and hasattr(content, "prepare"):
+        content.prepare(world)
 
-    atlas1 = json.load(open(os.path.join(ROOT, "build", "textures", "coda_atlas.json")))
-    atlas2 = json.load(open(os.path.join(ROOT, "build", "textures", "coda_atlas2.json")))
-    atlas3 = json.load(open(os.path.join(ROOT, "build", "textures", "coda_atlas3.json")))
-    atlases = walls.Atlases([atlas1, atlas2, atlas3])
-
+    atlas_list = load_atlases()
+    atlases = walls.Atlases(atlas_list)
     casa = (38.1241474, 15.0599826)
     hx, hz = world.sector_of(*casa)
     casa_id = None
@@ -87,44 +129,16 @@ def build_terrain_level(key):
         casa_id = int(world.building_id[bi[k], bj[k]])
     world.casa_id = casa_id
     styles = texturing.building_styles(world.buildings, casa_id)
-    texer = texturing.Texturer(atlas1, world.floor, world.mat, world.building_id, styles,
+    texer = texturing.Texturer(atlas_list[0], world.floor, world.mat, world.building_id, styles,
                                [b["base_m"] for b in world.buildings])
 
-    level = prj2.Level()
-    level.use_tombide_ten(key + ".ten")
-    level.ambient = (0.6, 0.6, 0.6)
-    for i, a in enumerate((atlas1, atlas2, atlas3)):
-        level.textures.append({"path": "$(LevelDirectory)\\textures\\coda_atlas%s.png" % ("" if i == 0 else str(i + 1)),
-                               "footsteps": a["footsteps_64px"]})
+    level = make_level()
+    level.use_tombide_ten(key + ".ten", wads=WADS)
+    setup_textures(level, atlas_list)
     terrain, water = W.build_rooms(world, level, atlases, texer)
     print("%s: %dx%d sectors, %d terrain + %d water rooms (%.1fs)" % (
         key, world.nx, world.nz, len(terrain), len(water), time.time() - t0))
     return Ctx(key, world, level, atlases, terrain, water)
-
-
-def default_start(ctx):
-    """Lara on dry land near the middle of the level (for terrain tests)."""
-    w = ctx.world
-    cx, cz = w.nx // 2, w.nz // 2
-    best = None
-    for r in range(0, max(w.nx, w.nz)):
-        for wx in range(max(1, cx - r), min(w.nx - 1, cx + r + 1)):
-            for wz in (cz - r, cz + r):
-                if 1 <= wz < w.nz - 1 and not w.water[wx, wz] and w.building_id[wx, wz] < 0 and w.zone_mask[wx, wz]:
-                    try:
-                        ctx.terrain_room_at(wx, wz)
-                    except KeyError:
-                        continue
-                    best = (wx, wz)
-                    break
-            if best:
-                break
-        if best:
-            break
-    wx, wz = best
-    room = ctx.terrain_room_at(wx, wz)
-    room.no_path = False  # at least one room with pathfinding boxes
-    ctx.level.add_moveable(room, 0, ctx.local(room, wx + 0.5, wz + 0.5, ctx.ground(wx, wz)), lua_name="lara_start")
 
 
 def save(ctx):
@@ -133,58 +147,41 @@ def save(ctx):
     for f in ("coda_atlas.png", "coda_atlas2.png", "coda_atlas3.png"):
         shutil.copy(os.path.join(ROOT, "build", "textures", f), os.path.join(out, "textures", f))
     size = ctx.level.save(os.path.join(out, ctx.key + ".prj2"))
-    write_lua(ctx, out)
-    print("%s saved: %.1f MB, %d rooms" % (ctx.key, size / 1e6, len(ctx.level.rooms)))
+    with open(os.path.join(out, ctx.key + ".lua"), "w", newline="\r\n") as f:
+        f.write(ctx.lua.text())
+    with open(os.path.join(out, ctx.key + ".names.json"), "w") as f:
+        json.dump(ctx.kit.names, f, indent=0)
+    if ctx.notes:
+        with open(os.path.join(out, "soluzione.txt"), "w") as f:
+            f.write("\n".join(ctx.notes) + "\n")
+    print("%s saved: %.1f MB, %d rooms, pathfinding in %d rooms" % (
+        ctx.key, size / 1e6, len(ctx.level.rooms), sum(1 for r in ctx.level.rooms if not r.no_path)))
     return size
 
 
-LUA_TEMPLATE = """-- Coda di Volpe - script del livello {title} (TombEngine).
--- Va in C:\\CodaDiVolpe\\Engine\\Scripts\\Levels\\{key}.lua  (generato da tools/episode.py)
-
-{body}
-
--- Called when entering a level, either after leveljump, new game or loading game
-LevelFuncs.OnStart = function()
-{on_start}
-end
-
--- Called after loading from a save
-LevelFuncs.OnLoad = function() end
-
--- Called after saving game
-LevelFuncs.OnSave = function() end
-
--- Called on every frame of the game
-LevelFuncs.OnLoop = function()
-{on_loop}
-end
-
--- Called when level is ended, either after leveljump, quitting to title or loading game
-LevelFuncs.OnEnd = function() end
-"""
-
-
-def write_lua(ctx, out):
-    lua = getattr(ctx, "lua_parts", {})
-    text = LUA_TEMPLATE.format(title=LEVELS[ctx.key]["title"], key=ctx.key,
-                               body="\n".join(ctx.lua) if ctx.lua else "-- (nessuna logica extra)",
-                               on_start="\n".join(lua.get("start", [])),
-                               on_loop="\n".join(lua.get("loop", [])))
-    with open(os.path.join(out, ctx.key + ".lua"), "w", newline="\r\n") as f:
-        f.write(text)
-
-
 GAMEFLOW_HEAD = """-- Coda di Volpe - Gameflow.lua (generato da tools/episode.py)
--- Va in C:\\CodaDiVolpe\\Engine\\Scripts\\Gameflow.lua
+-- Va in C:\\\\CodaDiVolpe\\\\Engine\\\\Scripts\\\\Gameflow.lua
 
 Flow.SetIntroImagePath("Screens\\\\intro.jpg")
 Flow.SetTotalSecretCount(12)
 Flow.EnablePointFilter(false)
 Flow.EnableLoadSave(true)
-Flow.EnableFlyCheat(true)      -- sviluppo: da disattivare per la release
+Flow.EnableFlyCheat(false)
 Flow.EnableLaraInTitle(false)
-Flow.EnableLevelSelect(true)   -- sviluppo: comodo per provare i singoli livelli
+Flow.EnableLevelSelect(true)
 Flow.EnableMassPickup(true)
+
+-- Nomi degli oggetti e dei livelli (si sommano a Strings.lua).
+TEN.Flow.SetStrings({
+%s
+})
+
+local function CdvObjects()
+    local Rot, Axis, Act, ID = TEN.Rotation, TEN.Flow.RotationAxis, TEN.Flow.ItemAction, TEN.Objects.ObjID
+    return {
+%s
+    }
+end
 
 --------------------------------------------------
 
@@ -196,47 +193,68 @@ title.loadScreenFile = "Screens\\\\main.png"
 Flow.AddLevel(title)
 """
 
+LEVEL_FLOW = {
+    "Oliveri": {"track": "108", "fog": None, "far": 96},
+    "Lungomare": {"track": "108", "fog": None, "far": 128},
+    "Marinello": {"track": "108", "fog": None, "far": 128},
+    "Laghetti": {"track": "108", "fog": None, "far": 128},
+    "Tindari": {"track": "108", "fog": None, "far": 160},
+    "Sommersa": {"track": "108", "fog": (20, 60, 70, 6, 24), "far": 40},
+}
+
 
 def write_gameflow(only=None):
-    parts = [GAMEFLOW_HEAD]
+    strings = ["    %s = { %s }," % (k, luagen.lua_str(name)) for k, name in ITEMS.values()]
+    strings += ["    cdv_level_%s = { %s }," % (k.lower(), luagen.lua_str(LEVELS[k]["title"])) for k in ORDER]
+    objs = ["        TEN.Flow.InventoryItem(%s, ID.PUZZLE_ITEM%d, 0, 0.5, Rot(0, 0, 0), Axis.Y, -1, Act.USE)," % (
+        luagen.lua_str(k), i) for i, (k, _) in ITEMS.items()]
+    parts = [GAMEFLOW_HEAD % ("\n".join(strings), "\n".join(objs))]
     for k in ORDER:
         if only is not None and k not in only:
             continue
         if not os.path.exists(os.path.join(OUT, k, k + ".prj2")):
             continue  # level not generated yet: keep it out of the level select
-        parts.append('''
+        lf = LEVEL_FLOW[k]
+        block = """
 --------------------------------------------------
 
 {k} = TEN.Flow.Level()
-{k}.nameKey = "{k}"
+{k}.nameKey = "cdv_level_{lk}"
 {k}.scriptFile = "Scripts\\\\Levels\\\\{k}.lua"
-{k}.ambientTrack = "108"
-{k}.horizon1.enabled = true
+{k}.ambientTrack = "{track}"
+{k}.horizon1.enabled = {hz}
 {k}.levelFile = "Data\\\\{k}.ten"
 {k}.loadScreenFile = "Screens\\\\loading.png"
-{k}.farView = 128 -- distanza di visibilita' in settori (128 = 256 m)
-TEN.Flow.AddLevel({k})
-'''.format(k=k))
+{k}.farView = {far}
+{k}.objects = CdvObjects()
+""".format(k=k, lk=k.lower(), track=lf["track"], far=lf["far"], hz="false" if k == "Sommersa" else "true")
+        if lf["fog"]:
+            r, g, b, mn, mx = lf["fog"]
+            block += "{k}.fog = TEN.Flow.Fog(TEN.Color({r}, {g}, {b}), {mn}, {mx})\n".format(k=k, r=r, g=g, b=b, mn=mn, mx=mx)
+        block += "TEN.Flow.AddLevel({k})\n".format(k=k)
+        parts.append(block)
     os.makedirs(OUT, exist_ok=True)
     with open(os.path.join(OUT, "Gameflow.lua"), "w", newline="\r\n") as f:
         f.write("".join(parts))
 
 
 def build(key):
-    try:
-        content = importlib.import_module("content_" + key.lower())
-    except ImportError:
-        content = None
+    content = importlib.import_module("content_" + key.lower())
     if LEVELS[key]["box"] is None:
-        ctx = content.build_standalone(key) if content else None
+        level = make_level()
+        level.use_tombide_ten(key + ".ten", wads=WADS)
+        atlas_list = load_atlases()
+        setup_textures(level, atlas_list)
+        ctx = Ctx(key, None, level, walls.Atlases(atlas_list), {}, {})
+        content.build_standalone(ctx)
     else:
-        ctx = build_terrain_level(key)
-        if content:
-            content.build(ctx)
-        else:
-            default_start(ctx)
-    if ctx is not None:
-        save(ctx)
+        ctx = build_terrain_level(key, content)
+        content.build(ctx)
+    ctx.kit.finish_interiors()
+    probs = K.validate(ctx.level, ctx.kit.names)
+    for pr in probs:
+        print("  CHECK:", pr)
+    save(ctx)
     return ctx
 
 

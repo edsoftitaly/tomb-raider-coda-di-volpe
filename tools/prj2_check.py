@@ -171,8 +171,28 @@ def check(path):
                 r.chunks(lambda c4, s4: c4 == b"TePorMirror" and bool(r.raw(5)), "portal")
                 room["portals"].append((area, adj, direction))
             elif c3 == b"TeMovTen2":
-                pos = r.f(3); r.f(3); r.leb(); t = r.u32(); r.i16(); r.raw(3); r.f(3); r.ustr()
-                room["objects"].append(("moveable", t, pos))
+                pos = r.f(3); r.f(3); r.leb(); t = r.u32(); r.i16(); r.raw(3); r.f(3); name = r.ustr()
+                room["objects"].append(("moveable", t, pos, oid, name))
+            elif c3 == b"TeTri3":
+                area = [r.leb() for _ in range(4)]
+                trig = {"area": area, "oid": oid}
+
+                def tri(c4, s4):
+                    if c4 in (b"TeTy", b"TeTaTy", b"TeCo"):
+                        trig[c4.decode()] = r.leb()
+                    elif c4 == b"TeOS":
+                        r.raw(s4)
+                    elif c4 in (b"TeTa", b"TeTi", b"TeEx", b"TePl"):
+                        kind = r.leb()
+                        if kind in (0, 1, 2):
+                            trig[c4.decode()] = (kind, r.leb())
+                        elif kind == 3:
+                            r.ustr()
+                    else:
+                        return False
+                    return True
+                r.chunks(tri, "trigger")
+                room["objects"].append(("trigger", trig))
             elif c3 == b"TeStaTen2":
                 pos = r.f(3); r.f(4); r.leb(); t = r.u32(); r.f(3); r.i16(); r.ustr()
                 room["objects"].append(("static", t, pos))
@@ -240,6 +260,19 @@ def check(path):
                 continue
             if not any(a2 == rm["index"] and d2 == opposite[d] for _, a2, d2 in other["portals"]):
                 r.errors.append("room %d portal dir %d to %d has no counterpart" % (rm["index"], d, adj))
+    oids = {o[3] for rm in info["rooms"] for o in rm["objects"] if o[0] == "moveable"}
+    for rm in info["rooms"]:
+        for o in rm["objects"]:
+            if o[0] != "trigger":
+                continue
+            t = o[1]
+            x0, z0, x1, z1 = t["area"]
+            if not (1 <= x0 <= x1 < rm["nx"] - 1 and 1 <= z0 <= z1 < rm["nz"] - 1):
+                r.errors.append("trigger area %s outside room %s interior" % (t["area"], rm.get("name")))
+            ta = t.get("TeTa")
+            if t.get("TeTaTy") == 0 and (ta is None or ta[0] != 1 or ta[1] not in oids):
+                r.errors.append("trigger in room %s targets missing object %s" % (rm.get("name"), ta))
+    info["triggers"] = sum(1 for rm in info["rooms"] for o in rm["objects"] if o[0] == "trigger")
     return info, r.errors
 
 
@@ -247,7 +280,7 @@ if __name__ == "__main__":
     info, errors = check(sys.argv[1])
     print("settings:", info["settings"])
     print("rooms:", len(info["rooms"]), "portals:", sum(len(r["portals"]) for r in info["rooms"]),
-          "objects:", sum(len(r["objects"]) for r in info["rooms"]),
+          "objects:", sum(len(r["objects"]) for r in info["rooms"]), "triggers:", info["triggers"],
           "textured faces:", sum(r.get("textured", 0) for r in info["rooms"]),
           "invisible faces:", sum(r.get("invisible", 0) for r in info["rooms"]))
     for e in errors[:30]:

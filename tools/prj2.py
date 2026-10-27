@@ -182,6 +182,7 @@ class Room:
         self.no_path = False      # exclude from enemy pathfinding (huge terrain rooms stall the compiler)
         self.tags = []
         self.objects = []         # encoded object chunks (callables taking id maps)
+        self.meta = []            # (kind, ...) description of objects, for validation
         self.index = None
         self.alternate = None     # (group, Room)
 
@@ -287,21 +288,74 @@ class Level:
             return chunk("TePor2", body)
         room.objects.append(enc)
 
-    def add_moveable(self, room, type_id, pos, rot_y=0.0, ocb=0, lua_name=""):
-        """pos = room-local units (x, y, z)."""
-        def enc(oid=self._next_obj()):
+    def add_moveable(self, room, type_id, pos, rot_y=0.0, ocb=0, lua_name="", code_bits=0, invisible=False):
+        """pos = room-local units (x, y, z). Returns the object id (for triggers)."""
+        oid0 = self._next_obj()
+        room.meta.append(("moveable", type_id, tuple(pos), lua_name, oid0, ocb))
+
+        def enc(oid=oid0):
             body = leb(oid) + f32(*pos) + f32(rot_y, 0.0, 0.0) + leb(-1)
             body += struct.pack("<I", type_id) + struct.pack("<h", ocb)
-            body += b"\x00\x00" + b"\x00" + f32(1.0, 1.0, 1.0) + utf8(lua_name)
+            body += bytes([1 if invisible else 0, 0, code_bits]) + f32(1.0, 1.0, 1.0) + utf8(lua_name)
             return chunk("TeMovTen2", body)
         room.objects.append(enc)
+        if lua_name:
+            self._check_name(lua_name)
+        return oid0
+
+    def _check_name(self, name):
+        if not hasattr(self, "_names"):
+            self._names = set()
+        if name in self._names:
+            raise ValueError("duplicate Lua name %r" % name)
+        self._names.add(name)
+
+    def add_trigger(self, room, area, trig_type=0, target_type=0, target=None, timer=0, extra=0,
+                    code_bits=0x1F, one_shot=False):
+        """Classic trigger. area = (x0, z0, x1, z1) room-local sectors (inclusive).
+
+        trig_type: 0 Trigger, 1 Pad, 2 Switch, 3 Key, 4 Pickup, 5 Heavy, 6 Antipad, 7 Combat, 8 Dummy,
+        9 Antitrigger. target_type: 0 Object, 1 Camera, 3 FlipMap, 4 FlipOn, 5 FlipOff, 7 FinishLevel,
+        9 FlipEffect, 10 Secret. target: object id (int from add_moveable) for Object, else ushort value.
+        """
+        oid0 = self._next_obj()
+        room.meta.append(("trigger", tuple(area), trig_type, target_type, target))
+
+        def param_obj(v):
+            return leb(1) + leb(v)
+
+        def param_u(v):
+            return leb(0) + leb(v)
+
+        def enc(oid=oid0):
+            body = leb(oid) + b"".join(leb(v) for v in area)
+            body += c_int("TeTy", trig_type) + c_int("TeTaTy", target_type)
+            if target is None:
+                tgt = leb(-1)
+            elif target_type == 0:
+                tgt = param_obj(target)
+            else:
+                tgt = param_u(target)
+            body += chunk("TeTa", tgt)
+            body += chunk("TeTi", param_u(timer))
+            body += chunk("TeEx", param_u(extra))
+            body += c_int("TeCo", code_bits)
+            body += c_bool("TeOS", one_shot)
+            body += chunk("TePl", leb(-1))
+            body += END
+            return chunk("TeTri3", body)
+        room.objects.append(enc)
+        return oid0
 
     def add_static(self, room, type_id, pos, rot_y=0.0, scale=1.0, ocb=0, lua_name=""):
-        def enc(oid=self._next_obj()):
+        oid0 = self._next_obj()
+
+        def enc(oid=oid0):
             body = leb(oid) + f32(*pos) + f32(rot_y, 0.0, 0.0, scale) + leb(-1)
             body += struct.pack("<I", type_id) + f32(1.0, 1.0, 1.0) + struct.pack("<h", ocb) + utf8(lua_name)
             return chunk("TeStaTen2", body)
         room.objects.append(enc)
+        return oid0
 
     def add_light(self, room, ltype, pos, color=(1.0, 1.0, 1.0), intensity=0.5,
                   inner=1.0, outer=5.0, rot_y=0.0, rot_x=0.0, inner_angle=20.0, outer_angle=25.0):
