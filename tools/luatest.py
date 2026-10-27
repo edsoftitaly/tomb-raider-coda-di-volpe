@@ -34,7 +34,8 @@ TEN.Flow.AddSecret = function(i) log("secret", tostring(i)) end
 TEN.Sound.PlaySound = function() end
 local objs = {}
 local function newMov(name)
-    local m = { name = name, active = false, valid = true, hp = 10 }
+    local m = { name = name, active = false, valid = true, hp = 10, state = 1 }
+    function m:GetState() return self.state end
     function m:Enable() self.active = true; log("enable", self.name) end
     function m:Disable() self.active = false; log("disable", self.name) end
     function m:GetActive() return self.active end
@@ -43,6 +44,7 @@ local function newMov(name)
     function m:SetPosition(p) log("teleport", self.name) end
     function m:SetRoomNumber() end
     function m:SetRotation() end
+    function m:SetAir(v) log("air", tostring(v)) end
     return m
 end
 for name, _ in pairs(names) do objs[name] = newMov(name) end
@@ -71,6 +73,7 @@ function H.tick(k) for _ = 1, (k or 1) do LevelFuncs.OnLoop() end end
 function H.kill(name) objs[name].hp = 0; objs[name].valid = false end
 function H.setActive(name, v) objs[name].active = v end
 function H.active(name) return objs[name].active end
+function H.pull(name) objs[name].state = 1 - objs[name].state end
 function H.count(i) return inv[i] or 0 end
 function H.give(i) inv[i] = (inv[i] or 0) + 1 end
 return H
@@ -84,6 +87,11 @@ class Harness:
         tbl = self.lua.table_from({n: True for n in names})
         self.H = self.lua.execute(MOCK, tbl, lambda kind, val: self.events.append((kind, val)))
         src = open(script_path, encoding="utf-8").read()
+        self.captured = {}
+
+        def hook(cdv, zones, uses):
+            self.captured["cdv"], self.captured["zones"], self.captured["uses"] = cdv, zones, uses
+        self.lua.globals().CDV_TEST = hook
         self.lua.execute(src)
         self.lua.globals().LevelFuncs.OnStart()
         self.ids = self.lua.globals().TEN.Objects.ObjID
@@ -102,9 +110,41 @@ class Harness:
         return [v for k, v in self.events if k == kind]
 
 
+def smoke(level_dir, key):
+    """Visit every zone and try every item use; report Lua errors and what happened."""
+    names = load_names(level_dir, key)
+    t = Harness("%s/%s.lua" % (level_dir, key), names)
+    zones = t.captured["zones"]
+    uses = t.captured["uses"]
+    for i in range(1, len(zones) + 1):
+        z = zones[i]
+        t.at((z.x, z.y, z.z), 2)
+    for i in range(1, len(uses) + 1):
+        u = uses[i]
+        for j in range(1, 9):
+            t.H.give(t.item("PUZZLE_ITEM%d" % j))
+        t.at((u.x, u.y, u.z), 1)
+        t.H.use(u.item)
+    for n in names:
+        t.H.kill(n) if n.startswith(("ladro", "guard", "turi", "donna", "capo")) else None
+    t.H.tick(800)
+    return t
+
+
 def load_names(level_dir, key):
     return json.load(open("%s/%s.names.json" % (level_dir, key)))
 
+
+if __name__ == "__main__" and sys.argv[1] == "smoke":
+    for key in sys.argv[2:]:
+        t = smoke("../build/levels/" + key, key)
+        kinds = {}
+        for k, v in t.events:
+            kinds.setdefault(k, []).append(v)
+        print("%-10s zones %d uses %d | enable %d say %d give %d secret %s end %s" % (
+            key, len(t.captured["zones"]), len(t.captured["uses"]), len(kinds.get("enable", [])),
+            len(kinds.get("say", [])), len(kinds.get("give", [])), sorted(set(kinds.get("secret", []))), kinds.get("end")))
+    sys.exit(0)
 
 if __name__ == "__main__":
     lvl = sys.argv[1]

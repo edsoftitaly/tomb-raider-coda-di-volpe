@@ -160,13 +160,13 @@ def save(ctx):
 
 
 GAMEFLOW_HEAD = """-- Coda di Volpe - Gameflow.lua (generato da tools/episode.py)
--- Va in C:\\\\CodaDiVolpe\\\\Engine\\\\Scripts\\\\Gameflow.lua
+-- Va in C:\\CodaDiVolpe\\Engine\\Scripts\\Gameflow.lua
 
 Flow.SetIntroImagePath("Screens\\\\intro.jpg")
 Flow.SetTotalSecretCount(12)
 Flow.EnablePointFilter(false)
 Flow.EnableLoadSave(true)
-Flow.EnableFlyCheat(false)
+Flow.EnableFlyCheat(true)      -- comodo per i test: mettere false per la release
 Flow.EnableLaraInTitle(false)
 Flow.EnableLevelSelect(true)
 Flow.EnableMassPickup(true)

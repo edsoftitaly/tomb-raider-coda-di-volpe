@@ -52,6 +52,19 @@ function CDV.Active(name)
     return m ~= nil and m:GetValid() and m:GetActive()
 end
 
+-- Floor levers (LEVER_SWITCH) toggle between two states: "pulled" = not in the state it had at start.
+function CDV.Pulled(name)
+    local m = CDV.M(name)
+    if m == nil or not m:GetValid() then return false end
+    local k = "s0_" .. name
+    local s0 = CDV.Flag(k)
+    if s0 == nil then
+        s0 = m:GetState()
+        CDV.Flag(k, s0)
+    end
+    return m:GetState() ~= s0
+end
+
 function CDV.Enable(name)
     local m = CDV.M(name)
     if m ~= nil and m:GetValid() then m:Enable() end
@@ -179,6 +192,8 @@ end
 '''
 
 FOOTER = r'''
+if CDV_TEST ~= nil then CDV_TEST(CDV, zones, uses) end
+
 LevelFuncs.OnStart = function()
     if CDV.Start then CDV.Start() end
 end

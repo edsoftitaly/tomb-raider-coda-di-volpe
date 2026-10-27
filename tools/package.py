@@ -1,0 +1,83 @@
+"""Build the delivery zip: everything to extract over C:\\CodaDiVolpe."""
+import os
+import shutil
+import sys
+import zipfile
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+B = os.path.join(ROOT, "build", "levels")
+ORDER = ["Oliveri", "Lungomare", "Marinello", "Laghetti", "Tindari", "Sommersa"]
+PROJECT = "C:\\CodaDiVolpe"
+
+LEGGIMI = r"""TOMB RAIDER - CODA DI VOLPE  (episodio completo, 6 livelli, TombEngine)
+==========================================================================
+
+INSTALLAZIONE
+1. Estrai lo zip DENTRO C:\CodaDiVolpe e sovrascrivi tutto. Vengono aggiunti/sostituiti:
+   - Levels\<livello>\<livello>.prj2 + textures   (i 6 livelli di Tomb Editor)
+   - Assets\Wads\CodaDiVolpe\*.wad2                 (nemici, porte, leve, oggetti: libreria ufficiale TombEngine/Resources)
+   - Engine\Scripts\Gameflow.lua                     (6 livelli, nomi degli oggetti, 12 segreti)
+   - Engine\Scripts\Levels\<livello>.lua             (logica di enigmi, nemici, messaggi, segreti, fine livello)
+2. Doppio clic su COMPILA_TUTTO.bat: lancia Tomb Editor (C:\Tomb Editor) in modalita' batch e compila
+   i sei livelli uno dopo l'altro in Engine\Data. Ci mette qualche minuto per livello.
+   In alternativa: apri ogni .prj2 in Tomb Editor e premi F5.
+3. Avvia da TombIDE (Play) o con Engine\Bin\x64\TombEngine.exe. Dal menu: Nuova partita, oppure Selezione livello.
+
+NOTE
+- Fly cheat e selezione livello sono attivi per i test (Gameflow.lua: EnableFlyCheat / EnableLevelSelect).
+- Ogni livello parte anche da solo: gli oggetti che arrivano dal livello prima vengono dati in automatico se mancano.
+- La soluzione completa e' in SOLUZIONE.txt.
+- Audio: le tracce ambientali sono quelle di default (108). Voce di Donna Villa, eco della grotta e musiche sono da fare.
+
+COSE DA GUARDARE PER PRIME IN GIOCO (non le ho potute provare nel motore)
+- Leve a pavimento (Saia, Basilica, Torre, cripta): si spingono da sud e si riportano indietro da nord.
+- Le casse sotto i buchi nei soffitti: salto + aggrappo per risalire (casa, cisterna, Saia, cripta, grotta).
+- La porta del Casello FS e' "magica": entrando nella porta a sud Lara viene portata dentro (dissolvenza).
+- Il camino del balcone nella grotta: muro scalabile verso est.
+- Se un nemico resta fermo, e' perche' esce dalla stanza in cui ha il pathfinding (il terreno ne e' escluso apposta:
+  il compilatore si bloccava al 48%).
+"""
+
+
+def bat():
+    return ("@echo off\r\n"
+            "rem Compila tutti i livelli di Coda di Volpe con Tomb Editor (modalita' batch).\r\n"
+            "copy /Y \"%~dp0compila_livelli.xml\" \"%TEMP%\\cdv_compila.xml\" >nul\r\n"
+            "start \"\" /wait \"C:\\Tomb Editor\\TombEditor.exe\" \"%TEMP%\\cdv_compila.xml\"\r\n"
+            "echo Fatto. Controlla i file .ten in Engine\\Data.\r\n"
+            "pause\r\n")
+
+
+def xml():
+    files = "\n".join("    <string>%s\\Levels\\%s\\%s.prj2</string>" % (PROJECT, k, k) for k in ORDER)
+    return ('<?xml version="1.0" encoding="utf-8"?>\n'
+            '<BatchCompileList xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" '
+            'xmlns:xsd="http://www.w3.org/2001/XMLSchema">\n  <Files>\n%s\n  </Files>\n</BatchCompileList>\n' % files)
+
+
+def main(out):
+    sol = ["TOMB RAIDER - CODA DI VOLPE: SOLUZIONE", "=" * 40, ""]
+    for k in ORDER:
+        sol += open(os.path.join(B, k, "soluzione.txt")).read().splitlines()
+    sol += ["", "I 12 segreti sono le Stelle dei Dioscuri: 3 a Oliveri, 2 sul Lungomare, 1 a Marinello, 2 ai Laghetti,",
+            "2 a Tindari, 2 nella Citta' Sommersa."]
+    with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as z:
+        for k in ORDER:
+            d = os.path.join(B, k)
+            z.write(os.path.join(d, k + ".prj2"), "Levels/%s/%s.prj2" % (k, k))
+            for f in sorted(os.listdir(os.path.join(d, "textures"))):
+                z.write(os.path.join(d, "textures", f), "Levels/%s/textures/%s" % (k, f))
+            z.write(os.path.join(d, k + ".lua"), "Engine/Scripts/Levels/%s.lua" % k)
+        z.write(os.path.join(B, "Gameflow.lua"), "Engine/Scripts/Gameflow.lua")
+        wd = os.path.join(ROOT, "assets", "wads")
+        for f in sorted(os.listdir(wd)):
+            z.write(os.path.join(wd, f), "Assets/Wads/CodaDiVolpe/" + f)
+        z.writestr("LEGGIMI.txt", LEGGIMI.replace("\n", "\r\n"))
+        z.writestr("SOLUZIONE.txt", "\r\n".join(sol) + "\r\n")
+        z.writestr("COMPILA_TUTTO.bat", bat())
+        z.writestr("compila_livelli.xml", xml())
+    print(out, "%.1f MB" % (os.path.getsize(out) / 1e6))
+
+
+if __name__ == "__main__":
+    main(sys.argv[1])

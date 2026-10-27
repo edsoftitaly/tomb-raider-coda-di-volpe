@@ -72,6 +72,37 @@ class Kit:
     def room_at(self, wx, wz):
         return self.ctx.terrain_room_at(wx, wz)
 
+    def spot(self, wx, wz, r=8, flat=192, taken=None):
+        """Nearest walkable outdoor sector to (wx, wz): not a building, not water, nearly flat, room interior."""
+        w = self.ctx.world
+        taken = taken if taken is not None else getattr(self, "_taken", set())
+        self._taken = taken
+        best = None
+        for dx in range(-r, r + 1):
+            for dz in range(-r, r + 1):
+                x, z = int(wx) + dx, int(wz) + dz
+                if not (2 <= x < w.nx - 2 and 2 <= z < w.nz - 2) or (x, z) in taken:
+                    continue
+                if w.building_id[x, z] >= 0 or w.water[x, z] or not w.zone_mask[x, z]:
+                    continue
+                f = w.floor[x, z]
+                if f.max() - f.min() > flat:
+                    continue
+                if (x - 1) % 30 == 29 or (z - 1) % 30 == 29:
+                    pass
+                try:
+                    room = self.room_at(x, z)
+                except KeyError:
+                    continue
+                d = dx * dx + dz * dz
+                if best is None or d < best[0]:
+                    best = (d, x, z)
+        if best is None and r < 24:
+            return self.spot(wx, wz, r=r * 2, flat=flat * 2, taken=taken)
+        assert best is not None, "no walkable spot near %s" % ((wx, wz),)
+        taken.add((best[1], best[2]))
+        return best[1], best[2]
+
     def floor_at(self, room, wx, wz):
         s = room.sectors[int(wx) - room.x][int(wz) - room.z]
         return room.y + int(np.mean(s.floor))
@@ -240,22 +271,27 @@ class Kit:
         self.level.add_portal(up_room, (x0 - up_room.x, z0 - up_room.z, x1 - up_room.x, z1 - up_room.z),
                               prj2.P_FLOOR, lo_room, opacity=opacity)
 
-    def link_wall(self, a, b):
-        """Wall portal between two interiors that overlap by two columns/rows (TR adjacency)."""
+    def link_wall(self, a, b, span=None):
+        """Wall portal between two interiors that overlap by two columns/rows (TR adjacency).
+
+        span = (lo, hi) world coordinates along the shared border to limit the opening (default: all).
+        """
         ra, rb = a.room, b.room
         if ra.x + ra.nx - 2 == rb.x:      # b east of a
             pa, pb, axis = ("+x", "-x", "x")
         elif rb.x + rb.nx - 2 == ra.x:
-            return self.link_wall(b, a)
+            return self.link_wall(b, a, span)
         elif ra.z + ra.nz - 2 == rb.z:    # b north of a
             pa, pb, axis = ("+z", "-z", "z")
         elif rb.z + rb.nz - 2 == ra.z:
-            return self.link_wall(b, a)
+            return self.link_wall(b, a, span)
         else:
             raise ValueError("rooms %s and %s are not adjacent" % (ra.name, rb.name))
         if axis == "x":
             z0 = max(ra.z, rb.z) + 1
             z1 = min(ra.z + ra.nz, rb.z + rb.nz) - 2
+            if span:
+                z0, z1 = max(z0, span[0]), min(z1, span[1])
             self.level.add_portal(ra, (ra.nx - 1, z0 - ra.z, ra.nx - 1, z1 - ra.z), prj2.P_WALL_PX, rb)
             self.level.add_portal(rb, (0, z0 - rb.z, 0, z1 - rb.z), prj2.P_WALL_NX, ra)
             for z in range(z0, z1 + 1):
@@ -267,6 +303,8 @@ class Kit:
         else:
             x0 = max(ra.x, rb.x) + 1
             x1 = min(ra.x + ra.nx, rb.x + rb.nx) - 2
+            if span:
+                x0, x1 = max(x0, span[0]), min(x1, span[1])
             self.level.add_portal(ra, (x0 - ra.x, ra.nz - 1, x1 - ra.x, ra.nz - 1), prj2.P_WALL_PZ, rb)
             self.level.add_portal(rb, (x0 - rb.x, 0, x1 - rb.x, 0), prj2.P_WALL_NZ, ra)
             for x in range(x0, x1 + 1):
@@ -280,13 +318,67 @@ class Kit:
 
     def water_surface(self, air, water, cells, tex="acqua_scura"):
         """Visible water surface between an air room (above) and a water room, over a rectangle."""
-        self.link_vertical(water, air, cells, opacity=2)
         ar = air.room if isinstance(air, Interior) else air
         wr = water.room if isinstance(water, Interior) else water
+        cells = [(x, z) for x, z in cells
+                 if not ar.sectors[x - ar.x][z - ar.z].wall and not wr.sectors[x - wr.x][z - wr.z].wall]
+        xs = [c[0] for c in cells]
+        zs = [c[1] for c in cells]
+        x0, z0 = min(xs), min(zs)
+        mask = np.zeros((max(xs) - x0 + 1, max(zs) - z0 + 1), dtype=bool)
+        for x, z in cells:
+            mask[x - x0, z - z0] = True
+        from world import rectangles
+        for (a, b, c, d) in rectangles(mask):
+            self.link_vertical(water, air, rect(x0 + a, z0 + b, x0 + c, z0 + d), opacity=2)
         for wx, wz in cells:
             rot = walls.rot_for(wx, wz)
             walls.set_floor(ar.sectors[wx - ar.x][wz - ar.z], self.atlases, tex, rot, blend=2)
             walls.set_ceiling(wr.sectors[wx - wr.x][wz - wr.z], self.atlases, tex, rot, blend=2)
+
+    def lever_spot(self, wx, wz, r=10):
+        """Flat outdoor sector with flat, level neighbours north and south (floor levers are pushed from both sides)."""
+        w = self.ctx.world
+        taken = getattr(self, "_taken", set())
+        self._taken = taken
+        best = None
+        for dx in range(-r, r + 1):
+            for dz in range(-r, r + 1):
+                x, z = int(wx) + dx, int(wz) + dz
+                cells = [(x, z - 1), (x, z), (x, z + 1)]
+                if any(w.building_id[c] >= 0 or w.water[c] or c in taken for c in cells):
+                    continue
+                fs = [w.floor[c] for c in cells]
+                if max(f.max() - f.min() for f in fs) > 128 or max(f.mean() for f in fs) - min(f.mean() for f in fs) > 128:
+                    continue
+                d = dx * dx + dz * dz
+                if best is None or d < best[0]:
+                    best = (d, x, z)
+        assert best is not None, "no lever spot near %s" % ((wx, wz),)
+        for c in ((best[1], best[2] - 1), (best[1], best[2]), (best[1], best[2] + 1)):
+            taken.add(c)
+        return best[1], best[2]
+
+    def wall_spot(self, wx, wz, r=10, flat=192):
+        """Walkable outdoor sector next to a building/raised block: returns (x, z, lever rotation)."""
+        w = self.ctx.world
+        best = None
+        for dx in range(-r, r + 1):
+            for dz in range(-r, r + 1):
+                x, z = int(wx) + dx, int(wz) + dz
+                if w.building_id[x, z] >= 0 or w.water[x, z]:
+                    continue
+                f = w.floor[x, z]
+                if f.max() - f.min() > flat:
+                    continue
+                for d, (ox, oz), rot in (("+z", (0, 1), 180.0), ("-z", (0, -1), 0.0), ("+x", (1, 0), 270.0), ("-x", (-1, 0), 90.0)):
+                    nf = w.floor[x + ox, z + oz]
+                    if nf.min() - f.max() >= 4 * CLICK:
+                        dd = dx * dx + dz * dz
+                        if best is None or dd < best[0]:
+                            best = (dd, x, z, rot)
+        assert best is not None, "no wall spot near %s" % ((wx, wz),)
+        return best[1], best[2], best[3]
 
     def climb(self, wx, wz, direction, room=None):
         """Climbable wall on side `direction` (+x, -x, +z, -z) of the walkable sector (wx, wz)."""
@@ -353,7 +445,7 @@ def validate(level, names):
                     problems.append("%s %s in a wall (%s)" % (OBJ_NAMES.get(t, t), name, rm.name))
                     continue
                 if t in (BAT, FLAME_EMITTER, FLAME_EMITTER2, FLAME_EMITTER3, FIREFLY_EMITTER, FISH_EMITTER,
-                         SHARK, LAGOON_WITCH, CROW) or rm.room_type == 3:
+                         SHARK, LAGOON_WITCH, CROW, WRAITH1, WRAITH2, WRAITH3) or rm.room_type == 3:
                     continue
                 if abs(pos[1] - fl) > 300:
                     problems.append("%s %s floats/buried: y %d floor %d (%s)" % (OBJ_NAMES.get(t, t), name, pos[1], fl, rm.name))

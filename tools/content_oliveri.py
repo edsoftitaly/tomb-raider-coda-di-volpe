@@ -192,11 +192,12 @@ def saia(ctx):
     # open, Polluce closed -> the gate opens.
     names = ["castore", "polluce", "tindaro"]
     for i, x in enumerate((161, 165, 169)):
-        lev = k.place(K.LEVER_SWITCH, x, 106, room=B.room, rot=180.0, name="leva_" + names[i])
-        fl = k.place(K.FLAME_EMITTER2, x - 1, 106, room=B.room, ocb=1, name="fiamma_" + names[i])
-        k.trigger(x, 106, room=B.room, trig_type=K.T_SWITCH, target=lev)
-        k.trigger(x, 106, room=B.room, trig_type=K.T_SWITCH, target=fl)
-        lua.zone("leva_" + names[i], k.lua_pos(x, 105, SAIA_FLOOR), r=900, dy=1000, once=False, secs=3,
+        # Floor levers (TR4 rail switch): used from the south, pushed back from the north.
+        lev = k.place(K.LEVER_SWITCH, x, 103, room=B.room, rot=0.0, name="leva_" + names[i])
+        fl = k.place(K.FLAME_EMITTER2, x + 1, 103, room=B.room, ocb=1, name="fiamma_" + names[i])
+        k.trigger(x, 103, room=B.room, trig_type=K.T_SWITCH, target=lev)
+        k.trigger(x, 103, room=B.room, trig_type=K.T_SWITCH, target=fl)
+        lua.zone("leva_" + names[i], k.lua_pos(x, 102, SAIA_FLOOR), r=900, dy=1000, once=False, secs=3,
                  text="Leva della chiusa di %s" % ("Castore", "Polluce", "Tindaro")[i])
     k.place(K.DOOR_TYPE3, 157, 101, room=B.room, rot=90.0, name="cancello_saia")
     k.place(K.SHOTGUN_AMMO1, 165, 97, room=B.room)
@@ -204,7 +205,8 @@ def saia(ctx):
     lua.zone("iscrizione", k.lua_pos(165, 97, SAIA_FLOOR), r=1500, dy=1000, once=False, secs=8,
              text="Inciso sui segni di piena: \"Castore beve, Polluce dorme, Tindaro apre la via.\"")
     lua.loop('''
-if not CDV.Flag("saia_aperta") and CDV.Active("fiamma_castore") and CDV.Active("fiamma_tindaro") and not CDV.Active("fiamma_polluce") then
+local c, p, t = CDV.Pulled("leva_castore"), CDV.Pulled("leva_polluce"), CDV.Pulled("leva_tindaro")
+if not CDV.Flag("saia_aperta") and c and t and not p then
     CDV.Flag("saia_aperta", true)
     CDV.Enable("cancello_saia")
     CDV.Say("L'acqua scende nel canale giusto: il cancello si apre.", 6)
