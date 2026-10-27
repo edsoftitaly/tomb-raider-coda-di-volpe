@@ -123,6 +123,7 @@ def default_start(ctx):
             break
     wx, wz = best
     room = ctx.terrain_room_at(wx, wz)
+    room.no_path = False  # at least one room with pathfinding boxes
     ctx.level.add_moveable(room, 0, ctx.local(room, wx + 0.5, wz + 0.5, ctx.ground(wx, wz)), lua_name="lara_start")
 
 

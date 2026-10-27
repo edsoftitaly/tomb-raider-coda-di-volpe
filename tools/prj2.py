@@ -179,6 +179,7 @@ class Room:
         self.room_type = 0        # RoomType: 0 Normal, 1 Rain, 2 Snow, 3 Water, 4 Quicksand
         self.light_effect = 1     # RoomLightEffect: 0 None, 1 Default (editor default)
         self.reverb = 0
+        self.no_path = False      # exclude from enemy pathfinding (huge terrain rooms stall the compiler)
         self.tags = []
         self.objects = []         # encoded object chunks (callables taking id maps)
         self.index = None
@@ -391,7 +392,7 @@ class Level:
         b += c_bool("TeHorizon", r.horizon)
         b += c_bool("TeOutside", r.outside)
         b += c_bool("TeNoLens", r.no_lensflare)
-        b += c_bool("TeNoPath", False)
+        b += c_bool("TeNoPath", r.no_path)
         b += c_int("TeRoomType", r.room_type)
         b += c_int("TeRoomTypeStrength", 0)
         b += c_int("TeRoomLightEffect", r.light_effect)

@@ -309,6 +309,7 @@ def build_rooms(world, level, atlases, texer):
         room.horizon = True
         room.ambient = (0.62, 0.6, 0.58)
         room.tags = ["esterno"]
+        room.no_path = True  # enemies get pathfinding only where content modules enable it
         for lx in range(n):
             for lz in range(n):
                 s = room.sectors[lx][lz]
@@ -331,6 +332,7 @@ def build_rooms(world, level, atlases, texer):
             wr.room_type = 3  # Water
             wr.ambient = (0.35, 0.5, 0.55)
             wr.tags = ["acqua"]
+            wr.no_path = True
             top = 0 - ymin
             for lx in range(n):
                 for lz in range(n):
