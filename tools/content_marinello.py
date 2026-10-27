@@ -19,7 +19,11 @@ def prepare(world):
     K.flatten(world, K.rect(EXIT[0] - 1, EXIT[1] - 1, EXIT[0] + 1, EXIT[1] + 1), mat="roccia")
 
 
+DECOR = dict(boats=20)
+
+
 def build(ctx):
+    ctx.decor_block = [(194, 58, 214, 78)]
     k, lua = ctx.kit, ctx.lua
     sx, sz = k.spot(*START)
     k.place(K.LARA, sx, sz, rot=0.0, name="lara_start")

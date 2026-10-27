@@ -46,7 +46,11 @@ def prepare(world):
     K.flatten(world, K.rect(tx - 1, tz - 4, tx + 1, tz - 2), base, mat="castello_pav")
 
 
+DECOR = dict(centre=(200, 225, 25))
+
+
 def build(ctx):
+    ctx.decor_block = [(30, 322, 72, 362), (78, 296, 92, 312)]
     k, lua = ctx.kit, ctx.lua
     sx, sz = k.spot(*START)
     k.place(K.LARA, sx, sz, rot=315.0, name="lara_start")

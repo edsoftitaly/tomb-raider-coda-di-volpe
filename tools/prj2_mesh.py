@@ -5,6 +5,7 @@ texture coordinates and exports a JSON mesh for the three.js preview in tools/re
 Usage: python3 prj2_mesh.py file.prj2 out.json [room_name_prefix ...]
 """
 import json
+import os
 import struct
 import sys
 
@@ -23,6 +24,7 @@ CORNER_XZ = [(0, 1), (1, 1), (1, 0), (0, 0)]  # XnZp, XpZp, XpZn, XnZn offsets
 
 
 def read_rooms(path):
+    statics = []
     r = Reader(open(path, "rb").read())
     r.raw(8)
     rooms, objects = [], []
@@ -70,6 +72,10 @@ def read_rooms(path):
             if c3 == b"TeMovTen2":
                 pos = r.f(3); rot = r.f(3); r.leb(); t = r.u32(); r.i16(); r.raw(3); r.f(3); r.ustr()
                 objects.append({"room": rm, "type": t, "pos": pos, "rot": rot[0]})
+            elif c3 == b"TeStaTen2":
+                pos = r.f(3); rot = r.f(4); r.leb(); t = r.u32()
+                statics.append({"room": rm, "type": t, "pos": pos, "rot": rot[0], "scale": rot[3]})
+                r.raw(s3 - (r.s.tell() - start[0]))
             else:
                 r.raw(s3 - (r.s.tell() - start[0]))
             return True
@@ -103,6 +109,7 @@ def read_rooms(path):
             r.raw(size)
         return True
     r.chunks(top, "file")
+    read_rooms.statics = statics
     return rooms, objects
 
 
@@ -168,6 +175,38 @@ def build_mesh(rooms, prefixes):
     return pos, uv, tix
 
 
+def add_statics(rooms, statics, keep, pos, uv, tix, out_dir):
+    """Decoration statics (CdV_Decorazioni) as real meshes, textures 3.. = decor pages."""
+    import math
+    import numpy as np
+    from decor import tex
+    tex.build()
+    from decor import models
+    tex.save(out_dir)
+    lib = {}
+    for sid, name, mesh, coll, note in models.build_all():
+        tris = []
+        for idx, px, page, blend, dbl in mesh.f:
+            ps = [np.array(mesh.v[i], float) for i in idx]
+            for a, b, c in [(0, 1, 2)] + ([(0, 2, 3)] if len(ps) == 4 else []):
+                tris.append(([ps[a], ps[b], ps[c]], [px[a], px[b], px[c]], page))
+        lib[sid] = tris
+    for st in statics:
+        if st["type"] not in lib or (keep and not any(st["room"]["name"].startswith(p) for p in keep)):
+            continue
+        rx, ry, rz = st["room"]["pos"]
+        a = math.radians(st["rot"])
+        ca, sa = math.cos(a), math.sin(a)
+        ox, oy, oz = rx * 1024 + st["pos"][0], ry + st["pos"][1], rz * 1024 + st["pos"][2]
+        sc = st["scale"]
+        for ps, px, page in lib[st["type"]]:
+            for p, t in zip(ps, px):
+                x, y, z = p * sc
+                pos.extend([(ox + x * ca + z * sa) / 512.0, (oy + y) / 512.0, (oz - x * sa + z * ca) / 512.0])
+                uv.extend([t[0] / 512.0, t[1] / 512.0])
+            tix.append(3 + page)
+
+
 if __name__ == "__main__":
     rooms, objects = read_rooms(sys.argv[1])
     pos, uv, tix = build_mesh(rooms, sys.argv[3:])
@@ -188,11 +227,13 @@ if __name__ == "__main__":
         color = 0xff2020 if t in kit.ENEMIES else 0xffd020 if (950 <= t <= 990 or 500 <= t < 520) else \
             0x20e020 if 800 <= t < 830 else 0xffffff
         marks.append(w + [color])
-    sizes = [2048.0, 2048.0, 1024.0]
+    sizes = [2048.0, 2048.0, 1024.0, 2048.0, 2048.0, 2048.0]
     for i, t in enumerate(tix):
         for k in range(3):
             j = (i * 3 + k) * 2
             uv[j] /= sizes[t] if t < len(sizes) else 2048.0
             uv[j + 1] /= sizes[t] if t < len(sizes) else 2048.0
+    if os.environ.get("DECOR", "1") == "1" and read_rooms.statics:
+        add_statics(rooms, read_rooms.statics, keep, pos, uv, tix, os.path.dirname(sys.argv[2]))
     json.dump({"pos": pos, "uv": uv, "tix": tix, "lara": lara, "objects": marks}, open(sys.argv[2], "w"))
     print("triangles", len(pos) // 9, "lara", lara)

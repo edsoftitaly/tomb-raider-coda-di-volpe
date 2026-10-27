@@ -42,7 +42,8 @@ INDEX = {k: i + 1 for i, k in enumerate(ORDER)}   # Gameflow: 0 = title
 WADS = ["TombEngine.wad2"] + ["CodaDiVolpe\\%s.wad2" % w for w in (
     "CdV_Oggetti_A", "CdV_Oggetti_B", "TR4_Baddy1", "TR4_Baddy2", "TR2_Doberman", "TR1_Rat", "TR4_Bat",
     "TEN_Wraith", "TR5_Lagoon_Witch", "TR2_Shark", "TR4_Skeleton", "TR4_Doors", "TR5_Floor_Trapdoor",
-    "TR4_Lever_Switch", "TR4_Rolling_Ball", "TR1_Teeth_Spikes", "TEN_Fish_Emitter", "TEN_Firefly")]
+    "TR4_Lever_Switch", "TR4_Rolling_Ball", "TR1_Teeth_Spikes", "TEN_Fish_Emitter", "TEN_Firefly",
+    "CdV_Decorazioni")]
 
 # Puzzle items: slot -> (Strings key, Italian name). Same slots in every level (inventory carries over).
 ITEMS = {
@@ -250,6 +251,8 @@ def build(key):
     else:
         ctx = build_terrain_level(key, content)
         content.build(ctx)
+        import decorate
+        decorate.decorate(ctx, **getattr(content, "DECOR", {}))
     ctx.kit.finish_interiors()
     probs = K.validate(ctx.level, ctx.kit.names)
     for pr in probs:

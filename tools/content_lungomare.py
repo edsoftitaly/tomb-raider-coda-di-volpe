@@ -9,7 +9,11 @@ START = (240, 86)
 BIKE = (242, 90)
 
 
+DECOR = dict(lungomare_road="Corso Cristoforo Colombo", boats=35)
+
+
 def build(ctx):
+    ctx.decor_block = []
     k, lua = ctx.kit, ctx.lua
     sx, sz = k.spot(*START)
     k.place(K.LARA, sx, sz, rot=0.0, name="lara_start")

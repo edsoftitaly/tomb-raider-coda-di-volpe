@@ -90,7 +90,11 @@ def house(ctx):
     return F0, F1, F2
 
 
+DECOR = dict(centre=(190, 160, 70))
+
+
 def build(ctx):
+    ctx.decor_block = [(30, 34, 37, 74), (34, 35, 42, 38), (39, 30, 54, 45), (205, 155, 218, 165)]
     k, lua, L = ctx.kit, ctx.lua, ctx.level
     F0, F1, F2 = house(ctx)
 

@@ -67,6 +67,7 @@ class Kit:
         self.names = {}          # Lua name -> (x, h, z) absolute units, room name
         self.interiors = []
         self.pathfinding_rooms = set()
+        self.links = []          # world cells of vertical links (holes): kept free of decorations
 
     # ------------------------------------------------------------------ placement
     def room_at(self, wx, wz):
@@ -251,6 +252,7 @@ class Kit:
         Heights: the lower room's ceiling at those cells becomes the upper room's floor there.
         """
         cells = sorted(set((int(a), int(b)) for a, b in cells))
+        self.links.extend(cells)
         xs = [c[0] for c in cells]
         zs = [c[1] for c in cells]
         x0, x1, z0, z1 = min(xs), max(xs), min(zs), max(zs)

@@ -29,6 +29,20 @@ NOTE
 - La soluzione completa e' in SOLUZIONE.txt.
 - Audio: le tracce ambientali sono quelle di default (108). Voce di Donna Villa, eco della grotta e musiche sono da fare.
 
+DECORAZIONI (CdV_Decorazioni.wad2, 46 statici, ID 100-145, texture procedurali)
+- Vegetazione: fico d'india (2), elicriso (2), asparago selvatico (2), pino d'Aleppo (3), ulivo (3).
+- Citta': lampioni (piazza, a muro, stradale, lungomare a due bracci), panchina, vasi bianchi giganti
+  (fiori, palma, ulivo), parco giochi (scivolo, altalena, dondolo, molla, castello), campi sportivi
+  (torre faro, recinzione, porta da calcio), dehors (tavolo con sedie, ombrellone, fioriera).
+- Mare: gozzo, gommone, motoscafo, barca a vela, barchetta in secca, ombrellone da spiaggia.
+- Veicoli: 4 auto, furgone, camper, 2 scooter, bicicletta.
+- Sono gia' piazzati in tutti i livelli (2.800-5.500 per livello) secondo la mappa: uliveti a filari
+  ogni 6 m, pinete, macchia sui pendii rocciosi, auto nei parcheggi e lungo le strade, camper nei
+  campeggi, dehors davanti a bar e ristoranti, barche ormeggiate al largo e in secca sulla spiaggia.
+  Le zone degli enigmi (rampe, cancelli, leve, teatro) sono lasciate libere.
+- Alberi, lampioni, veicoli e arredi hanno collisione; cespugli ed elicriso no (Lara ci passa attraverso).
+- Se il gioco rallenta, dimmelo e abbasso la densita' della vegetazione.
+
 COSE DA GUARDARE PER PRIME IN GIOCO (non le ho potute provare nel motore)
 - Leve a pavimento (Saia, Basilica, Torre, cripta): si spingono da sud e si riportano indietro da nord.
 - Le casse sotto i buchi nei soffitti: salto + aggrappo per risalire (casa, cisterna, Saia, cripta, grotta).

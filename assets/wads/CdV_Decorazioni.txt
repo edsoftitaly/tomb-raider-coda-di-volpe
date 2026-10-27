@@ -1,0 +1,47 @@
+Coda di Volpe - decorazioni
+100 FICO_INDIA_GRANDE: Opuntia ficus-indica, circa 2,2 m
+101 FICO_INDIA_PICCOLO: Opuntia giovane, circa 1,2 m
+102 ELICRISO: Helichrysum italicum, cuscinetto argentato con fiori gialli
+103 ELICRISO_GRUPPO: Tre cespi di elicriso
+104 ASPARAGO_SELVATICO: Asparagus acutifolius, cespuglio spinoso
+105 ASPARAGO_ROVO: Asparagi selvatici intrecciati a un cespuglio
+106 PINO_ALEPPO_GRANDE: Pinus halepensis adulto, 12 m, chioma a ombrello
+107 PINO_ALEPPO_INCLINATO: Pino d'Aleppo piegato dal vento, 9 m
+108 PINO_ALEPPO_GIOVANE: Pino d'Aleppo giovane, 5 m
+109 ULIVO: Olea europaea coltivato, 5 m
+110 ULIVO_GIOVANE: Ulivo giovane, 3,5 m
+111 ULIVO_SECOLARE: Ulivo secolare dal tronco contorto, 6 m
+112 LAMPIONE_PIAZZA: Palo in ghisa con lanterna, piazze e corso (4 m)
+113 LAMPIONE_MURO: Lanterna a braccio da muro, vicoli del centro (montare sulla facciata, il braccio va verso +Z)
+114 LAMPIONE_STRADA: Palo stradale moderno a sbraccio, 8 m (lato strada verso +Z)
+115 LAMPIONE_LUNGOMARE: Lampione del lungomare a due globi, 4,5 m
+116 PANCHINA: Panchina in legno e ghisa, 1,8 m
+117 VASO_BIANCO_FIORI: Vaso gigante bianco con piante fiorite
+118 VASO_BIANCO_PALMA: Vaso gigante bianco con palma nana
+119 VASO_BIANCO_ULIVO: Vaso gigante bianco con ulivo
+120 GIOCHI_SCIVOLO: Scivolo con scaletta, 3 m
+121 GIOCHI_ALTALENA: Altalena a due posti, 2,2 m
+122 GIOCHI_DONDOLO: Altalena a bilico
+123 GIOCHI_MOLLA: Gioco a molla a forma di cavalluccio marino
+124 GIOCHI_CASTELLO: Torretta da arrampicata con tettuccio
+125 FARO_CAMPO: Torre faro per campo sportivo, 14 m (proiettori verso +Z)
+126 RECINZIONE_CAMPO: Rete metallica 2 x 3 m (modulo da affiancare lungo X)
+127 PORTA_CALCIO: Porta da calcio a 7 (5 x 2 m), rete verso -Z
+128 GOZZO: Gozzo siciliano in legno, 6 m: bianco, fascia blu, opera viva rossa. Base = linea di galleggiamento
+129 GOMMONE: Gommone con consolle, 5 m
+130 MOTOSCAFO: Motoscafo cabinato, 7 m
+131 BARCA_VELA: Barca a vela da 8 m all'ormeggio, albero 11 m
+132 BARCHETTA_SPIAGGIA: Barchetta a remi tirata in secca, 4 m (base = sabbia)
+133 AUTO_UTILITARIA_ROSSA: Utilitaria, 3,6 m
+134 AUTO_UTILITARIA_BIANCA: Utilitaria bianca, 3,6 m
+135 AUTO_BERLINA_GRIGIA: Berlina, 4,5 m
+136 AUTO_SUV_BLU: SUV compatto, 4,3 m
+137 FURGONE_BIANCO: Furgone, 5 m
+138 CAMPER: Camper mansardato, 6,5 m
+139 SCOOTER_ROSSO: Scooter 125, 1,9 m
+140 SCOOTER_CREMA: Scooter crema
+141 BICICLETTA: Bicicletta da citta' appoggiata al cavalletto
+142 DEHORS_TAVOLO: Tavolino con quattro sedie (dehors di bar e ristoranti)
+143 DEHORS_OMBRELLONE: Tavolino, due sedie e ombrellone verde
+144 DEHORS_FIORIERA: Fioriera divisoria in legno con piante, 1,6 m
+145 OMBRELLONE_SPIAGGIA: Ombrellone da spiaggia a strisce blu
