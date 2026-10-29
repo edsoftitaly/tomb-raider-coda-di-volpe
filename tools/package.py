@@ -26,7 +26,8 @@ NOVITA' DELLA v4
 
 INSTALLAZIONE
 1. Estrai lo zip DENTRO C:\CodaDiVolpe e sovrascrivi tutto. Vengono aggiunti/sostituiti:
-   - Levels\<livello>\<livello>.prj2 + textures   (i 6 livelli di Tomb Editor)
+   - Levels\<livello>\<livello>.prj2               (i 6 livelli di Tomb Editor)
+   - Levels\CdV_Textures\                          (texture comuni a tutti i livelli)
    - Levels\Titolo\Titolo.prj2                      (nuovo title level: Capo Tindari sui Laghetti, diventa Data\title.ten)
    - Engine\Scripts\CdvRiprese.lua                  (interruttore della modalita' riprese)
    - Engine\FMV\LEGGIMI_VIDEO.txt                    (nomi dei video che il gioco cerca)
@@ -129,13 +130,13 @@ def main(out):
         for k in ORDER:
             d = os.path.join(B, k)
             z.write(os.path.join(d, k + ".prj2"), "Levels/%s/%s.prj2" % (k, k))
-            for f in sorted(os.listdir(os.path.join(d, "textures"))):
-                z.write(os.path.join(d, "textures", f), "Levels/%s/textures/%s" % (k, f))
             z.write(os.path.join(d, k + ".lua"), "Engine/Scripts/Levels/%s.lua" % k)
         d = os.path.join(B, "Titolo")
         z.write(os.path.join(d, "Titolo.prj2"), "Levels/Titolo/Titolo.prj2")
-        for f in sorted(os.listdir(os.path.join(d, "textures"))):
-            z.write(os.path.join(d, "textures", f), "Levels/Titolo/textures/%s" % f)
+        td = os.path.join(ROOT, "build", "textures")
+        for f in sorted(os.listdir(td)):
+            if f.endswith(".png"):
+                z.write(os.path.join(td, f), "Levels/CdV_Textures/" + f)
         z.write(os.path.join(B, "Gameflow.lua"), "Engine/Scripts/Gameflow.lua")
         z.writestr("Engine/Scripts/CdvRiprese.lua", RIPRESE.replace("\n", "\r\n"))
         z.writestr("Engine/FMV/LEGGIMI_VIDEO.txt", FMV.replace("\n", "\r\n"))

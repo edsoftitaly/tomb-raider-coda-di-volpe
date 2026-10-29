@@ -133,7 +133,8 @@ def load_atlases():
 
 def setup_textures(level, atlas_list):
     for i, a in enumerate(atlas_list):
-        level.textures.append({"path": "$(LevelDirectory)\\textures\\coda_atlas%s.png" % ("" if i == 0 else str(i + 1)),
+        # One shared copy for every level (Levels\CdV_Textures): the atlases are 17 MB in all.
+        level.textures.append({"path": "$(LevelDirectory)\\..\\CdV_Textures\\coda_atlas%s.png" % ("" if i == 0 else str(i + 1)),
                                "footsteps": a["footsteps_64px"]})
 
 
