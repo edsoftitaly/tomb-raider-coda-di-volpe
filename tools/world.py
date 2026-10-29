@@ -27,7 +27,7 @@ OSM = [os.path.join(ROOT, "data", "osm", f) for f in ("Oliveri.osm", "Tindari.os
 M = 512
 QUANT = 64
 N = 30
-HEADROOM = 12 * prj2.CLICK
+HEADROOM = 48 * prj2.CLICK     # 24 m of air over the highest point: room for flyby cameras
 to3004 = Transformer.from_crs(4326, 3004, always_xy=True)
 
 # Playable zones (lat, lon polygons).
@@ -195,13 +195,39 @@ class World:
                     add(o, inners, tags, "relation/" + tags.get("name", "?"))
         is_b = self.building_id >= 0
         self.floor[is_b] = (np.round(roof[is_b] * M / QUANT) * QUANT).astype(np.int64)[:, None]
+        self.terrace(is_b | water)
         self.floor_terrain = (np.round(fl * M / QUANT) * QUANT).astype(np.int64)
         self.floor_terrain[water] = 0
+
+    TERRACE_DROP = 1280   # 2.5 m over one 2 m sector (> 51 deg): unwalkable, and a stretched texture
+
+    def terrace(self, keep):
+        """Very steep sectors become flat ledges at their mean height (rounded to a click).
+
+        A floor face can carry at most 256 px, so a steep slope stretches its texture 1.5-4 times.
+        As flat ledges, the height differences become vertical rock faces, which the texturer splits
+        every 2 m: cliffs turn into stepped rock walls with undistorted texture.
+        """
+        f = self.floor
+        drop = np.max(np.abs(f - np.roll(f, 1, axis=2)), axis=2)
+        steep = (drop > self.TERRACE_DROP) & ~keep
+        # Grow into the steep-ish neighbours, so a cliff does not alternate ledges and sloped
+        # sectors (that made saw-tooth spikes).
+        for _ in range(2):
+            steep |= ndimage.binary_dilation(steep) & (drop > self.TERRACE_DROP * 0.55) & ~keep
+        mean = np.round(f.mean(axis=2) / 256.0) * 256.0
+        f[steep] = mean[steep].astype(np.int64)[:, None]
+        self.terraced = steep
+        return int(steep.sum())
 
     def build_materials(self):
         rng = np.random.default_rng(7)
         mat = np.full((self.nx, self.nz), "erba_secca", dtype=object)
-        mat[rng.random((self.nx, self.nz)) < 0.2] = "terra"
+        # Bare-earth patches: coherent areas of 10-30 m, not single random sectors (those made a checkerboard).
+        from gen_textures import noise
+        n = max(self.nx, self.nz)
+        patches = noise(n, n, 12, 3, 77)[:self.nx, :self.nz]
+        mat[patches > 0.66] = "terra"
         for wid, (refs, tags) in self.ways.items():
             key = next((k for k in texturing.LANDUSE if tags.get(k[0]) == k[1]), None)
             if key is None or not refs or refs[0] != refs[-1]:

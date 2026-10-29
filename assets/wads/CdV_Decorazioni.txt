@@ -45,3 +45,20 @@ Coda di Volpe - decorazioni
 143 DEHORS_OMBRELLONE: Tavolino, due sedie e ombrellone verde
 144 DEHORS_FIORIERA: Fioriera divisoria in legno con piante, 1,6 m
 145 OMBRELLONE_SPIAGGIA: Ombrellone da spiaggia a strisce blu
+150 SANTUARIO_FACCIATA: Facciata: corpo centrale aggettante, portale, oculo, frontone AVE MARIA
+151 SANTUARIO_CAMPANILE_SX: Campanile sinistro (nord): orologio nell'oculo cieco e piccola cella esterna
+152 SANTUARIO_CAMPANILE_DX: Campanile destro (sud): monofore alla cella campanaria
+153 SANTUARIO_NAVATA_NORD: Fianco nord della navata (verso la loggia)
+154 SANTUARIO_NAVATA_SUD: Fianco sud della navata fino al transetto
+155 SANTUARIO_TRANSETTO: Braccio sud del transetto
+156 SANTUARIO_NAVATA_SUD_EST: Fianco sud dopo il transetto
+157 SANTUARIO_ABSIDE: Testata est con abside semicircolare e tetto a semicono
+158 SANTUARIO_TETTO: Tetto della navata in ceramica azzurra
+159 SANTUARIO_CUPOLA: Tetto del transetto e cupola sull'incrocio
+160 SANTUARIO_LOGGIA_1: Loggia nord (76 x 8 m) sui laghetti, tratto 1 di 4
+161 SANTUARIO_LOGGIA_2: Loggia nord (76 x 8 m) sui laghetti, tratto 2 di 4
+162 SANTUARIO_LOGGIA_3: Loggia nord (76 x 8 m) sui laghetti, tratto 3 di 4
+163 SANTUARIO_LOGGIA_4: Loggia nord (76 x 8 m) sui laghetti, tratto 4 di 4
+164 SANTUARIO_PILASTRO: Pilastro della loggia (con collisione), piazzato a ogni campata
+165 SANTUARIO_ANTICO: Santuario antico (1552-1598): intonaco, portale con chiave datata 1598, campanile a vela, tetto in coppi
+166 SANTUARIO_BASAMENTO: Basamento in pietra sotto la facciata e i campanili (fino alla roccia)

@@ -272,6 +272,10 @@ def build():
     pk.put("umbrella_beach", stripes(128, 64, (240, 238, 230), (40, 90, 170), 8))
     pk.put("cloth", solid(64, 64, (240, 238, 232), 29, 0.05))
     pk.put("chair_alu", solid(32, 32, (170, 172, 175), 30, 0.1))
+    # --- Santuario di Tindari ---
+    pk.new_page()
+    from decor import santuario_tex
+    santuario_tex.build(pk)
     return pages, REG
 
 

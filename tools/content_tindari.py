@@ -19,6 +19,8 @@ ROCCA = (258, 212)
 
 
 def prepare(world):
+    import santuario
+    santuario.prepare(world)
     # Teatro Greco: the OSM outline is a solid block; carve a cavea of 1-click terraces around the orchestra.
     ids = [i for i, b in enumerate(world.buildings) if b["tags"].get("name") == "Teatro Greco di Tindari"]
     mask = np.isin(world.building_id, ids)
@@ -49,9 +51,25 @@ def prepare(world):
 DECOR = dict(centre=(200, 225, 25))
 
 
+def santuario_scene(ctx):
+    """The basilica and its square (see santuario.py for sources and estimates)."""
+    import santuario as S
+    k = ctx.kit
+    S.place(ctx)
+    F = ctx.world.santuario["F"]
+    # Square: four lamps, benches facing the facade, two big white pots by the steps.
+    for u, v in ((-6, -9), (-6, 9), (-20, -9), (-20, 9)):
+        k.prop("LAMPIONE_PIAZZA", *S.to_world(u, v), rot=S.AXIS_DEG, h=F)
+    for u, v in ((-14, -13), (-14, 13), (-24, -13), (-24, 13)):
+        k.prop("PANCHINA", *S.to_world(u, v), rot=S.AXIS_DEG + (0 if v < 0 else 180), h=F)
+    for v in (-4.2, 4.2):
+        k.prop("VASO_BIANCO_FIORI", *S.to_world(-3.0, v), rot=S.AXIS_DEG, h=F)
+
+
 def build(ctx):
-    ctx.decor_block = [(30, 322, 72, 362), (78, 296, 92, 312)]
+    ctx.decor_block = [(30, 322, 72, 362), (78, 296, 92, 312), (204, 198, 252, 232)]
     k, lua = ctx.kit, ctx.lua
+    santuario_scene(ctx)
     sx, sz = k.spot(*START)
     k.place(K.LARA, sx, sz, rot=315.0, name="lara_start")
     k.place(K.LARA_START_POS, sx, sz, ocb=1)
@@ -68,7 +86,7 @@ CDV.Say("Tindari, in cima alla rupe. Il santuario della Madonna Nera, e piu' in 
     k.place(K.SMALLMEDI, *k.spot(215, 200))
     bx, bz = k.spot(*BELVEDERE)
     lua.zone("belvedere", k.lua_pos(bx, bz, ctx.ground(bx, bz)), r=2200, dy=3000, once=False, secs=10,
-             text="ENIGMA - Dal belvedere la lingua di sabbia disegna prima una LUNA, poi una STELLA, e il suo ultimo ricciolo e' un SOLE.")
+             text="Laggiu' la lingua di sabbia: da qui sembra disegnare una luna, poi una stella, e l'ultimo ricciolo e' un sole.")
 
     # E8: twin levers at the Basilica and the Tower, 30 seconds.
     tor = k.lever_spot(TORRE[0], TORRE[1] - 3)
@@ -93,7 +111,7 @@ CDV.Say("Tindari, in cima alla rupe. Il santuario della Madonna Nera, e piu' in 
              fn='CDV.Enable("tombarolo_b0")\nCDV.Enable("tombarolo_b1")\nCDV.Enable("tombarolo_t")',
              text="Gli uomini della Volpe scavano tra le rovine di Tyndaris.")
     lua.zone("leve_gemelle", k.lua_pos(bas[0], bas[1], ctx.ground(bas[0], bas[1])), r=2500, dy=3000, secs=8,
-             text="Una leva con il simbolo di Castore. Ce n'e' una gemella, con Polluce, alla Torre: vanno tirate insieme.")
+             text="Una leva con il simbolo di Castore. Il fratello Polluce dev'essere da qualche parte, verso la Torre.")
     k.place(K.UZI_AMMO, *k.spot(100, 300))
     k.place(K.BIGMEDI, *k.spot(70, 320))
 
@@ -162,7 +180,13 @@ CDV.Loop(function()
                 end
             else
                 CDV.Flag("cripta_step", 0)
-                CDV.Say("Il meccanismo torna indietro. Ordine sbagliato.", 4)
+                local n = (CDV.Flag("cripta_errori") or 0) + 1
+                CDV.Flag("cripta_errori", n)
+                if n <= 2 then
+                    CDV.Enable("ratto_extra" .. (2 * n - 2))
+                    CDV.Enable("ratto_extra" .. (2 * n - 1))
+                end
+                CDV.Say("Il meccanismo torna indietro e dalle fessure escono i topi!", 4)
             end
         end
         was[key] = on
@@ -171,27 +195,24 @@ end)''')
     k.place(K.SHOTGUN_AMMO1, 54, 335, room=H.room)
     lua.secret(8, k.lua_pos(55, 334, fl0), r=800, text="Dietro una colonna della cripta: una Stella dei Dioscuri!")
 
-    # Donna Villa after the Astro.
-    for i, (x, z) in enumerate(((64, 330), (76, 322))):
-        p = k.spot(x, z)
-        k.place(K.WRAITH2 if i == 0 else K.WRAITH3, *p, h=ctx.ground(*p) + 3 * CLICK, name="donna_villa%d" % i)
-    lua.zone("astro", k.lua_pos(58, 338, h_orch), r=3000, dy=3000, need="CDV.Has(ID.PUZZLE_ITEM7)",
-             fn='CDV.Enable("donna_villa0")\nCDV.Enable("donna_villa1")',
-             text="Donna Villa! \"L'Astro di Castore e' mio, come quello di Polluce sotto il mare.\" Alla Rocca Femmina, verso il mare!")
+    for i, (x, z) in enumerate(((49, 341), (55, 341), (49, 335), (55, 335))):
+        k.place(K.BIG_RAT, x, z, room=H.room, name="ratto_extra%d" % i)
+
+    # The Astro opens the way down to the sea (Sommersa starts in a sea cave under the cape);
+    # Donna Villa's spirits come into the crypt to stop Lara. No more 470 m run back to the Rocca.
+    D = k.interior("CRIPTA_DISCESA", ["."] * 9 + ["M"], 51, 343, fl0, 7 * CLICK, *tex, ambient=(0.25, 0.3, 0.34))
+    k.link_wall(H, D, span=(51, 51))
+    k.place(K.DOOR_TYPE3, *D.anchors["M"], room=D.room, rot=0.0, name="porta_mare")
+    for i, (x, z) in enumerate(((48, 336), (54, 341))):
+        k.place(K.WRAITH2 if i == 0 else K.WRAITH3, x, z, room=H.room, h=fl0 + 3 * CLICK, name="donna_villa%d" % i)
+    lua.zone("astro", k.lua_pos(*H.anchors["N"], fl0), r=1500, dy=1500, need="CDV.Has(ID.PUZZLE_ITEM7)",
+             fn='CDV.Enable("donna_villa0")\nCDV.Enable("donna_villa1")\nCDV.Enable("porta_mare")',
+             text="Donna Villa! \"L'Astro di Castore e' mio, come quello di Polluce sotto il mare.\" A nord si apre un cunicolo: si sente il mare!")
+    lua.zone("discesa", k.lua_pos(51, 351, fl0), r=1500, dy=1500, need="CDV.Has(ID.PUZZLE_ITEM7)",
+             text="Il cunicolo scende sotto il capo, fino al mare. Donna Villa e' passata di qui.", fn="CDV.End(6, 1)")
     s2 = k.spot(30, 360)
     lua.secret(9, k.lua_pos(*s2, ctx.ground(*s2)), r=900)
     k.place(K.FLARE_ITEM, *s2)
-    rx, rz = k.spot(*ROCCA)
-    lua.zone("rocca", k.lua_pos(rx, rz, ctx.ground(rx, rz)), r=2500, dy=4000, need="CDV.Has(ID.PUZZLE_ITEM7)",
-             text="La Rocca Femmina. Donna Villa scompare tra le onde, verso la citta' sommersa. Lara si tuffa.",
-             fn='CDV.Flag("tuffo", 0)')
-    lua.loop('''
-local t = CDV.Flag("tuffo")
-if t ~= nil then
-    t = t + 1
-    CDV.Flag("tuffo", t)
-    if t == 150 then CDV.End(6, 1) end
-end''')
     ctx.notes += [
         "",
         "LIVELLO 5 - TINDARI",
@@ -203,6 +224,7 @@ end''')
         "4. Cripta: usare il Sigillo della tonnara sulla porta a ovest. Due ratti.",
         "5. ENIGMA E9: tre leve sul muro nord (da ovest: Sole, Luna, Stella). Tirarle nell'ordine Luna, Stella, Sole.",
         "   La nicchia a ovest si apre: Astro di Castore. Segreto 9: angolo sud-est della sala.",
-        "6. Fuori, due spiriti di Donna Villa. Segreto 10: dietro il teatro, a ovest.",
-        "7. Si corre alla Rocca Femmina (est del santuario, sul ciglio della rupe): Lara si tuffa. Fine livello.",
+        "   Ordine sbagliato: il meccanismo si azzera ed escono due topi (alla prima e alla seconda volta).",
+        "6. Preso l'Astro entrano due spiriti di Donna Villa e si apre una porta a nord: il cunicolo scende al mare.",
+        "   In fondo al cunicolo finisce il livello. Segreto 10 (facoltativo): dietro il teatro, a ovest.",
     ]

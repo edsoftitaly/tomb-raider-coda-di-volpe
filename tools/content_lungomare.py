@@ -20,7 +20,6 @@ def build(ctx):
     k.place(K.LARA_START_POS, sx, sz, ocb=1)
     bx, bz = k.spot(*BIKE)
     k.place(K.MOTORBIKE, bx, bz, rot=315.0, name="moto")
-    k.place(K.SMALLMEDI, *k.spot(246, 84))
     lua.start('''CDV.Say("Alba alla stazione di Oliveri-Tindari. La moto della banda e' ancora qui: verso Marinello!", 7)''')
 
     # Uzi and ammo at the Lido Baiadera, guarded by two gunmen.
@@ -40,6 +39,13 @@ def build(ctx):
     lua.zone("ruota", k.lua_pos(ruota[0], ruota[1], ctx.ground(*k.spot(*ruota))), r=18000, dy=8000,
              fn='CDV.Enable("cane_ruota0")\nCDV.Enable("cane_ruota1")')
     k.place(K.SHOTGUN_AMMO1, *k.spot(ruota[0] + 5, ruota[1] + 5))
+
+    # Between the Ruota and Marinello (about 250 m): two men on the road by the camp site.
+    for i, (x, z) in enumerate(((204, 280), (196, 292))):
+        k.place(K.BADDY1, *k.spot(x, z), rot=180.0, name="strada%d" % i)
+    lua.zone("strada", k.lua_pos(*k.spot(206, 262), ctx.ground(206, 262)), r=14000, dy=8000,
+             fn='CDV.Enable("strada0")\nCDV.Enable("strada1")')
+    k.place(K.UZI_AMMO, *k.spot(200, 286))
 
     # Last guard before Marinello.
     k.place(K.BADDY2, *k.spot(185, 345), name="guardia_marinello")
@@ -62,7 +68,7 @@ def build(ctx):
         "LIVELLO 2 - IL LUNGOMARE",
         "1. Davanti alla stazione c'e' la moto: si sale e si prende Via Stazione verso il mare, poi il lungomare a nord.",
         "2. Posto di blocco al Lido Baiadera: due uomini con le Uzi; Uzi, munizioni e medikit grande vicino al lido.",
-        "3. Alla Ruota due dobermann. Prima di Marinello un'ultima guardia.",
+        "3. Alla Ruota due dobermann. Vicino al campeggio due uomini sulla strada, prima di Marinello un'ultima guardia.",
         "   Segreto 4: sugli scogli della spiaggia, a sud del lido. Segreto 5: dietro il campeggio Villaggio Marinello, verso la collina.",
         "4. Il livello finisce davanti al Piro Piro Bar.",
     ]

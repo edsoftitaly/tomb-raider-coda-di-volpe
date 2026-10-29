@@ -12,6 +12,18 @@ PROJECT = "C:\\CodaDiVolpe"
 LEGGIMI = r"""TOMB RAIDER - CODA DI VOLPE  (episodio completo, 6 livelli, TombEngine)
 ==========================================================================
 
+NOVITA' DELLA v4
+- Santuario di Tindari modellato: basilica con facciata a capanna tra due campanili (orologio e monofore),
+  portale bugnato con le porte in bronzo e San Pietro e San Paolo nelle nicchie, oculo, frontone AVE MARIA,
+  tetti e cupola in ceramica azzurra, loggia nord di 76 m sui laghetti, santuario antico con il portale
+  del 1598. Il title level ora gira intorno alla basilica.
+- Terreno: texture grandi senza giunte (si ripetono ogni 16-32 m invece di 2 m), rupi a gradoni di roccia
+  invece dei pendii con la texture stirata.
+- Percorsi: i Laghetti passano da circa 1,3 km a circa 250 m (niente andata e ritorno), Tindari finisce
+  nella cripta con un cunicolo verso il mare (niente corsa di 470 m alla Rocca).
+- Incontri in piu' sui tratti lunghi (Oliveri, Lungomare, Marinello, Laghetti), imboscata ai Laghetti,
+  topi se si sbaglia l'ordine delle leve nella cripta, meno soluzioni scritte a schermo.
+
 INSTALLAZIONE
 1. Estrai lo zip DENTRO C:\CodaDiVolpe e sovrascrivi tutto. Vengono aggiunti/sostituiti:
    - Levels\<livello>\<livello>.prj2 + textures   (i 6 livelli di Tomb Editor)

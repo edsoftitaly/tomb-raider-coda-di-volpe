@@ -21,6 +21,12 @@ CEIL_MARGIN = 160            # stay below room ceilings
 # Flyby flags (TombEngine spotcam.h)
 CUT_PAN, LOOP, HIDE_LARA = 1, 4, 16
 
+def _sant(u, v, h):
+    import santuario
+    x, z = santuario.to_world(u, v)
+    return (x, z, h)
+
+
 SHOTS = {
     "Oliveri": [
         dict(name="Sui tetti di Oliveri", v=2.0, fov=70,
@@ -68,7 +74,7 @@ SHOTS = {
         dict(name="La lingua di sabbia", v=2.5, fov=70,
              path=[(335, 120, 2.5), (340, 160, 2.5), (338, 200, 3)],
              look=[(150, 120, 20)],
-             note="Sulla lingua di sabbia dove aspetta la banda, la rupe sullo sfondo."),
+             note="Sulla lingua di sabbia, la rupe sullo sfondo."),
     ],
     "Tindari": [
         dict(name="Il teatro greco", v=1.5, fov=75,
@@ -76,9 +82,17 @@ SHOTS = {
              look=[(58, 338, 1)],
              note="Dalla cavea verso l'orchestra (la botola dell'enigma)."),
         dict(name="Rocca Femmina", v=1.5, fov=70,
-             path=[(245, 215, 2), (255, 222, 2.5), (262, 230, 3)],
+             path=[_sant(96, -18, 2), _sant(104, -8, 2.5), _sant(110, 4, 3)],
              look=[(300, 320, 0)],
              note="Dal ciglio della rupe: la lingua di sabbia e i laghetti (luna, stella, sole)."),
+        dict(name="Il santuario", v=1.2, fov=60,
+             path=[_sant(-44, 7, "F+1.8"), _sant(-32, 4, "F+2.4"), _sant(-20, 1, "F+3")],
+             look=[_sant(0, 0, "F+11"), _sant(0, 0, "F+12"), _sant(0, 0, "F+14")],
+             note="Dal piazzale verso la facciata della basilica, tra i due campanili."),
+        dict(name="La loggia", v=1.2, fov=70,
+             path=[_sant(-1, 15, "F+1.7"), _sant(20, 15, "F+1.7"), _sant(40, 15, "F+1.7")],
+             look=[_sant(20, 15.5, "F+2"), _sant(40, 16, "F+2"), _sant(60, 16, "F+2")],
+             note="Lungo la loggia nord, con i laghetti oltre le arcate."),
         dict(name="Il parco archeologico", v=2.0, fov=70,
              path=[(110, 310, 4), (125, 312, 4), (136, 302, 4)],
              look=[(122, 296, 3)],
@@ -87,9 +101,11 @@ SHOTS = {
 }
 
 # Title level (built from the Tindari terrain): slow endless loop on the edge of the cape, over the Laghetti.
-TITLE = dict(name="Titolo", v=1.0, fov=65, loop=True,
-             path=[(245, 215, 3), (253, 221, 3.5), (260, 229, 4), (254, 236, 4), (246, 229, 3.5)],
-             look=[(300, 320, 0), (318, 338, 0), (300, 352, 0), (282, 330, 0), (290, 312, 0)])
+# Title: a slow orbit around the basilica on the promontory (about 60 m out), always looking at it.
+TITLE = dict(name="Titolo", v=2.0, fov=60, loop=True,
+             path=[_sant(33 + 50 * math.cos(a), 50 * math.sin(a), "F+16") for a in
+                   [math.radians(d) for d in (200, 150, 110, 70, 30, -10, -50, -110, -160)]],
+             look=[_sant(30, 0, "F+11")])
 
 
 def _ground(world, x, z):
@@ -97,6 +113,13 @@ def _ground(world, x, z):
     x0, x1 = max(0, int(x) - 1), min(world.nx, int(x) + 2)
     z0, z1 = max(0, int(z) - 1), min(world.nz, int(z) + 2)
     return float(world.floor[x0:x1, z0:z1].max())
+
+
+def _y(world, x, z, h):
+    """h = metres above the ground, or "F+n" = n metres above the floor of the sanctuary square."""
+    if isinstance(h, str) and h.startswith("F"):
+        return world.santuario["F"] + float(h[1:]) * M
+    return _ground(world, x, z) + h * M
 
 
 def _ceil(room, x, z):
@@ -109,7 +132,7 @@ def cameras(ctx, shot):
     world, kit = ctx.world, ctx.kit
     pts = []
     for i, (x, z, h) in enumerate(shot["path"]):
-        y = _ground(world, x, z) + h * M
+        y = _y(world, x, z, h)
         pts.append([x * SECTOR + 512.0, y, z * SECTOR + 512.0])
     # clearance between consecutive cameras: raise both ends until the straight line clears the ground
     for _ in range(4):
@@ -124,7 +147,7 @@ def cameras(ctx, shot):
     out = []
     for i, p in enumerate(pts):
         lx, lz, lh = looks[min(i, len(looks) - 1)]
-        ly = _ground(world, lx, lz) + lh * M
+        ly = _y(world, lx, lz, lh)
         room = kit.room_at(p[0] / SECTOR, p[2] / SECTOR)
         c = _ceil(room, p[0] / SECTOR, p[2] / SECTOR) - CEIL_MARGIN
         if p[1] > c:

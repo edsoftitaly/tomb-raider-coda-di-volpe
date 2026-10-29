@@ -126,8 +126,10 @@ def building_styles(buildings, casa_id=None):
 
 
 class Texturer:
-    def __init__(self, atlas, floor, mat, building_id, styles, bases):
+    def __init__(self, atlas, floor, mat, building_id, styles, bases, macro=None, columns=None):
         self.a = atlas
+        self.columns = columns or {}   # extra vertical columns: name -> (texture index, x0, x1)
+        self.macro = macro or {}   # material -> (texture index, x0, y0, size px): seamless big tiles
         self.floor = floor
         self.mat = mat
         self.bid = building_id
@@ -139,6 +141,18 @@ class Texturer:
     # Floors -----------------------------------------------------------------
     def floor_coords(self, wi, wj, f, split):
         name = self.mat[wi, wj]
+        if name in self.macro:
+            ti, x0, y0, size = self.macro[name]
+            n = size // 256
+            col, row = wi % n, (n - 1) - (wj % n)   # u along +X, v along -Z (tl = XnZp corner)
+            ax, ay = x0 + col * 256, y0 + row * 256
+            e = 0.25
+            tl, tr, br, bl = (ax + e, ay + e), (ax + 256 - e, ay + e), (ax + 256 - e, ay + 256 - e), (ax + e, ay + 256 - e)
+            if prj2_is_quad(f):
+                return [(prj2.F_FLOOR, [tl, tr, br, bl], ti)]
+            if split:
+                return [(prj2.F_FLOOR, [tr, br, bl, bl], ti), (prj2.F_FLOOR_TRI2, [bl, tl, tr, tr], ti)]
+            return [(prj2.F_FLOOR, [tl, tr, br, br], ti), (prj2.F_FLOOR_TRI2, [br, bl, tl, tl], ti)]
         if name in ("asfalto", "erba_secca") and h32("t2", wi, wj) % 2:
             name = name + "2"
         x0, y0, x1, y1 = self.a["tiles"][name]
@@ -149,10 +163,10 @@ class Texturer:
             quad = quad[r:] + quad[:r]
         tl, tr, br, bl = quad
         if prj2_is_quad(f):
-            return [(prj2.F_FLOOR, [tl, tr, br, bl])]
+            return [(prj2.F_FLOOR, [tl, tr, br, bl], 0)]
         if split:   # diagonal XnZn-XpZp
-            return [(prj2.F_FLOOR, [tr, br, bl, bl]), (prj2.F_FLOOR_TRI2, [bl, tl, tr, tr])]
-        return [(prj2.F_FLOOR, [tl, tr, br, br]), (prj2.F_FLOOR_TRI2, [br, bl, tl, tl])]
+            return [(prj2.F_FLOOR, [tr, br, bl, bl], 0), (prj2.F_FLOOR_TRI2, [bl, tl, tr, tr], 0)]
+        return [(prj2.F_FLOOR, [tl, tr, br, br], 0), (prj2.F_FLOOR_TRI2, [br, bl, tl, tl], 0)]
 
     # Walls ------------------------------------------------------------------
     # Tomb Editor accepts at most 256 x 256 px per face, i.e. 2 m of facade at 128 px/m.
@@ -163,6 +177,9 @@ class Texturer:
     def column_for(self, wi, wj, d):
         b = self.bid[wi, wj]
         if b < 0:
+            if "roccia_faccia_0" in self.columns:
+                along = wi if d in ("+z", "-z") else wj   # position along the wall: continuous rock face
+                return "roccia_faccia_%d" % (along % 8), None
             return "roccia_parete", None
         style = self.styles[b]
         if style == "castello":
@@ -173,7 +190,10 @@ class Texturer:
 
     def segment_coords(self, col, ref, top, bot, room_y):
         """top/bot: (start, end) heights in room units. Returns TL, TR, BR, BL pixel coords."""
-        x0, _, x1, _ = self.a["columns"][col]
+        if col in self.columns:
+            _, x0, x1 = self.columns[col]
+        else:
+            x0, _, x1, _ = self.a["columns"][col]
         world = [(h + room_y) / M for h in (top[0], top[1], bot[1], bot[0])]
         if ref is None:  # rock: keep the segment inside the 16 m column
             lo = min(world[2], world[3])
@@ -216,7 +236,8 @@ class Texturer:
                 bot = tops[k + 1]
             if top[0] <= bot[0] and top[1] <= bot[1]:
                 continue
-            s.set_tex(prj2.f_wall_floor(d, k), self.segment_coords(col, ref, top, bot, room.y))
+            ti = self.columns[col][0] if col in self.columns else 0
+            s.set_tex(prj2.f_wall_floor(d, k), self.segment_coords(col, ref, top, bot, room.y), ti)
 
     def apply_room(self, room, wx0, wz0):
         """wx0, wz0: world array index of the room's local sector (0, 0)."""
@@ -231,8 +252,8 @@ class Texturer:
                 wi, wj = wx0 + lx, wz0 + lz
                 border = lx in (0, n_x - 1) or lz in (0, n_z - 1)
                 if not border:
-                    for face, coords in self.floor_coords(wi, wj, s.floor, s.fsplit):
-                        s.set_tex(face, coords)
+                    for face, coords, ti in self.floor_coords(wi, wj, s.floor, s.fsplit):
+                        s.set_tex(face, coords, ti)
                     s.set_invisible(prj2.F_CEILING)
                     s.set_invisible(prj2.F_CEILING_TRI2)
                 for d, (oi, pi, (dx, dz)) in DIRS.items():

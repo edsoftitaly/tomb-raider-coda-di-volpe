@@ -182,6 +182,7 @@ def add_statics(rooms, statics, keep, pos, uv, tix, out_dir):
     from decor import tex
     tex.build()
     from decor import models
+    from decor import santuario_models  # noqa: F401
     tex.save(out_dir)
     lib = {}
     for sid, name, mesh, coll, note in models.build_all():
@@ -204,7 +205,7 @@ def add_statics(rooms, statics, keep, pos, uv, tix, out_dir):
                 x, y, z = p * sc
                 pos.extend([(ox + x * ca + z * sa) / 512.0, (oy + y) / 512.0, (oz - x * sa + z * ca) / 512.0])
                 uv.extend([t[0] / 512.0, t[1] / 512.0])
-            tix.append(3 + page)
+            tix.append(9 + page)
 
 
 if __name__ == "__main__":
@@ -227,7 +228,7 @@ if __name__ == "__main__":
         color = 0xff2020 if t in kit.ENEMIES else 0xffd020 if (950 <= t <= 990 or 500 <= t < 520) else \
             0x20e020 if 800 <= t < 830 else 0xffffff
         marks.append(w + [color])
-    sizes = [2048.0, 2048.0, 1024.0, 2048.0, 2048.0, 2048.0]
+    sizes = [2048.0, 2048.0, 1024.0] + [2048.0] * 6 + [2048.0] * 7
     for i, t in enumerate(tix):
         for k in range(3):
             j = (i * 3 + k) * 2

@@ -102,9 +102,31 @@ def make_level():
     return level
 
 
+ATLAS_NAMES = ["coda_atlas"] + ["coda_atlas%d" % i for i in range(2, 10)]
+
+
+def macro_tiles(atlas_list):
+    out = {}
+    for i, a in enumerate(atlas_list):
+        for name, (x0, y0, size) in a.get("macro", {}).items():
+            out[name] = (i, x0, y0, size)
+    return out
+
+
+def extra_columns(atlas_list):
+    out = {}
+    for i, a in enumerate(atlas_list):
+        if i == 0:
+            continue
+        for name, (x0, y0, x1, y1) in a.get("columns", {}).items():
+            if name.startswith("roccia_faccia"):
+                out[name] = (i, x0, x1)
+    return out
+
+
 def load_atlases():
     out = []
-    for name in ("coda_atlas", "coda_atlas2", "coda_atlas3"):
+    for name in ATLAS_NAMES:
         out.append(json.load(open(os.path.join(ROOT, "build", "textures", name + ".json"))))
     return out
 
@@ -136,7 +158,7 @@ def build_terrain_level(key, content):
     world.casa_id = casa_id
     styles = texturing.building_styles(world.buildings, casa_id)
     texer = texturing.Texturer(atlas_list[0], world.floor, world.mat, world.building_id, styles,
-                               [b["base_m"] for b in world.buildings])
+                               [b["base_m"] for b in world.buildings], macro=macro_tiles(atlas_list), columns=extra_columns(atlas_list))
 
     level = make_level()
     level.use_tombide_ten(LEVELS[key].get("ten", key + ".ten"), wads=WADS)
@@ -150,7 +172,7 @@ def build_terrain_level(key, content):
 def save(ctx):
     out = os.path.join(OUT, ctx.key)
     os.makedirs(os.path.join(out, "textures"), exist_ok=True)
-    for f in ("coda_atlas.png", "coda_atlas2.png", "coda_atlas3.png"):
+    for f in [n + ".png" for n in ATLAS_NAMES]:
         shutil.copy(os.path.join(ROOT, "build", "textures", f), os.path.join(out, "textures", f))
     size = ctx.level.save(os.path.join(out, ctx.key + ".prj2"))
     with open(os.path.join(out, ctx.key + ".lua"), "w", newline="\r\n") as f:

@@ -35,9 +35,13 @@ check("rete_morte" not in t.last("enable"), "door shut after wrong order")
 for name in ("camera_levante", "camera_tramontana", "camera_ponente"):
     t.at(zone(t, name), 3)
 check("rete_morte" in t.last("enable"), "door opens with levante, tramontana, ponente")
+t.at(zone(t, "agguato"), 3)
+check("banda0" not in t.last("enable"), "no ambush before the seal")
 t.at(zone(t, "fine"), 3)
 check(not t.last("end"), "no exit without the seal")
 t.H.give(t.item("PUZZLE_ITEM6"))
+t.at(zone(t, "agguato"), 3)
+check(all(("banda%d" % i) in t.last("enable") for i in range(5)), "ambush on the west shore after the seal")
 t.at(zone(t, "fine"), 3)
 check(t.last("end") == ["5:1"], "exit to Tindari with the seal")
 
@@ -54,13 +58,17 @@ check("botola_teatro" in t.last("enable"), "both levers open the theatre trapdoo
 for key in ("luna", "sole"):
     t.H.pull("leva_" + key); t.H.tick(2); t.H.pull("leva_" + key); t.H.tick(2)
 check("porta_astro" not in t.last("enable"), "wrong crypt order keeps the niche shut")
+check("ratto_extra0" in t.last("enable") and "ratto_extra1" in t.last("enable"), "wrong crypt order releases rats")
 for key in ("luna", "stella", "sole"):
     t.H.pull("leva_" + key); t.H.tick(2); t.H.pull("leva_" + key); t.H.tick(2)
 check("porta_astro" in t.last("enable"), "luna, stella, sole opens the niche")
+t.at(zone(t, "discesa"), 3)
+check(not t.last("end"), "no exit to the sea without the Astro")
 t.H.give(t.item("PUZZLE_ITEM7"))
-t.at(zone(t, "rocca"), 3)
-t.H.tick(200)
-check(t.last("end") == ["6:1"], "dive ends the level towards Sommersa")
+t.at(zone(t, "astro"), 3)
+check("porta_mare" in t.last("enable") and "donna_villa0" in t.last("enable"), "Astro opens the sea passage and wakes the spirits")
+t.at(zone(t, "discesa"), 3)
+check(t.last("end") == ["6:1"], "the passage to the sea ends the level towards Sommersa")
 
 # Sommersa: witch, Turi, altar.
 D = "../build/levels/Sommersa"

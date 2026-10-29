@@ -144,7 +144,13 @@ def build(ctx):
              fn='CDV.Enable("cane1")\nCDV.Enable("cane2")', text="I cani della Volpe!")
     lua.zone("saia_hint", k.lua_pos(190, 176, ctx.ground(190, 176)), r=3000, dy=4000, need='CDV.Dead("cane1") and CDV.Dead("cane2")',
              text="Le tracce del ladro portano a Via Saia Interna, verso il tombino del vecchio canale.")
-    ctx.notes += ["6. In Piazza 24 Maggio due dobermann. Le tracce portano a Via Saia Interna (a sud): tombino in mezzo al vicolo."]
+    # Via Saia Interna (about 150 m of street): the thief with the diary has left a man behind
+    # to cover his escape, shooting from a corner.
+    k.place(K.BADDY1, *k.spot(197, 128), rot=0.0, name="copertura")
+    lua.zone("vicolo", k.lua_pos(*k.spot(195, 145), ctx.ground(195, 145)), r=6000, dy=5000,
+             fn='CDV.Enable("copertura")', text="Uno della banda copre la fuga del ladro!")
+    ctx.notes += ["6. In Piazza 24 Maggio due dobermann. Le tracce portano a Via Saia Interna (a sud): tombino in mezzo al vicolo.",
+                  "   Nel vicolo un uomo della banda copre la fuga del ladro."]
 
     saia(ctx)
     castle(ctx)
@@ -223,7 +229,8 @@ end''')
         "   ENIGMA E1: iscrizione \"Castore beve, Polluce dorme, Tindaro apre la via\": leve di Castore e Tindaro alzate,",
         "   quella di Polluce abbassata. Il cancello a ovest si apre.",
         "   Segreto 2: nicchia nell'angolo sud-ovest della camera dietro il cancello.",
-        "8. Si sale dal tombino nel campo e si va a ovest verso il castello.",
+        "8. Si sale dal tombino nel campo e si va a ovest verso il castello. A meta' campo, tra gli ulivi,",
+        "   due cani e una guardia.",
     ]
 
 
@@ -234,15 +241,24 @@ def castle(ctx):
     k.place(K.BADDY1, 40, 74, name="vedetta1")
     k.place(K.BADDY2, 36, 66, name="vedetta2")
     lua.zone("campo", k.lua_pos(60, 80, ctx.ground(60, 80)), r=12000, dy=6000,
-             fn='CDV.Enable("vedetta1")\nCDV.Enable("vedetta2")',
+             fn='CDV.Enable("vedetta1")\nCDV.Enable("vedetta2")\nCDV.Enable("vedetta3")',
              text="Il castello di Oliveri. La rampa sale dal lato nord.")
-    k.place(K.SMALLMEDI, 34, 60)
+    # Halfway across the field (Saia exit -> castle is about 240 m): the gang's dogs come out of the
+    # olive grove, and a third man watches from the top of the ramp.
+    for i, (x, z) in enumerate(((98, 92), (102, 84))):
+        k.place(K.DOBERMAN, *k.spot(x, z), name="cane_campo%d" % i)
+    k.place(K.BADDY1, *k.spot(110, 88), name="guardia_campo")
+    k.place(K.SHOTGUN_AMMO1, *k.spot(104, 90))
+    lua.zone("campo_cani", k.lua_pos(*k.spot(120, 94), ctx.ground(120, 94)), r=9000, dy=6000,
+             fn='CDV.Enable("cane_campo0")\nCDV.Enable("cane_campo1")\nCDV.Enable("guardia_campo")',
+             text="Cani tra gli ulivi! La banda sorveglia il campo.")
+    k.place(K.BADDY2, *k.spot(36, 74), name="vedetta3")
     # Courtyard: the thief, two Gemini stones and their stars.
     k.place(K.BADDY1, 47, 41, name="capo_ladri")
     lua.zone("cortile", k.lua_pos(41, 36, YARD_H), r=1500, dy=1500, fn='CDV.Enable("capo_ladri")',
              text="Il capo dei ladri! Ha qualcosa in mano...")
     lua.zone("morto_capo", k.lua_pos(47, 38, YARD_H), r=6000, dy=2000, need='CDV.Dead("capo_ladri")',
-             text="Prima di cadere ha gettato il diario nella cisterna. La botola si apre solo con le due pietre dei Gemelli sulle stelle.")
+             text="Prima di cadere ha gettato il diario nella cisterna. La botola e' chiusa da un meccanismo.")
     trap = k.place(K.FLOOR_TRAPDOOR1, CISTERN_HOLE[0], CISTERN_HOLE[1], name="botola_cisterna")
     for i, (start, star) in enumerate(PUSH):
         k.place(K.PUSHABLE, start[0], start[1], name="pietra%d" % i)
@@ -253,7 +269,7 @@ def castle(ctx):
         import walls
         walls.set_floor(sec, ctx.atlases, "stella_dioscuri")
     lua.zone("stelle", k.lua_pos(46, 40, YARD_H), r=2500, dy=1500, once=True,
-             text="Due stelle incise nel lastricato: Castore e Polluce. Le pietre vanno spinte sopra.")
+             text="Due stelle incise nel lastricato, con i nomi di Castore e Polluce.")
 
     # Cistern: air room with ledges and a pool, water room below.
     cx0, cz0 = 44, 31
@@ -300,7 +316,7 @@ if t ~= nil then
     if t == 240 then CDV.End(2, 1) end
 end''')
     ctx.notes += [
-        "9. Nel campo due vedette. Una rampa sale dal lato nord-ovest del colle fino al pianoro, poi la porta ovest del castello.",
+        "9. Sotto il castello tre vedette. Una rampa sale dal lato nord-ovest del colle fino al pianoro, poi la porta ovest del castello.",
         "10. Nel cortile il capo dei ladri. ENIGMA E2: spingere le due pietre verso nord sulle stelle incise",
         "    (pietra ovest e pietra est, tre spinte ciascuna). La botola della cisterna si apre.",
         "11. Cisterna: due pipistrelli, il Diario bizantino sul fondo dell'acqua. Segreto 3: sul cornicione a nord-ovest.",

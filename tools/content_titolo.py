@@ -9,8 +9,10 @@ DECOR = dict(centre=(200, 225, 25))
 
 
 def build(ctx):
-    ctx.decor_block = list(getattr(ctx, "decor_block", []))
+    ctx.decor_block = list(getattr(ctx, "decor_block", [])) + [(204, 198, 252, 232)]
     k = ctx.kit
+    import content_tindari
+    content_tindari.santuario_scene(ctx)
     x, z = k.spot(246, 172)
     k.place(K.LARA, x, z, rot=0.0, name="lara_titolo")
     k.room_at(x, z).no_path = False   # at least one room with boxes, like every other level

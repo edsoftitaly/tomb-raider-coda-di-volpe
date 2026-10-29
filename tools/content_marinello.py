@@ -30,7 +30,22 @@ def build(ctx):
     k.place(K.LARA_START_POS, sx, sz, ocb=1)
     lua.start('CDV.Say("Marinello. Il Casello FS, la base della Volpe, e\' davanti a me.", 6)')
     casello(ctx)
+    spiaggia(ctx)
     grotta(ctx)
+
+
+def spiaggia(ctx):
+    """Halfway along the beach (Casello -> cave, about 190 m): the gang's boat has just landed."""
+    k, lua = ctx.kit, ctx.lua
+    bx, bz = k.spot(236, 112)
+    k.prop("GOMMONE", bx + 3.5, bz + 1.5, rot=80.0, h=0)
+    for i, (t, (x, z)) in enumerate(((K.BADDY1, (234, 116)), (K.BADDY2, (238, 108)), (K.DOBERMAN, (230, 104)))):
+        k.place(t, *k.spot(x, z), rot=270.0, name="sbarco%d" % i)
+    k.place(K.UZI_AMMO, *k.spot(237, 114))
+    lua.zone("sbarco", k.lua_pos(bx, bz - 10, ctx.ground(bx, bz)), r=14000, dy=6000,
+             fn='CDV.Enable("sbarco0")\nCDV.Enable("sbarco1")\nCDV.Enable("sbarco2")',
+             text="Un gommone tirato in secca: altri uomini della Volpe!")
+    ctx.notes += ["   Sulla spiaggia, a meta' strada verso la rupe, lo sbarco della banda: due uomini e un cane."]
 
 
 def casello(ctx):

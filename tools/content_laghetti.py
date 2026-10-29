@@ -10,8 +10,9 @@ from kit import CLICK
 
 START = (275, 15)
 HOLE = (215, 55)
-VIEW = (215, 141)
-END = (86, 166)
+SHORE = (252, 30)      # south-east shore of the Mergolo: where the tide map is read
+WEST = (180, 52)       # west shore, under the cliff: the gang waits here
+END = (170, 44)        # foot of the cliff: the Sentiero Coda di Volpe
 FL = -6144          # tonnara floor
 HT = 2048           # chamber height
 
@@ -24,53 +25,65 @@ DECOR = dict(boats=15)
 
 
 def build(ctx):
-    ctx.decor_block = []
+    """Compact route (about 250 m instead of 1.3 km): shore -> Turi's boat over the deep spot -> tonnara
+    -> west shore ambush -> cliff path. The rest of the lagoons stays open for the secrets."""
+    ctx.decor_block = [(200, 40, 230, 70), (160, 35, 190, 65)]
     k, lua = ctx.kit, ctx.lua
     sx, sz = k.spot(*START)
-    k.place(K.LARA, sx, sz, rot=0.0, name="lara_start")
+    k.place(K.LARA, sx, sz, rot=270.0, name="lara_start")
     k.place(K.LARA_START_POS, sx, sz, ocb=1)
     lua.start('''if not CDV.Has(ID.PUZZLE_ITEM3) then CDV.Give(ID.PUZZLE_ITEM3, 1) end
-CDV.Say("I laghetti di Marinello. Turi cercava qualcosa sott'acqua: la Mappa delle maree puo' dire dove.", 7)''')
+CDV.Say("I laghetti di Marinello all'alba. Turi cercava qualcosa sott'acqua.", 6)''')
 
-    # E4: read the tide map from the reserve.
-    vx, vz = k.spot(*VIEW)
-    lua.zone("riserva", k.lua_pos(vx, vz, ctx.ground(vx, vz)), r=2500, dy=3000, once=True,
-             text="Da qui si vedono tutti i laghetti. E' il posto giusto per leggere la Mappa delle maree.")
-    lua.use("mappa", "ID.PUZZLE_ITEM3", k.lua_pos(vx, vz, ctx.ground(vx, vz)), r=3000, dy=3000, consume=False,
-            text="\"Il tonno entra dove il Mergolo e' piu' profondo.\" La tonnara e' sotto il lago della Tonnara, al centro, sul fondo.",
+    # E4: the tide map says "where the Mergolo is deepest"; Turi's boat is anchored right there.
+    k.prop("GOZZO", HOLE[0] + 0.3, HOLE[1] + 0.6, rot=35.0, h=0)
+    vx, vz = k.spot(*SHORE)
+    lua.use("mappa", "ID.PUZZLE_ITEM3", k.lua_pos(vx, vz, ctx.ground(vx, vz)), r=4000, dy=3000, consume=False,
+            text="\"Il tonno entra dove il Mergolo e' piu' profondo.\" E in mezzo al Mergolo c'e' una barca all'ancora, senza nessuno a bordo...",
             fn='CDV.Flag("mappa_letta", true)')
+    lua.zone("riva", k.lua_pos(vx, vz, ctx.ground(vx, vz)), r=5000, dy=3000,
+             text="Il Mergolo della Tonnara. Forse la Mappa delle maree dice qualcosa di questo posto.")
     tonnara(ctx)
 
-    # The gang on the sand bar.
-    for i, (x, z) in enumerate(((338, 150), (343, 200), (330, 120))):
-        k.place(K.BADDY1 if i < 2 else K.BADDY2, *k.spot(x, z), name="banda%d" % i)
-    sp = k.spot(338, 165)
-    lua.zone("sabbia", k.lua_pos(*sp, ctx.ground(*sp)), r=22000, dy=8000,
-             fn='CDV.Enable("banda0")\nCDV.Enable("banda1")\nCDV.Enable("banda2")',
-             need="CDV.Has(ID.PUZZLE_ITEM6)", text="La lingua di sabbia. Gli uomini della Volpe aspettavano il sigillo!")
-    k.place(K.UZI_AMMO, *k.spot(340, 172))
-    k.place(K.SMALLMEDI, *k.spot(140, 120))
+    # The gang waits on the west shore for whoever comes up with the seal: two from the cliff path,
+    # one along the shore, two dogs. They come from three sides.
+    gang = [(K.BADDY1, (WEST[0] - 6, WEST[1] - 8)), (K.BADDY2, (WEST[0] - 4, WEST[1] + 10)),
+            (K.BADDY1, (WEST[0] + 4, WEST[1] + 16)), (K.DOBERMAN, (WEST[0] - 8, WEST[1] + 2)),
+            (K.DOBERMAN, (WEST[0] - 8, WEST[1] - 2))]
+    names = []
+    for i, (t, (x, z)) in enumerate(gang):
+        n = "banda%d" % i
+        k.place(t, *k.spot(x, z), rot=90.0, name=n)
+        names.append(n)
+    wx, wz = k.spot(*WEST)
+    lua.zone("agguato", k.lua_pos(wx, wz, ctx.ground(wx, wz)), r=16000, dy=8000,
+             fn="\n".join('CDV.Enable("%s")' % n for n in names),
+             need="CDV.Has(ID.PUZZLE_ITEM6)", text="Gli uomini della Volpe aspettavano il sigillo sulla riva!")
+    k.place(K.SHOTGUN_AMMO1, *k.spot(WEST[0] + 2, WEST[1] - 4))
+    # Optional exploration: the rest of the lagoons.
     s = k.spot(30, 330)
     k.place(K.FLARE_ITEM, *s)
+    k.place(K.UZI_AMMO, *k.spot(32, 328))
     lua.secret(7, k.lua_pos(*s, ctx.ground(*s)), r=900, text="Sulla riva del Lago Verde: una Stella dei Dioscuri!")
 
     ex, ez = k.spot(*END)
     lua.zone("fine", k.lua_pos(ex, ez, ctx.ground(ex, ez)), r=2500, dy=4000, need="CDV.Has(ID.PUZZLE_ITEM6)",
              text="Il Sentiero Coda di Volpe sale la rupe fino al santuario di Tindari.", fn="CDV.End(5, 1)")
     lua.zone("fine_no", k.lua_pos(ex, ez, ctx.ground(ex, ez)), r=2500, dy=4000, once=False, secs=4,
-             need="not CDV.Has(ID.PUZZLE_ITEM6)", text="Non posso salire senza aver trovato cosa cercava Turi nei laghetti.")
+             need="not CDV.Has(ID.PUZZLE_ITEM6)", text="Non posso salire senza aver trovato cosa cercava Turi nel Mergolo.")
     ctx.notes += [
         "",
         "LIVELLO 4 - I LAGHETTI",
-        "1. Si parte sulla riva sud. Si va alla riserva, sulla terra tra il Mergolo e il lago grande (centro mappa).",
-        "2. ENIGMA E4: usare la Mappa delle maree alla riserva. Indica il punto piu' profondo del Mergolo (lago a sud-ovest):",
-        "   al centro del lago, sul fondo, si apre un pozzo.",
+        "1. Si parte sulla riva sud-est del Mergolo della Tonnara (il lago a ovest).",
+        "2. ENIGMA E4: sulla riva usare la Mappa delle maree: \"il tonno entra dove il Mergolo e' piu' profondo\".",
+        "   In mezzo al lago c'e' la barca di Turi all'ancora: sotto la barca, sul fondo, si apre un pozzo.",
         "3. ENIGMA E5 (la tonnara): dalla camera centrale si entra nelle camere nell'ordine del tonno:",
         "   LEVANTE (est), TRAMONTANA (nord), PONENTE (ovest). Ordine sbagliato: le reti si stringono e l'aria cala.",
         "   Con l'ordine giusto si apre la rete a sud: camera della morte, sacca d'aria, Sigillo della tonnara.",
         "   Segreto 7: angolo sud-ovest della camera di ponente.",
-        "4. Tornati in superficie, sulla lingua di sabbia (est) attacca la banda. Segreto 8: riva del Lago Verde (nord-ovest).",
-        "5. Ai piedi della rupe (ovest) inizia il Sentiero Coda di Volpe: fine livello.",
+        "4. Si risale e si nuota alla riva ovest, sotto la rupe: imboscata (tre uomini e due cani).",
+        "5. Ai piedi della rupe inizia il Sentiero Coda di Volpe: fine livello.",
+        "   Segreto 8 (facoltativo, lontano): riva del Lago Verde, a nord-ovest.",
     ]
 
 
