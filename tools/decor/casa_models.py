@@ -471,6 +471,18 @@ def antenna():
     return m, None
 
 
+@furniture(234, "SCALA_PIOLI", "Scala a pioli in legno appoggiata al muro (3.6 m), larghezza lungo z", coll=False)
+def scala_pioli():
+    m = G.Mesh()
+    for z in (-0.24, 0.24):
+        box(m, 0.07, 3.6, 0.06, "ca_rovere", x=0.06, z=z)
+    y = 0.25
+    while y < 3.5:
+        box(m, 0.04, 0.04, 0.46, "ca_rovere", x=0.06, y=y)
+        y += 0.3
+    return m, None
+
+
 @furniture(233, "PERGOLATO", "Pergolato in legno con stuoia di canne, 4 x 3 m", coll=False)
 def pergolato():
     m = G.Mesh()

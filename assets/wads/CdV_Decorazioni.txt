@@ -101,4 +101,5 @@ Coda di Volpe - decorazioni
 230 PARAPETTO: Parapetto del tetto, 2 m (con collisione)
 231 SERBATOIO: Serbatoio dell'acqua sul tetto, su cavalletto (con collisione)
 232 ANTENNA_TV: Antenna TV con parabola
+234 SCALA_PIOLI: Scala a pioli in legno appoggiata al muro (3.6 m), larghezza lungo z
 233 PERGOLATO: Pergolato in legno con stuoia di canne, 4 x 3 m

@@ -230,7 +230,7 @@ class Kit:
             self.texture_steps(it)
             col = it.wall_col
             walls.texture_walls(room, self.atlases, lambda r, wx, wz, d: (col, None),
-                                portal_sides=it.portal_sides)
+                                portal_sides=it.portal_sides, open_portals_only=True)
 
     def texture_steps(self, it):
         """Vertical faces between open sectors of different floor height (crates, steps)."""

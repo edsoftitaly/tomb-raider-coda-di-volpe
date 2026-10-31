@@ -83,7 +83,7 @@ def _is_open(room, x, z):
     return not room.sectors[x][z].wall
 
 
-def texture_walls(room, atlases, column_fn, portal_sides=(), invisible=False):
+def texture_walls(room, atlases, column_fn, portal_sides=(), invisible=False, open_portals_only=False):
     """Prepare and texture all wall sectors of a room that face open sectors.
 
     column_fn(room, wx, wz, d) -> (column name, ref height in metres or None).
@@ -99,7 +99,7 @@ def texture_walls(room, atlases, column_fn, portal_sides=(), invisible=False):
                 continue
             if border:
                 side = "-x" if x == 0 else "+x" if x == n_x - 1 else "-z" if z == 0 else "+z"
-                if side in portal_sides:
+                if side in portal_sides and (not open_portals_only or not w.wall):
                     continue
             elif not w.wall:
                 continue

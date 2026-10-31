@@ -19,33 +19,42 @@ import kit as K
 from kit import CLICK
 
 HOUSE_LATLON = (38.1241402, 15.0600308)
-W_COLS, H_ROWS = 8, 5            # interior plan: 8 x 5 sectors (16 x 10 m), the street on the south side
+W_COLS, H_ROWS = 8, 5            # house footprint: 8 x 5 sectors (16 x 10 m), the street on the south side
 H0 = H1 = 1536                   # storeys 3 m
-H2 = 1792                        # second floor 3.5 m (4 clicks under the hatch, standing on a 3-click step)
+H2 = 1792                        # second floor 3.5 m
 
-# Plans: rows from north (back) to south (street); columns west to east.
-F0_PLAN = ["....#..P",           # stairs up (cols 1-3, rising east); pantry (secret) behind the wall
-           ".....#..",
-           ".K..##.#",           # kitchen
-           "........",
-           "..A.#.E."]           # entrance hall; E = the barred street door
-F1_PLAN = ["........",           # stairwell from the ground floor at cols 2-3
-           ".SSS....",           # stairs up (cols 3 -> 1, rising west)
-           ".....#..",
-           "##.###.#",
-           "...T...."]           # living room on the balcony side
-F2_PLAN = ["...#....",           # stairwell at cols 1-2, arrival at col 0
-           "...#.7..",           # chimney stack north of the hatch, a floor raised to the ceiling (not a
-                                 # wall: TEN finds the roof ledge above it), the wall Lara grabs to climb out
-           "...#.3..",           # box room: the hatch over the 3-click step at col 5
-           "##.##.##",           # doorways: col 2 (stairs), col 5 (box room, closed by the door)
-           ".S.....M"]           # Ed's bedroom (Lara wakes up here)
-STAIR0 = [(1, 4), (2, 4), (3, 4)]          # (col, row) rising east, top lands at (4, 4) on F1
-STAIR1 = [(3, 1), (2, 1), (1, 1)]          # rising west, top lands at (0, 1) on F2
-HATCH = (5, 2)
-DOORWAY = (5, 3)
-DOOR = (5, 4)                              # door item: the sector in front of the doorway, turned 180
-LOCK = (4, 4)                              # keyhole on the wall north of this sector
+# v7: every room is its own TR room, joined to its neighbours by thin-wall door portals (TRLE practice),
+# instead of one plan per storey with sector-thick walls. House-local coordinates: col 0..7 west -> east,
+# row 0..4 from the street (south) to the back (north).
+#   name: (storey, (col0, col1), (row0, row1), floor texture)
+ROOMS = {
+    "INGRESSO": (0, (0, 3), (0, 2), "cementine"),
+    "SCALA0": (0, (0, 2), (3, 4), "cementine"),
+    "LAB": (0, (4, 7), (0, 2), "cementine"),
+    "DISPENSA": (0, (4, 7), (3, 4), "cementine"),
+    "SOGGIORNO": (1, (0, 4), (0, 2), "maiolica"),
+    "CUCINA": (1, (5, 7), (0, 2), "maiolica"),
+    "SCALA1": (1, (0, 3), (3, 4), "cementine"),
+    "STUDIO": (1, (4, 7), (3, 4), "parquet"),
+    "CAMERA": (2, (0, 3), (0, 2), "parquet"),
+    "BAGNO": (2, (4, 5), (0, 2), "maiolica"),
+    "RIPOSTIGLIO": (2, (6, 7), (0, 2), "parquet"),
+    "SCALA2": (2, (0, 2), (3, 4), "parquet"),
+    "CORRIDOIO": (2, (3, 7), (3, 4), "parquet"),
+}
+# Doorways: (room a, room b, the col (z border) or row (x border) of the opening).
+DOORS = [
+    ("INGRESSO", "SCALA0", 1), ("INGRESSO", "LAB", 1), ("LAB", "DISPENSA", 6),
+    ("SCALA1", "SOGGIORNO", 0), ("SOGGIORNO", "CUCINA", 1), ("SCALA1", "STUDIO", 4),
+    ("SCALA2", "CORRIDOIO", 4), ("CAMERA", "CORRIDOIO", 3), ("BAGNO", "CORRIDOIO", 4),
+    ("RIPOSTIGLIO", "CORRIDOIO", 7),
+]
+STAIR0 = [(0, 4), (1, 4), (2, 4)]          # SCALA0, rising east; top cells open into SCALA1
+STAIR1 = [(3, 3), (2, 3), (1, 3)]          # SCALA1, rising west; top cells open into SCALA2, landing (0, 3)
+HATCH = (6, 1)                             # RIPOSTIGLIO: ladder on the west wall, hole to the roof above
+DOOR = (7, 3)                              # door item in CORRIDOIO, leaf on the south edge (rot 0)
+LOCK = (6, 3)                              # lock plate on the south wall of CORRIDOIO (rot 180)
+START = (2, 1)                             # CAMERA
 
 
 def house_rect(world):
@@ -147,8 +156,8 @@ def street_fronts(world, street_h):
 
 
 def cell(c, col, row):
-    """Plan (col, row) -> world sector (x, z). Row 0 is the north (top) row."""
-    return c["x0"] + col, c["z0"] + (H_ROWS - 1 - row)
+    """House-local (col, row) -> world sector (x, z). Row 0 is the street (south) row."""
+    return c["x0"] + col, c["z0"] + row
 
 
 def ramp(it, cells, step):
@@ -158,71 +167,93 @@ def ramp(it, cells, step):
         s.floor = [lo, hi, hi, lo] if step > 0 else [hi, lo, lo, hi]
 
 
+def storey_h(c, f):
+    return c["G"] + (0, H0, H0 + H1)[f], (H0, H1, H2)[f]
+
+
 def house(ctx):
     k, c = ctx.kit, ctx.world.casa
-    G = c["G"]
-    F0 = k.interior("CASA_TERRA", F0_PLAN, c["x0"], c["z0"], G, H0, "cementine", "soffitto", "intonaco_interno",
-                    ambient=(0.3, 0.29, 0.33))
-    F1 = k.interior("CASA_PRIMO", F1_PLAN, c["x0"], c["z0"], G + H0, H1, "maiolica", "soffitto", "intonaco_interno",
-                    ambient=(0.3, 0.29, 0.33))
-    F2 = k.interior("CASA_SECONDO", F2_PLAN, c["x0"], c["z0"], G + H0 + H1, H2, "parquet", "soffitto",
-                    "intonaco_interno", ambient=(0.3, 0.29, 0.33))
+    R = {}
+    for name, (f, (c0, c1), (r0, r1), ftex) in ROOMS.items():
+        h, height = storey_h(c, f)
+        plan = ["." * (c1 - c0 + 1)] * (r1 - r0 + 1)
+        x0, z0 = cell(c, c0, r0)
+        R[name] = k.interior("CASA_" + name, plan, x0, z0, h, height, ftex, "soffitto", "intonaco_interno",
+                             ambient=(0.2, 0.2, 0.26))
+        R[name].storey = f
+    for a, b, at in DOORS:
+        ra, rb = R[a].room, R[b].room
+        x_border = ra.x + ra.nx - 2 == rb.x or rb.x + rb.nx - 2 == ra.x
+        w = cell(c, 0, at)[1] if x_border else cell(c, at, 0)[0]
+        k.link_wall(R[a], R[b], span=(w, w))
     s0 = [cell(c, *p) for p in STAIR0]
     s1 = [cell(c, *p) for p in STAIR1]
-    k.link_vertical(F0, F1, s0[1:])
-    k.link_vertical(F1, F2, s1[1:])
-    ramp(F0, s0, +1)
-    ramp(F1, s1, -1)
+    ramp(R["SCALA0"], s0, +1)
+    ramp(R["SCALA1"], s1, -1)
+    k.link_vertical(R["SCALA0"], R["SCALA1"], s0[1:])
+    k.link_vertical(R["SCALA1"], R["SCALA2"], s1[1:])
     hx, hz = cell(c, *HATCH)
     roof_room = k.room_at(hx, hz)
-    k.link_vertical(F2, roof_room, [(hx, hz)])
-    return F0, F1, F2, roof_room
+    k.link_vertical(R["RIPOSTIGLIO"], roof_room, [(hx, hz)])
+    k.climb(hx, hz, "-x", room=R["RIPOSTIGLIO"].room)
+    return R, roof_room
 
 
-# Furniture: (name, col, row, dx, dz, rot, floor); position = sector of (col, row) + (dx, dz) sectors.
+# Furniture: (model, x, z in house-local sectors (fractions), rot, room).
 FURNITURE = [
-    ("CASA_CUCINA", 0, 2, 0.32, 0.6, 0.0, 0), ("CASA_FRIGO", 0, 1, 0.35, 0.75, 0.0, 0),
-    ("CASA_TAVOLO", 2, 3, 0.4, 0.5, 0.0, 0), ("CASA_SCAFFALE", 7, 0, 0.8, 0.5, 180.0, 0),
-    ("CASA_DIVANO", 7, 4, 0.55, 0.5, 180.0, 0), ("CASA_TAVOLINO", 6, 3, 0.4, 0.2, 0.0, 0),
-    ("CASA_SEDIA_ROVESCIATA", 3, 2, 0.0, 0.3, 30.0, 0), ("CASA_GRADINI", 2, 4, 0.5, 0.5, 0.0, 0),
-    ("CASA_LIBRERIA", 7, 0, 0.8, 0.6, 180.0, 1), ("CASA_SCRIVANIA", 6, 0, 0.6, 0.7, 180.0, 1),
-    ("CASA_SEDIA_ROVESCIATA", 6, 1, 0.0, 0.9, 120.0, 1), ("CASA_DIVANO", 0, 4, 0.45, 0.5, 0.0, 1),
-    ("CASA_TAVOLINO", 1, 4, 0.6, 0.5, 0.0, 1), ("CASA_GRADINI", 2, 1, 0.5, 0.5, 180.0, 1),
-    ("CASA_CORRIMANO", 2, 0, 1.0, 0.0, 0.0, 1),
-    ("CASA_LETTO", 0, 4, 0.55, 0.5, 0.0, 2), ("CASA_COMODINO", 0, 4, 0.25, 0.92, 0.0, 2),
-    ("CASA_ARMADIO", 3, 4, 0.5, 0.84, 90.0, 2), ("CASA_SCAFFALE", 7, 1, 0.8, 0.5, 180.0, 2),
-    ("CASA_CORRIMANO", 1, 1, 1.0, 0.0, 0.0, 2), ("CASA_BAGNO", 7, 4, 0.55, 0.6, 90.0, 2),
+    ("CASA_LETTO", 0.55, 1.5, 0.0, "CAMERA"), ("CASA_COMODINO", 0.25, 2.6, 0.0, "CAMERA"),
+    ("CASA_ARMADIO", 2.5, 2.84, 90.0, "CAMERA"), ("CASA_QUADRO", 0.02, 1.5, 0.0, "CAMERA"),
+    ("CASA_BAGNO", 5.45, 1.0, 90.0, "BAGNO"),
+    ("CASA_SCAFFALE", 7.8, 0.7, 180.0, "RIPOSTIGLIO"), ("SCALA_PIOLI", 6.0, 1.5, 0.0, "RIPOSTIGLIO"),
+    ("CASA_SCAFFALE", 7.8, 3.6, 180.0, "CORRIDOIO"),
+    ("CASA_DIVANO", 0.45, 1.5, 0.0, "SOGGIORNO"), ("CASA_TAVOLINO", 1.6, 1.5, 0.0, "SOGGIORNO"),
+    ("CASA_MOBILE_TV", 4.75, 1.5, 180.0, "SOGGIORNO"), ("CASA_LIBRERIA", 2.5, 2.8, 90.0, "SOGGIORNO"),
+    ("CASA_SEDIA_ROVESCIATA", 3.2, 0.8, 30.0, "SOGGIORNO"),
+    ("CASA_CUCINA", 7.68, 1.5, 180.0, "CUCINA"), ("CASA_FRIGO", 7.7, 2.6, 180.0, "CUCINA"),
+    ("CASA_TAVOLO", 6.0, 1.2, 0.0, "CUCINA"), ("CASA_SEDIA", 6.0, 0.6, 0.0, "CUCINA"),
+    ("CASA_SCRIVANIA", 5.6, 4.7, 180.0, "STUDIO"), ("CASA_LIBRERIA", 7.8, 3.9, 180.0, "STUDIO"),
+    ("CASA_SCAFFALE", 0.2, 1.0, 0.0, "INGRESSO"), ("CASA_PORTONE_INT", 2.5, 0.02, 0.0, "INGRESSO"),
+    ("CASA_TAVOLO", 5.5, 1.5, 0.0, "LAB"), ("CASA_SEDIA_ROVESCIATA", 6.6, 1.0, 120.0, "LAB"),
+    ("CASA_SCAFFALE", 7.8, 1.5, 180.0, "LAB"),
+    ("CASA_SCAFFALE", 7.8, 3.6, 180.0, "DISPENSA"), ("CASA_SCAFFALE", 4.2, 4.0, 0.0, "DISPENSA"),
 ]
-DOORFRAMES = {0: [(3, 3), (6, 2)], 1: [(2, 3), (6, 3)], 2: [(2, 3)]}   # doorways in wall rows (frame across x)
-WINDOWS = [(1, "S"), (3, "S"), (6, "S"), (0, "W"), (7, "E")]          # inside views on the outer walls
+# Windows on the outer walls: (col or row, side, rooms by storey).
+WINDOWS = [(1, "S"), (3, "S"), (6, "S"), (1, "W"), (1, "E")]
 
 
-def house_dressing(ctx, floors):
+def house_dressing(ctx, R):
     k, c = ctx.kit, ctx.world.casa
-    for name, col, row, dx, dz, rot, f in FURNITURE:
-        x, z = cell(c, col, row)
-        it = floors[f]
-        k.prop(name, x + dx, z + dz, rot=rot, h=it.floor_h, room=it.room)
-    for f, it in enumerate(floors[:3]):
-        for col, row in DOORFRAMES.get(f, []):
-            x, z = cell(c, col, row)
-            k.prop("CASA_PORTA_ALTA" if f == 2 else "CASA_PORTA", x + 0.5, z + 0.5, rot=90.0, h=it.floor_h, room=it.room)
-        for col, side in WINDOWS:
-            if side == "S":
-                x, z = cell(c, col, H_ROWS - 1)
-                k.prop("CASA_FINESTRA", x + 0.5, z + 0.0, rot=270.0, h=it.floor_h, room=it.room)
-            elif side == "W":
-                x, z = cell(c, 0, 2)
-                k.prop("CASA_FINESTRA", x + 0.0, z + 0.5, rot=0.0, h=it.floor_h, room=it.room)
-            else:
-                x, z = cell(c, W_COLS - 1, 2)
-                k.prop("CASA_FINESTRA", x + 1.0, z + 0.5, rot=180.0, h=it.floor_h, room=it.room)
-        for col, row in ((2, 2), (6, 4), (6, 1)):
-            x, z = cell(c, col, row)
-            pos = ((x + 0.5 - it.room.x) * 1024, 1100, (z + 0.5 - it.room.z) * 1024)
-            ctx.level.add_light(it.room, 0, pos, color=(1.0, 0.82, 0.6), intensity=0.6, inner=1.5, outer=5.0)
-    x, z = cell(c, DOORWAY[0], DOORWAY[1])
-    k.prop("CASA_VANO_RIPOSTIGLIO", x + 0.5, z + 0.5, rot=90.0, h=floors[2].floor_h, room=floors[2].room)
+    for name, x, z, rot, rn in FURNITURE:
+        it = R[rn]
+        k.prop(name, c["x0"] + x, c["z0"] + z, rot=rot, h=it.floor_h, room=it.room)
+    for a, b, at in DOORS:
+        ia, ib = R[a], R[b]
+        ra, rb = ia.room, ib.room
+        tall = "CASA_PORTA_ALTA" if ia.storey == 2 else "CASA_PORTA"
+        if ra.x + ra.nx - 2 == rb.x or rb.x + rb.nx - 2 == ra.x:
+            xb = max(ra.x, rb.x) + 1
+            k.prop(tall, xb, c["z0"] + at + 0.5, rot=0.0, h=ia.floor_h, room=ra)
+        else:
+            zb = max(ra.z, rb.z) + 1
+            k.prop(tall, c["x0"] + at + 0.5, zb, rot=90.0, h=ia.floor_h, room=ra)
+    for name, (f, (c0, c1), (r0, r1), _) in ROOMS.items():
+        it = R[name]
+        for at, side in WINDOWS:
+            if side == "S" and r0 == 0 and c0 <= at <= c1:
+                k.prop("CASA_FINESTRA", c["x0"] + at + 0.5, c["z0"], rot=270.0, h=it.floor_h, room=it.room)
+            elif side == "W" and c0 == 0 and r0 <= at <= r1:
+                k.prop("CASA_FINESTRA", c["x0"], c["z0"] + at + 0.5, rot=0.0, h=it.floor_h, room=it.room)
+            elif side == "E" and c1 == W_COLS - 1 and r0 <= at <= r1:
+                k.prop("CASA_FINESTRA", c["x0"] + W_COLS, c["z0"] + at + 0.5, rot=180.0, h=it.floor_h, room=it.room)
+        # one warm ceiling lamp per room, a little off-centre
+        room = it.room
+        h = (H0, H1, H2)[f] - 300
+        pos = (((c0 + c1 + 1) / 2.0 + c["x0"] - room.x) * 1024, h, ((r0 + r1 + 1) / 2.0 + c["z0"] - room.z) * 1024)
+        ctx.level.add_light(room, 0, pos, color=(1.0, 0.8, 0.55), intensity=0.75, inner=1.5, outer=6.0)
+    # handrails along the stair wells
+    for x, z, rot, rn in ((1.0, 4.0, 0.0, "SCALA1"), (1.5, 3.0, 0.0, "SCALA2")):
+        it = R[rn]
+        k.prop("CASA_CORRIMANO", c["x0"] + x + 0.5, c["z0"] + z, rot=rot, h=it.floor_h, room=it.room)
 
 
 def fronts_dressing(ctx):
@@ -305,57 +336,56 @@ DECOR = dict(centre=None)
 def build(ctx):
     k, lua, c, w = ctx.kit, ctx.lua, ctx.world.casa, ctx.world
     ctx.decor_block = [(c["x0"] - 14, c["z0"] - 10, c["x0"] + 16, c["z0"] + H_ROWS + 1)]
-    F0, F1, F2, roof_room = house(ctx)
-    house_dressing(ctx, (F0, F1, F2))
+    R, roof_room = house(ctx)
+    house_dressing(ctx, R)
     street(ctx)
     fronts_dressing(ctx)
 
-    def at(it, col, row, dh=0):
+    def at(rn, col, row, dh=0):
         x, z = cell(c, col, row)
-        return k.lua_pos(x, z, it.floor_h + dh)
+        return k.lua_pos(x, z, R[rn].floor_h + dh)
 
-    sx, sz = cell(c, 1, 4)
-    k.place(K.LARA, sx, sz, room=F2.room, rot=180.0, name="lara_start")
-    k.place(K.SMALLMEDI, *cell(c, 7, 4), room=F2.room)
-    k.place(K.FLARE_ITEM, *cell(c, 0, 2), room=F2.room)
-    k.place(K.SHOTGUN_ITEM, *cell(c, 1, 2), room=F0.room)
-    k.place(K.SHOTGUN_AMMO1, *cell(c, 2, 4), room=F0.room)
-    k.place(K.BADDY2, *cell(c, 3, 4), room=F1.room, name="ladro_primo")
-    k.place(K.BADDY2, *cell(c, 6, 3), room=F0.room, name="ladro_terra")
-    k.place(K.BADDY1, *cell(c, 1, 4), room=F0.room, name="ladro_chiave")
+    def put(t, rn, col, row, **kw):
+        return k.place(t, *cell(c, col, row), room=R[rn].room, **kw)
+
+    put(K.LARA, "CAMERA", *START, rot=0.0, name="lara_start")
+    put(K.FLARE_ITEM, "CAMERA", 3, 0)
+    put(K.SMALLMEDI, "CUCINA", 5, 2)
+    put(K.SHOTGUN_ITEM, "STUDIO", 6, 4)
+    put(K.SHOTGUN_AMMO1, "LAB", 7, 0)
+    put(K.SMALLMEDI, "LAB", 4, 0)
+    put(K.BADDY2, "SOGGIORNO", 3, 1, rot=270.0, name="ladro_primo")
+    put(K.BADDY2, "LAB", 6, 1, rot=270.0, name="ladro_terra")
+    put(K.BADDY1, "INGRESSO", 1, 1, rot=0.0, name="ladro_chiave")
     hx, hz = cell(c, *HATCH)
-    # TEN ceiling trapdoor (generic_trapdoor.cpp): the player must be 256..768 units behind the item
-    # (local z -768..-256) and 0..900 below it; the leaf spans local z 0..-1024 and hangs from the item
-    # when open. Turned 180 on the south edge of the hatch sector the leaf covers the hatch, Lara is
-    # caught jumping from the middle of the 3-click step, and the open leaf hangs on the door side, away
-    # from the chimney wall she then grabs to climb through.
-    k.place(K.CEILING_TRAPDOOR1, hx, hz, room=roof_room, rot=180.0, dz=0.0, name="botola_tetto")
-    dx, dz = cell(c, *DOOR)
-    door = k.place(K.DOOR_TYPE1, dx, dz, room=F2.room, rot=180.0, name="porta_ripostiglio")
-    lx, lz = cell(c, *LOCK)
-    lock = k.place(K.KEY_HOLE1, lx, lz, room=F2.room, rot=0.0, name="serratura_ripostiglio")
-    k.trigger(lx, lz, room=F2.room, trig_type=K.T_KEY, target=lock)
-    k.trigger(lx, lz, room=F2.room, trig_type=K.T_KEY, target=door)
+    # The hatch: a floor trapdoor of the roof (a bridge while closed). Lara pushes it open climbing the
+    # ladder (Lua zone near the top), then climbs out west onto the roof over the bathroom.
+    k.place(K.FLOOR_TRAPDOOR1, hx, hz, room=roof_room, rot=90.0, name="botola_tetto")
+    door = put(K.DOOR_TYPE1, "CORRIDOIO", *DOOR, rot=0.0, name="porta_ripostiglio")
+    lock = put(K.KEY_HOLE1, "CORRIDOIO", *LOCK, rot=180.0, name="serratura_ripostiglio")
+    del door, lock
     # Down from the roof: the drainpipe on the street front, at the west end of the house.
     cx = c["x0"]
     k.climb(cx, c["z0"] - 1, "+z")
     k.prop("CASA_PLUVIALE", cx + 0.5, c["z0"] - 0.02, rot=0.0, h=c["G"])
 
     lua.start('CDV.Say("Oliveri, notte. Rumori al piano di sotto... qualcuno e\' entrato in casa.", 7)')
-    lua.zone("primo", at(F1, 4, 0), r=1400, dy=900, fn='CDV.Enable("ladro_primo")',
+    lua.zone("primo", at("SCALA1", 0, 3), r=1200, dy=700, fn='CDV.Enable("ladro_primo")',
              text="Uno della banda della Volpe! Cercano il diario bizantino.")
-    lua.zone("terra", at(F0, 4, 0), r=1600, dy=900, fn='CDV.Enable("ladro_terra")\nCDV.Enable("ladro_chiave")')
+    lua.zone("terra", at("SCALA0", 1, 3), r=1200, dy=700, fn='CDV.Enable("ladro_terra")\nCDV.Enable("ladro_chiave")')
     lua.drop("chiave", "ladro_chiave", "ID.KEY_ITEM1",
              "Il tombarolo aveva la chiave del ripostiglio. Il diario pero' non c'e': l'ha preso il loro capo.")
-    lua.zone("portone", at(F0, 6, 4), r=1200, dy=900, once=True,
+    lua.zone("portone", at("INGRESSO", 2, 0), r=1100, dy=700, once=True,
              text="Il portone e' sbarrato da fuori. Resta la botola del ripostiglio, sul tetto.")
-    lua.use("chiave_ripostiglio", "ID.KEY_ITEM1", at(F2, *LOCK), r=700, dy=600,
+    lua.use("chiave_ripostiglio", "ID.KEY_ITEM1", at("CORRIDOIO", *LOCK), r=700, dy=600,
             text="La serratura scatta: il ripostiglio e' aperto.",
             fn='CDV.InsertKey("serratura_ripostiglio", "porta_ripostiglio")')
-    lua.zone("ripostiglio_chiuso", at(F2, *LOCK), r=1100, dy=900, once=False, secs=4,
+    lua.zone("ripostiglio_chiuso", at("CORRIDOIO", *LOCK), r=900, dy=700, once=False, secs=4,
              need='not CDV.Has(ID.KEY_ITEM1) and not CDV.Done("use_chiave_ripostiglio")',
-             text="Il ripostiglio della botola e' chiuso a chiave. Uno dei ladri ha la chiave.")
-    lua.zone("tetto", k.lua_pos(hx, hz, c["ROOF"]), r=1800, dy=300,
+             text="Il ripostiglio e' chiuso a chiave. Uno dei ladri ha la chiave.")
+    lua.zone("botola", at("RIPOSTIGLIO", *HATCH, dh=1100), r=600, dy=500, fn='CDV.Enable("botola_tetto")',
+             text="Una spinta e la botola si apre.")
+    lua.zone("tetto", k.lua_pos(hx - 1, hz, c["ROOF"]), r=1400, dy=300,
              text="Sulla terrazza. Sul davanti, verso la via, si scende lungo il pluviale.")
 
     # Via Amodeo: the look-out and two dogs; the thief runs off towards Via Stesicoro.
@@ -375,15 +405,16 @@ def build(ctx):
              text="Il ladro ha preso Via Stesicoro, verso la piazza e il castello.")
     lua.zone("fine_no", k.lua_pos(ex, ez, ctx.ground(ex, ez)), r=2600, dy=4000, once=False, secs=4,
              need='not CDV.Dead("palo")', text="Prima devo togliermi di torno il palo della banda.")
-    lua.secret(0, at(F0, 7, 0), r=800)
+    lua.secret(0, at("DISPENSA", 7, 4), r=800)
     ctx.notes += [
         "LIVELLO 1 - OLIVERI, VIA GASPARE AMODEO",
-        "1. Lara si sveglia in camera al secondo piano (medikit vicino al letto, razzi vicino alle scale).",
-        "2. Le scale scendono al primo piano (un ladro) e al piano terra (due ladri, fucile in cucina).",
-        "   Il ladro dell'ingresso lascia la Chiave del ripostiglio. Segreto 1: la dispensa dietro la cucina.",
-        "3. Si risale al secondo piano: la chiave va nella serratura sul muro accanto alla porta del ripostiglio",
-        "   (Azione davanti alla serratura). La porta si apre.",
-        "4. Nel ripostiglio, dal gradino: salto in alto + Azione per tirare giu' la botola; poi salto, aggrappo, su.",
+        "1. Lara si sveglia in camera, al secondo piano (razzi vicino alla finestra).",
+        "2. Le scale scendono al primo piano (un ladro nel soggiorno, medikit in cucina, fucile nello studio)",
+        "   e al piano terra (due ladri). Il ladro dell'ingresso lascia la Chiave del ripostiglio.",
+        "   Segreto 1: la dispensa dietro il laboratorio.",
+        "3. Si risale al secondo piano: la chiave va nella serratura sul muro del corridoio, accanto alla",
+        "   porta del ripostiglio (usare la chiave dall'inventario davanti alla serratura). La porta si apre.",
+        "4. Nel ripostiglio si sale la scala a pioli: a meta' Lara spinge la botola, in cima esce sul tetto.",
         "5. Dalla terrazza, sul lato della via, ci si cala lungo il pluviale.",
         "6. In Via Amodeo due cani e il palo della banda. Fine del livello all'incrocio con Via Stesicoro.",
     ]
