@@ -121,6 +121,41 @@ def door_leaf():
     return from_img(im)
 
 
+def metal(color, seed, streak=0.18, patina=None, rust=0.0):
+    """Worn metal: brushed streaks along u, darker edges and pits, optional green patina or rust."""
+    r = np.random.default_rng(seed)
+    n = 64
+    base = np.ones((n, n, 3)) * np.array(color, float)
+    brushed = np.repeat(r.normal(0, 1, (1, n)), n, axis=0)
+    from scipy import ndimage
+    brushed = ndimage.gaussian_filter(brushed, (0, 0.8))
+    base *= (1 + streak * 0.25 * brushed)[..., None]
+    yy, xx = np.mgrid[0:n, 0:n] / (n - 1.0)
+    edge = np.minimum.reduce([xx, 1 - xx, yy, 1 - yy])
+    base *= (0.78 + 0.22 * np.clip(edge * 6, 0, 1))[..., None]
+    hi = np.exp(-((yy - 0.35) ** 2) / 0.01)                     # a soft specular band
+    base += (hi * 50)[..., None]
+    blot = ndimage.gaussian_filter(r.random((n, n)), 3)
+    blot = (blot - blot.min()) / (np.ptp(blot) + 1e-9)
+    if patina is not None:
+        m = np.clip((blot - 0.6) * 3, 0, 1)[..., None]
+        base = base * (1 - m) + np.array(patina, float) * m
+    if rust:
+        m = np.clip((blot - (1 - rust)) * 4, 0, 1)[..., None]
+        base = base * (1 - m) + np.array((120, 62, 30), float) * m
+    base *= r.normal(1, 0.03, (n, n))[..., None]
+    return np.concatenate([np.clip(base, 0, 255), np.full((n, n, 1), 255.0)], axis=2)
+
+
+def wood_grip(seed=31):
+    r = np.random.default_rng(seed)
+    a = np.ones((64, 64, 3)) * np.array((120, 72, 38), float)
+    grain = np.sin(np.linspace(0, 40, 64)[None, :] + r.normal(0, 0.3, (64, 1)).cumsum(0)) * 0.12
+    a *= (1 + grain)[..., None]
+    a *= r.normal(1, 0.04, (64, 64))[..., None]
+    return np.concatenate([np.clip(a, 0, 255), np.full((64, 64, 1), 255.0)], axis=2)
+
+
 def build_textures():
     tex.build()
     first = len(tex.pages)
@@ -130,9 +165,10 @@ def build_textures():
     # objects' own page stays empty (invisible items).
     pk.page = len(tex.pages) - 1
     for name, img in (("it_cuoio", leather()), ("it_pagine", pages()), ("it_mappa", tide_map()),
-                      ("it_ferro", solid((52, 50, 48), 11, 0.25)), ("it_ottone", solid((196, 158, 70), 12)),
+                      ("it_ferro", metal((70, 68, 66), 11, rust=0.35)), ("it_ottone", metal((190, 148, 62), 12, patina=(96, 120, 80))),
+                      ("it_impugnatura", wood_grip()),
                       ("it_conchiglia", shell()), ("it_bronzo_sigillo", seal()),
-                      ("it_bronzo", solid((150, 104, 54), 13, 0.25)),
+                      ("it_bronzo", metal((150, 104, 54), 13, patina=(80, 110, 90))),
                       ("it_oro", star((226, 182, 70), 14)), ("it_argento", star((176, 196, 220), 15)),
                       ("it_rubino", solid((190, 30, 40), 16, 0.3)), ("it_zaffiro", solid((40, 80, 200), 17, 0.3)),
                       ("it_serratura", lock_plate()), ("it_porta", door_leaf()),
@@ -171,20 +207,43 @@ def rim(m, r, y0, y1, region, n=16, centre=(0.0, 0.0)):
 
 
 def diario():
+    """Leather-bound codex: covers proud of the page block, rounded spine with raised bands, a strap
+    with a brass buckle."""
     m = G.Mesh()
-    m.merge(G.box(0.26, 0.07, 0.34, "it_pagine", top="it_cuoio", bottom=True))
-    m.merge(G.box(0.02, 0.07, 0.34, "it_cuoio", center=(-0.13, 0, 0)))      # spine
+    m.merge(G.box(0.25, 0.05, 0.33, "it_pagine", center=(0.005, 0.008, 0)))                   # page block
+    m.merge(G.box(0.27, 0.008, 0.35, "it_cuoio", center=(0, 0, 0), bottom=True))                # back cover
+    m.merge(G.box(0.27, 0.008, 0.35, "it_cuoio", center=(0, 0.058, 0)))                         # front cover
+    m.merge(G.tube([(-0.135, 0.033, -0.175), (-0.135, 0.033, 0.175)], [0.034, 0.034], "it_cuoio", n=8))  # spine
+    for z in (-0.1, -0.03, 0.04, 0.11):
+        m.merge(G.tube([(-0.135, 0.033, z - 0.008), (-0.135, 0.033, z + 0.008)], [0.04, 0.04], "it_cuoio", n=8))
+    m.merge(G.box(0.03, 0.068, 0.03, "it_cuoio", center=(0.12, -0.002, 0)))                     # strap
+    m.merge(G.box(0.032, 0.012, 0.04, "it_ottone", center=(0.125, 0.06, 0)))                     # buckle
     return m
 
 
+def ring_xz(cx, cz, r, y, tr, region, n=14):
+    """Torus lying flat (XZ plane): centre (cx, cz) metres, ring radius r, tube radius tr."""
+    pts = [(cx + r * math.cos(2 * math.pi * k / n), y, cz + r * math.sin(2 * math.pi * k / n)) for k in range(n + 1)]
+    return G.tube(pts, [tr] * len(pts), region, n=6)
+
+
 def key(region, size=1.0, ring_r=0.05):
+    """Old bit key (chiave a mappa) lying flat: trefoil bow, collar, round shank, toothed bit.
+    size 1.0 = 0.2 m long (TR-readable, real key shape)."""
     m = G.Mesh()
     s = size
-    flat_disc(m, ring_r * s, 0.016 * s, region, 12, centre=(-0.1 * s, 0))
-    rim(m, ring_r * s, 0, 0.016 * s, region, 12, centre=(-0.1 * s, 0))
-    m.merge(G.box(0.2 * s, 0.016 * s, 0.022 * s, region, center=(0.03 * s, 0, 0)))
-    m.merge(G.box(0.04 * s, 0.016 * s, 0.06 * s, region, center=(0.11 * s, 0, 0.03 * s)))
-    m.merge(G.box(0.02 * s, 0.016 * s, 0.04 * s, region, center=(0.075 * s, 0, 0.025 * s)))
+    y = 0.007 * s
+    t = 0.006 * s
+    m.merge(ring_xz(-0.07 * s, 0.0, 0.024 * s, y, t, region))                 # bow
+    for a in (90, 210, 330):                                                    # trefoil lobes
+        ca, sa = math.cos(math.radians(a)), math.sin(math.radians(a))
+        m.merge(ring_xz(-0.07 * s + ca * 0.03 * s, sa * 0.03 * s, 0.011 * s, y, t * 0.8, region, n=10))
+    m.merge(G.tube([(-0.046 * s, y, 0), (-0.036 * s, y, 0)], [0.011 * s, 0.011 * s], region, n=8))   # collar
+    m.merge(G.tube([(-0.036 * s, y, 0), (0.085 * s, y, 0)], [0.0055 * s, 0.0055 * s], region, n=8))  # shank
+    m.merge(G.tube([(0.085 * s, y, 0), (0.095 * s, y, 0)], [0.007 * s, 0.004 * s], region, n=8))    # tip
+    # bit: plate below the shank with two wards cut in it
+    for x0, x1, d in ((0.055, 0.064, 0.034), (0.064, 0.072, 0.022), (0.072, 0.082, 0.034), (0.082, 0.09, 0.028)):
+        m.merge(G.box((x1 - x0) * s, 0.008 * s, d * s, region, center=((x0 + x1) / 2 * s, y - 0.004 * s, -d / 2 * s)))
     return m
 
 
@@ -234,11 +293,15 @@ def astro(metal, gem):
 
 
 def serratura():
-    """Lock plate on the wall face 1 m north of the item (TombEngine: Lara stands south of it facing north)."""
+    """Brass escutcheon of a mortice lock on the wall face 1 m north of the item (Lara south of it,
+    facing north): raised plate, keyhole face, a knob above. Visible from the front at 1 m."""
     m = G.Mesh()
-    quad(m, [np.array([-0.06, 0.95, 0.97]), np.array([0.06, 0.95, 0.97]), np.array([0.06, 1.2, 0.97]), np.array([-0.06, 1.2, 0.97])],
-         "it_serratura", np.array([0, 0, -1.0]), [(0, 1), (1, 1), (1, 0), (0, 0)])
-    m.merge(G.box(0.12, 0.25, 0.02, "it_ottone", center=(0, 0.95, 0.985)))
+    m.merge(G.box(0.1, 0.26, 0.016, "it_ottone", center=(0, 0.88, 0.992)))
+    quad(m, [np.array([-0.045, 0.89, 0.983]), np.array([0.045, 0.89, 0.983]), np.array([0.045, 1.13, 0.983]),
+             np.array([-0.045, 1.13, 0.983])], "it_serratura", np.array([0, 0, -1.0]), [(0, 1), (1, 1), (1, 0), (0, 0)],
+         double=True)
+    m.merge(G.tube([(0, 1.2, 0.995), (0, 1.2, 0.955)], [0.022, 0.026], "it_ottone", n=10))
+    m.merge(G.tube([(0, 1.2, 0.955), (0, 1.2, 0.94)], [0.03, 0.0], "it_ottone", n=10))
     return m
 
 
@@ -260,11 +323,15 @@ def porta():
 
 
 def manovella():
-    """Iron crank of a shutter winch: square socket shaft, arm, wooden grip."""
+    """Cast-iron winch crank: square-socket shaft, cranked arm, turned wooden grip on its spindle."""
     m = G.Mesh()
-    m.merge(G.box(0.05, 0.05, 0.36, "it_ferro", center=(0, 0, 0.0)))
-    m.merge(G.box(0.26, 0.04, 0.05, "it_ferro", center=(0.11, 0, 0.17)))
-    m.merge(G.cylinder(0.025, 0.025, 0.14, "it_legno_bordo", n=8, base=(0.22, 0.02, 0.17)))
+    y = 0.016
+    m.merge(G.box(0.03, 0.03, 0.05, "it_ferro", center=(0, y - 0.015, -0.18)))                 # socket
+    m.merge(G.tube([(0, y, -0.155), (0, y, 0.15)], [0.011, 0.011], "it_ferro", n=6))            # shaft
+    m.merge(G.tube([(0, y, 0.15), (0.06, y, 0.165), (0.2, y, 0.165)], [0.014, 0.012, 0.012], "it_ferro", n=6))  # arm
+    m.merge(G.tube([(0.2, y, 0.165), (0.2, y, 0.02)], [0.006, 0.006], "it_ferro", n=6))          # spindle
+    m.merge(G.tube([(0.2, y, 0.15), (0.2, y, 0.12), (0.2, y, 0.06), (0.2, y, 0.035)],
+                   [0.014, 0.019, 0.019, 0.014], "it_impugnatura", n=8))                       # grip
     return m
 
 
@@ -272,13 +339,13 @@ PICKUPS = {
     500: ("Diario bizantino", diario),
     501: ("Chiave della terrazza", lambda: key("it_ottone", 1.0)),
     502: ("Mappa delle maree", mappa),
-    503: ("Chiave del Casello", lambda: key("it_ferro", 1.6, 0.06)),
+    503: ("Chiave del Casello", lambda: key("it_ferro", 1.3)),
     504: ("Conchiglia del canto", conchiglia),
     505: ("Sigillo della tonnara", sigillo),
     506: ("Astro di Castore", lambda: astro("it_oro", "it_rubino")),
     507: ("Astro di Polluce", lambda: astro("it_argento", "it_zaffiro")),
     508: ("Manovella", manovella),
-    548: ("Chiave del ripostiglio", lambda: key("it_ottone", 1.8, 0.06)),
+    548: ("Chiave del ripostiglio", lambda: key("it_ottone", 1.0)),
     700: ("Serratura del ripostiglio", serratura),
 }
 
