@@ -57,6 +57,11 @@ local function newMov(name)
     return m
 end
 for name, _ in pairs(names) do objs[name] = newMov(name) end
+TEN.Objects.GetStaticByName = function(n) local st = { r = { x = 0, y = 0, z = 0 } }
+    function st:GetRotation() return self.r end
+    function st:SetRotation(r) self.r = r; log("swing", n) end
+    return st end
+TEN.Rotation = TEN.Rotation or function(x, y, z) return { x = x, y = y, z = z } end
 TEN.Objects.MoveableStatus = { INACTIVE = "INACTIVE", ACTIVE = "ACTIVE", DEACTIVATED = "DEACTIVATED", INVISIBLE = "INVISIBLE" }
 TEN.Objects.GetMoveableByName = function(name)
     if objs[name] == nil then error("unknown moveable name " .. tostring(name)) end

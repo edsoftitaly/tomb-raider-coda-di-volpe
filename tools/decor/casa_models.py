@@ -483,6 +483,88 @@ def scala_pioli():
     return m, None
 
 
+@furniture(235, "CASA_ANTA", "Anta della porta del ripostiglio (2 m), cardine nell'origine, si apre ruotando", coll=False)
+def anta():
+    m = G.Mesh()
+    box(m, 1.9, 2.25, 0.05, "ca_porta", x=1.0)
+    box(m, 0.03, 0.03, 0.12, "ca_grondaia", x=1.75, y=1.05)
+    return m, None
+
+
+@furniture(236, "BOTOLA_LEGNO", "Botola di tavole sul tetto (2 x 2 m), cardine sul bordo est nell'origine", coll=False)
+def botola_legno():
+    m = G.Mesh()
+    box(m, 1.96, 0.06, 1.96, "ca_rovere", x=-0.98)
+    for z in (-0.7, 0.0, 0.7):
+        box(m, 1.9, 0.04, 0.1, "ca_noce", x=-0.98, y=0.06, z=z)
+    return m, None
+
+
+@furniture(237, "CASSONETTI", "Due bidoni carrellati della differenziata (verde e grigio), 1.3 m", coll=True)
+def cassonetti():
+    m = G.Mesh()
+    box(m, 1.2, 1.15, 0.85, "ca_bidone_verde", x=-0.65)
+    box(m, 1.25, 0.08, 0.9, "ca_bidone_verde", x=-0.65, y=1.15)
+    box(m, 1.2, 1.15, 0.85, "ca_bidone_grigio", x=0.65)
+    box(m, 1.25, 0.08, 0.9, "ca_bidone_grigio", x=0.65, y=1.15)
+    return m, cb(2.6, 1.25, 0.95)
+
+
+@furniture(238, "CONDIZIONATORE", "Motore del condizionatore appeso al muro (retro su z = 0, verso +z)", coll=False)
+def condizionatore():
+    m = G.Mesh()
+    box(m, 0.8, 0.55, 0.3, "ca_condizionatore", z=0.17, top="ca_bidone_grigio")
+    for x in (-0.3, 0.3):
+        box(m, 0.04, 0.04, 0.34, "ca_grondaia", x=x, y=-0.04, z=0.17)
+    return m, None
+
+
+@furniture(239, "PANNI_STESI", "Filo con panni stesi, 2.4 m lungo x, appeso a 1 m dal ringhiera", coll=False)
+def panni_stesi():
+    m = G.Mesh()
+    rectf(m, V(-1.2, 0.0, 0.0), V(1, 0, 0), UP, 2.4, 1.2, "ca_panni", V(0, 0, 1), tile=None, double=True, blend=1)
+    return m, None
+
+
+@furniture(240, "INSEGNA_TABACCHI", "Insegna a bandiera dei tabacchi (0.6 m), sporge lungo +z dal muro", coll=False)
+def insegna_tabacchi():
+    m = G.Mesh()
+    rectf(m, V(0.0, 0.0, 0.08), V(0, 0, 1), UP, 0.6, 0.6, "ca_insegna_tabacchi", V(1, 0, 0), tile=None, double=True)
+    box(m, 0.03, 0.03, 0.12, "ca_grondaia", y=0.55, z=0.04)
+    return m, None
+
+
+@furniture(241, "INSEGNA_FARMACIA", "Croce verde della farmacia a bandiera (0.7 m), sporge lungo +z", coll=False)
+def insegna_farmacia():
+    m = G.Mesh()
+    rectf(m, V(0.0, 0.0, 0.1), V(0, 0, 1), UP, 0.7, 0.7, "ca_insegna_farmacia", V(1, 0, 0), tile=None, double=True)
+    box(m, 0.03, 0.03, 0.14, "ca_grondaia", y=0.65, z=0.05)
+    return m, None
+
+
+@furniture(242, "TARGA_VIA", "Targa in marmo Via Gaspare Amodeo (0.75 x 0.3 m) sul muro, verso +z", coll=False)
+def targa_via():
+    m = G.Mesh()
+    rectf(m, V(0.375, 0.0, 0.02), V(-1, 0, 0), UP, 0.75, 0.3, "ca_targa_via", V(0, 0, 1), tile=None)
+    return m, None
+
+
+@furniture(243, "CAVI_AEREI", "Due cavi elettrici sospesi attraverso la via, 14 m lungo z, a 6.5 m", coll=False)
+def cavi_aerei():
+    m = G.Mesh()
+    n = 14
+    for dx, y0 in ((-0.4, 6.5), (0.4, 6.3)):
+        for i in range(n):
+            z0, z1 = -7 + 14.0 * i / n, -7 + 14.0 * (i + 1) / n
+            s0 = 0.6 * (1 - (z0 / 7.0) ** 2)
+            s1 = 0.6 * (1 - (z1 / 7.0) ** 2)
+            fface(m, [V(dx - 0.012, y0 - s0, z0), V(dx + 0.012, y0 - s0, z0), V(dx + 0.012, y0 - s1, z1), V(dx - 0.012, y0 - s1, z1)],
+                  "ca_cavo", UP, double=True)
+            fface(m, [V(dx, y0 - s0 - 0.012, z0), V(dx, y0 - s0 + 0.012, z0), V(dx, y0 - s1 + 0.012, z1), V(dx, y0 - s1 - 0.012, z1)],
+                  "ca_cavo", V(1, 0, 0), double=True)
+    return m, None
+
+
 @furniture(233, "PERGOLATO", "Pergolato in legno con stuoia di canne, 4 x 3 m", coll=False)
 def pergolato():
     m = G.Mesh()

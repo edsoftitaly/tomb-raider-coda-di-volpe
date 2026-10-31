@@ -264,7 +264,7 @@ PICKUPS = {
     505: ("Sigillo della tonnara", sigillo),
     506: ("Astro di Castore", lambda: astro("it_oro", "it_rubino")),
     507: ("Astro di Polluce", lambda: astro("it_argento", "it_zaffiro")),
-    548: ("Chiave del ripostiglio", lambda: key("it_ottone", 0.8)),
+    548: ("Chiave del ripostiglio", lambda: key("it_ottone", 1.8, 0.06)),
     700: ("Serratura del ripostiglio", serratura),
 }
 

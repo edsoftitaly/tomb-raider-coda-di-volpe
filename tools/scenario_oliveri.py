@@ -23,6 +23,8 @@ def run():
     check("131" in t.last("anim"), "Lara plays the use-key animation")
     t.H.tick(50)
     check("porta_ripostiglio" in t.last("enable"), "the key opens the box-room door")
+    t.H.tick(45)
+    check("anta_ripostiglio" in t.last("swing"), "the door leaf swings open")
     check(t.H.count(t.item("KEY_ITEM1")) == 0, "key consumed")
     return ok
 

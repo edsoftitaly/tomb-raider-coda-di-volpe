@@ -37,6 +37,62 @@ def plaster(color, seed, dirt=True):
     return Image.fromarray(np.clip(img, 0, 255).astype(np.uint8))
 
 
+def realism(im, p0, seed):
+    """Weathering and depth pass over a drawn column: p0 = the bare plaster before the details.
+
+    Detail mask (frames, shutters, glass, cornices) -> soft drop shadow down-right on the plaster (light
+    from the upper left, like the street lamps and the moon), an inner shadow under the top edge of the
+    openings, rain streaks under every sill and cornice, faint glass reflections, cracks, and grain.
+    """
+    from scipy import ndimage
+    rng = np.random.default_rng(seed)
+    a = np.asarray(im).astype(float)
+    b = np.asarray(p0).astype(float)
+    mask = (np.abs(a - b).sum(axis=2) > 12)
+    # 1) drop shadow of every relief element on the wall
+    sh = np.zeros(mask.shape)
+    sh[6:, 5:] = mask[:-6, :-5]
+    sh = ndimage.gaussian_filter(sh, 3.0) * (~mask)
+    a *= (1 - 0.32 * sh)[..., None]
+    # 2) inner shadow at the top of openings (reveals): element pixels with an element-free row above
+    dark = (a.mean(axis=2) < 110) & mask
+    top_edge = dark & ~np.roll(dark, 1, axis=0)
+    reveal = ndimage.gaussian_filter(ndimage.binary_dilation(top_edge, structure=np.ones((14, 1)), origin=(-6, 0)).astype(float), 2.0)
+    a *= (1 - 0.35 * reveal * dark)[..., None]
+    # 3) rain streaks below the bottom edges of light elements (sills, cornices)
+    bottom = mask & ~np.roll(mask, -1, axis=0)
+    streak = np.zeros(mask.shape)
+    cols = np.nonzero(bottom.any(axis=0))[0]
+    for x in cols:
+        for y0 in np.nonzero(bottom[:, x])[0]:
+            if rng.random() < 0.10:
+                n = int(rng.integers(20, 90))
+                streak[y0 + 1:y0 + 1 + n, x] += np.linspace(1, 0, len(streak[y0 + 1:y0 + 1 + n, x]))
+    streak = ndimage.gaussian_filter(streak, (6, 1.6)) * (~mask)
+    a *= (1 - 0.3 * np.clip(streak, 0, 1))[..., None]
+    # 4) glass: a cool diagonal reflection on the dark panes
+    glass = mask & (np.abs(a[..., 2] - a[..., 0]) > 12) & (a.mean(axis=2) < 90)
+    yy, xx = np.mgrid[0:mask.shape[0], 0:mask.shape[1]]
+    refl = 0.5 + 0.5 * np.sin((xx + yy * 0.7) / 23.0)
+    a[glass] += (np.array([28, 34, 44]) * refl[glass][:, None])
+    # 5) a few hairline cracks in the plaster
+    for _ in range(int(rng.integers(2, 5))):
+        x, y_ = float(rng.integers(10, mask.shape[1] - 10)), float(rng.integers(200, mask.shape[0] - 200))
+        ang = rng.uniform(math.pi * 0.35, math.pi * 0.65)
+        for _ in range(int(rng.integers(40, 140))):
+            ang += rng.normal(0, 0.35)
+            x += math.cos(ang) * 1.6
+            y_ += math.sin(ang) * 1.6
+            xi, yi = int(x), int(y_)
+            if 0 <= xi < mask.shape[1] and 0 <= yi < mask.shape[0] and not mask[yi, xi]:
+                a[yi, xi] *= 0.72
+    # 6) broad weathering + grain
+    weather = fbm(mask.shape[0], 140, 3, seed + 7)[:mask.shape[0], :mask.shape[1]]
+    a *= (0.97 + 0.05 * weather)[..., None]
+    a *= rng.normal(1.0, 0.025, mask.shape)[..., None]
+    return Image.fromarray(np.clip(a, 0, 255).astype(np.uint8))
+
+
 def band(d, m0, m1, color):
     d.rectangle([0, y(m1), W, y(m0)], fill=color)
 
@@ -142,8 +198,7 @@ def ed_house(kind):
     if kind in ("finestra", "porta"):
         window(d, 6.9, 8.6, width=1.0)
     cornice(d, 9.35, h=0.25)
-    if kind == "tubo":
-        drainpipe(d)
+    # the drainpipe of the "tubo" column is a climbable static (CASA_PLUVIALE), not painted
     return im
 
 
@@ -211,6 +266,45 @@ def pizzeria(kind):
     return im
 
 
+GENERIC = {
+    # name: (plaster, shutter kind, shutter colour, base band colour)
+    "ocra": ((214, 178, 120), "roller", (150, 110, 70), (160, 130, 96)),
+    "bianca": ((232, 230, 222), "shutter", (58, 98, 70), (190, 186, 176)),
+    "grigia": ((196, 192, 186), "roller", (210, 206, 196), (150, 146, 140)),
+    "crema": ((228, 214, 182), "shutter", (110, 70, 44), (176, 150, 116)),
+}
+
+
+def generic(variant, ground):
+    """Ordinary 1960s-80s palazzina of the town: five storeys of 3.1 m, windows with roller blinds or
+    shutters, concrete balcony slabs every other column, ground floor door / window / garage."""
+    plaster_c, kind, sh, band_c = GENERIC[variant]
+    im = plaster(plaster_c, 70 + len(variant))
+    d = ImageDraw.Draw(im)
+    band(d, 0, 0.6, band_c)
+    if ground == "porta":
+        plain_door(d, color=(120, 90, 60) if variant != "bianca" else (70, 60, 50), height=2.5)
+    elif ground == "garage":
+        cx, hw = W // 2, int(1.0 * PX)
+        d.rectangle([cx - hw, y(2.6), cx + hw, y(0)], fill=(150, 150, 146))
+        for yy in range(y(2.6) + 4, y(0), 8):
+            d.line([(cx - hw, yy), (cx + hw, yy)], fill=(110, 110, 108), width=3)
+    else:
+        if kind == "roller":
+            roller_window(d, 0.9, 2.5, color=sh, width=1.1)
+        else:
+            window(d, 0.9, 2.5, shutters=sh, width=1.1)
+    for k in range(1, 5):
+        base = 3.1 * k
+        cornice(d, base - 0.1, color=tuple(min(255, c + 14) for c in plaster_c), h=0.12)
+        if kind == "roller":
+            roller_window(d, base + 0.8, base + 2.4, color=sh, width=1.1)
+        else:
+            window(d, base + 0.8, base + 2.4, shutters=sh, width=1.0, open_=(k % 2 == 1))
+    cornice(d, 15.6, h=0.3)
+    return im
+
+
 def plain_side(color, seed):
     im = plaster(color, seed)
     d = ImageDraw.Draw(im)
@@ -219,7 +313,27 @@ def plain_side(color, seed):
     return im
 
 
-COLUMNS = [
+def _real(fn, seed):
+    """Run a builder with realism(): plaster() is recorded so the pass knows the bare wall."""
+    def build():
+        global plaster
+        orig = plaster
+        rec = {}
+
+        def rec_plaster(color, seed_, dirt=True):
+            im = orig(color, seed_, dirt)
+            rec["p0"] = im.copy()
+            return im
+        plaster = rec_plaster
+        try:
+            im = fn()
+        finally:
+            plaster = orig
+        return realism(im, rec["p0"], seed)
+    return build
+
+
+COLUMNS_RAW = [
     ("fac_casa_finestra", lambda: ed_house("finestra")), ("fac_casa_porta", lambda: ed_house("porta")),
     ("fac_casa_piena", lambda: ed_house("piena")), ("fac_casa_tubo", lambda: ed_house("tubo")),
     ("fac_rosa_porta", lambda: pink_house("porta")), ("fac_rosa_finestra", lambda: pink_house("finestra")),
@@ -229,11 +343,14 @@ COLUMNS = [
     ("fac_lato_crema", lambda: plain_side(CREAM, 61)), ("fac_lato_rosa", lambda: plain_side(PINK, 62)),
     ("fac_lato_beige", lambda: plain_side(BEIGE, 63)), ("fac_lato_bianco", lambda: plain_side(WHITE, 64)),
 ]
+COLUMNS_RAW += [("fac_gen_%s_%s" % (v, g), (lambda v=v, g=g: generic(v, g)))
+                for v in ("ocra", "bianca", "grigia", "crema") for g in ("finestra", "porta")]
+COLUMNS = [(n, _real(f, 100 + i)) for i, (n, f) in enumerate(COLUMNS_RAW)]
 
 
 def main(first_index=9):
-    """Writes coda_atlas10.png and coda_atlas11.png (atlas list indices 9 and 10)."""
-    pages = [COLUMNS[:8], COLUMNS[8:16]]
+    """Writes coda_atlas10/11/12.png (atlas list indices 9, 10, 11)."""
+    pages = [COLUMNS[:8], COLUMNS[8:16], COLUMNS[16:24]]
     for p, cols in enumerate(pages):
         img = Image.new("RGB", (2048, 2048), (0, 0, 0))
         meta_cols = {}

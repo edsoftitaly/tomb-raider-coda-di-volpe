@@ -143,7 +143,7 @@ class Kit:
         return self.level.add_trigger(room, area, trig_type, target_type, target, timer=timer, extra=extra,
                                       code_bits=code_bits, one_shot=one_shot)
 
-    def prop(self, name, wx, wz, rot=0.0, h=None, scale=1.0, room=None):
+    def prop(self, name, wx, wz, rot=0.0, h=None, scale=1.0, room=None, lua_name=""):
         """A decoration static (CdV_Decorazioni) placed by content: clues, cover, set dressing."""
         from decorate import S as DECOR_IDS
         if name not in DECOR_IDS:
@@ -155,7 +155,9 @@ class Kit:
         if h is None:
             h = room.y + int(np.mean(room.sectors[lx][lz].floor))
         pos = ((wx - room.x) * SECTOR, float(h - room.y), (wz - room.z) * SECTOR)
-        self.level.add_static(room, DECOR_IDS[name], pos, rot_y=rot, scale=scale)
+        self.level.add_static(room, DECOR_IDS[name], pos, rot_y=rot, scale=scale, lua_name=lua_name)
+        if lua_name:
+            self.names[lua_name] = (wx * SECTOR, h, wz * SECTOR, room.name)
         self.links.append((int(wx), int(wz)))   # keep random decorations away from it
 
     def lua_pos(self, wx, wz, h, dx=0.5, dz=0.5):

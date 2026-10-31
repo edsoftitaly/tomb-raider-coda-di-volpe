@@ -151,6 +151,27 @@ def street_fronts(world, street_h):
         for i, x in enumerate(sorted(row)):
             cols[(x, row[x], f["side"])] = f["pattern"][i % len(f["pattern"])]
         fronts.append(dict(f, row=row, top=top))
+    # Every other building of the zone: an ordinary palazzina facade (four variants by building), so no
+    # face keeps the old generic atlas look. Door on the middle column of each street face.
+    variants = ("ocra", "bianca", "grigia", "crema")
+    for b in np.unique(world.building_id[world.building_id >= 0]):
+        b = int(b)
+        v = variants[(b * 7) % 4]
+        faces = {}
+        for (x, z) in zip(*np.nonzero(world.building_id == b)):
+            for d, (ddx, ddz) in (("+x", (1, 0)), ("-x", (-1, 0)), ("+z", (0, 1)), ("-z", (0, -1))):
+                nx_, nz_ = x + ddx, z + ddz
+                if 0 <= nx_ < world.nx and 0 <= nz_ < world.nz and world.building_id[nx_, nz_] != b:
+                    faces.setdefault(d, []).append((int(x), int(z)))
+        for d, cells in faces.items():
+            cells.sort()
+            mid = cells[len(cells) // 2]
+            for (x, z) in cells:
+                kind = "porta" if (x, z) == mid and len(cells) > 2 else "finestra"
+                cols.setdefault((x, z, d), "fac_gen_%s_%s" % (v, kind))
+        bb = world.buildings[b]
+        if "base_m" not in bb or bb.get("base_m") is None:
+            bb["base_m"] = street_h / 512.0
     world.facade_cols = cols
     world.fronts = fronts
 
@@ -281,6 +302,34 @@ def fronts_dressing(ctx):
             x = a0 + 1
             if x in f["row"]:
                 k.prop("BANCO_FRUTTA", x + 0.5, f["row"][x] + 1.5, rot=rot, h=G)
+    # Street life on the facades: air-conditioner units, laundry in front of some balconies, the street
+    # name plaque, overhead cables across the road, the bins on the opposite pavement.
+    import random
+    rnd = random.Random(7)
+    for f in w.fronts:
+        dz = -1 if f["side"] == "-z" else 1
+        rot = 0.0 if dz > 0 else 180.0
+        xs = sorted(f["row"])
+        for i, x in enumerate(xs):
+            zf = f["row"][x] + (1 if dz > 0 else 0)
+            if f["name"] != "casa" and rnd.random() < 0.35:
+                hm = rnd.choice((4.4, 7.4)) if f["top"] - G > 7 * 512 else 4.4
+                k.prop("CONDIZIONATORE", x + rnd.uniform(0.25, 0.75), zf, rot=rot, h=G + int(hm * 512))
+        for name, hm, idx in f.get("balconies", []):
+            for j, i in enumerate(idx):
+                if i < len(xs) and (j + int(hm)) % 3 == 0:
+                    x = xs[i]
+                    zf = f["row"][x] + (1 if dz > 0 else 0) + 0.4 * dz
+                    k.prop("PANNI_STESI", x + 0.5, zf, rot=0.0, h=G + int((hm + 0.95) * 512))
+    k.prop("TARGA_VIA", c["x0"] + 1.5, c["z0"], rot=180.0, h=G + int(2.9 * 512))
+    k.prop("CONDIZIONATORE", c["x0"] + 6.6, c["z0"], rot=180.0, h=G + int(7.3 * 512))
+    opp = [f for f in w.fronts if f["side"] == "+z"]
+    if opp:
+        z_opp = min(min(f["row"].values()) for f in opp) + 1
+        zc = (z_opp + c["z0"]) / 2.0
+        for x in (c["x0"] - 6, c["x0"] + 4, c["x0"] + 13):
+            k.prop("CAVI_AEREI", x + 0.5, zc, rot=0.0, h=G)
+        k.prop("CASSONETTI", c["x0"] + 9.5, z_opp + 0.5, rot=0.0, h=G)
     # Roofs: parapets on the house's street edge (gap over the drainpipe), water tanks, antennas, the pergola.
     R = c["ROOF"]
     for col in range(1, W_COLS):
@@ -358,9 +407,14 @@ def build(ctx):
     put(K.BADDY2, "LAB", 6, 1, rot=270.0, name="ladro_terra")
     put(K.BADDY1, "INGRESSO", 1, 1, rot=0.0, name="ladro_chiave")
     hx, hz = cell(c, *HATCH)
-    # The hatch: a floor trapdoor of the roof (a bridge while closed). Lara pushes it open climbing the
-    # ladder (Lua zone near the top), then climbs out west onto the roof over the bathroom.
-    k.place(K.FLOOR_TRAPDOOR1, hx, hz, room=roof_room, rot=90.0, name="botola_tetto")
+    # The hatch: a wooden lid hinged on its east edge, lying on the roof over the hole. Lara pushes it
+    # open climbing the ladder (Lua zone near the top), then climbs out west onto the roof over the bathroom.
+    k.prop("BOTOLA_LEGNO", hx + 1.0, hz + 0.5, rot=0.0, h=c["ROOF"], room=roof_room, lua_name="botola_legno")
+    # The box-room door: TEN door (collision, opened by the lock) + a hinged static leaf for the look
+    # (the door moveable's own mesh does not show in this setup).
+    dx_, dz_ = cell(c, *DOOR)
+    k.prop("CASA_ANTA", dx_ + 0.02, dz_, rot=0.0, h=R["CORRIDOIO"].floor_h, room=R["CORRIDOIO"].room,
+           lua_name="anta_ripostiglio")
     door = put(K.DOOR_TYPE1, "CORRIDOIO", *DOOR, rot=0.0, name="porta_ripostiglio")
     lock = put(K.KEY_HOLE1, "CORRIDOIO", *LOCK, rot=180.0, name="serratura_ripostiglio")
     del door, lock
@@ -379,11 +433,11 @@ def build(ctx):
              text="Il portone e' sbarrato da fuori. Resta la botola del ripostiglio, sul tetto.")
     lua.use("chiave_ripostiglio", "ID.KEY_ITEM1", at("CORRIDOIO", *LOCK), r=700, dy=600,
             text="La serratura scatta: il ripostiglio e' aperto.",
-            fn='CDV.InsertKey("serratura_ripostiglio", "porta_ripostiglio")')
+            fn='CDV.InsertKey("serratura_ripostiglio", "porta_ripostiglio", "anta_ripostiglio")')
     lua.zone("ripostiglio_chiuso", at("CORRIDOIO", *LOCK), r=900, dy=700, once=False, secs=4,
              need='not CDV.Has(ID.KEY_ITEM1) and not CDV.Done("use_chiave_ripostiglio")',
              text="Il ripostiglio e' chiuso a chiave. Uno dei ladri ha la chiave.")
-    lua.zone("botola", at("RIPOSTIGLIO", *HATCH, dh=1100), r=600, dy=500, fn='CDV.Enable("botola_tetto")',
+    lua.zone("botola", at("RIPOSTIGLIO", *HATCH, dh=1100), r=600, dy=500, fn='CDV.Swing("botola_legno", "z", -110, 30)',
              text="Una spinta e la botola si apre.")
     lua.zone("tetto", k.lua_pos(hx - 1, hz, c["ROOF"]), r=1400, dy=300,
              text="Sulla terrazza. Sul davanti, verso la via, si scende lungo il pluviale.")

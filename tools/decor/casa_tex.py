@@ -325,6 +325,93 @@ def fruit(seed=43):
     return from_img(im)
 
 
+def _font(size):
+    from PIL import ImageFont
+    for f in ("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"):
+        try:
+            return ImageFont.truetype(f, size)
+        except OSError:
+            pass
+    return ImageFont.load_default()
+
+
+def bin_plastic(color, seed):
+    """Wheelie bin side: moulded plastic with ribs, a sticker and grime."""
+    r = np.random.default_rng(seed)
+    a = np.ones((128, 128, 3)) * np.array(color, float)
+    a *= (0.92 + 0.08 * r.random((128, 128)))[..., None]
+    for x in range(10, 128, 22):
+        a[:, x:x + 3] *= 0.8
+    a[:14] *= 0.7
+    a[100:] *= np.linspace(1, 0.75, 28)[:, None, None]
+    im = Image.fromarray(np.clip(a, 0, 255).astype(np.uint8))
+    d = ImageDraw.Draw(im)
+    d.rectangle([44, 40, 84, 66], fill=(236, 236, 230))
+    d.text((49, 45), "RSU", fill=(30, 30, 30), font=_font(14))
+    return from_img(im)
+
+
+def ac_unit(seed=50):
+    im = Image.new("RGB", (128, 96), (222, 222, 216))
+    d = ImageDraw.Draw(im)
+    d.ellipse([12, 10, 84, 82], fill=(70, 72, 74))
+    for k in range(0, 72, 7):
+        d.line([(12, 10 + k), (84, 10 + k)], fill=(150, 150, 146), width=2)
+    d.rectangle([92, 20, 120, 76], outline=(170, 170, 164), width=2)
+    d.line([(0, 95), (128, 95)], fill=(120, 110, 96), width=3)
+    return from_img(im)
+
+
+def laundry(seed=51):
+    """Clothes on a line (alpha): shirts, towels, sheets in the colours of a Sicilian balcony."""
+    r = np.random.default_rng(seed)
+    img = np.zeros((128, 256, 4))
+    x = 4
+    while x < 240:
+        w = int(r.integers(26, 56))
+        h = int(r.integers(50, 120))
+        col = r.choice([(236, 234, 226), (200, 60, 50), (60, 100, 170), (240, 200, 70), (120, 170, 120), (230, 140, 170)])
+        w = min(w, 256 - x)
+        h = min(h, 126)
+        img[2:2 + h, x:x + w, :3] = col
+        img[2:2 + h, x:x + w, :3] *= (0.85 + 0.15 * np.sin(np.arange(w) / 4.0))[None, :, None]
+        img[2:2 + h, x:x + w, 3] = 255
+        img[0:3, x - 2:x + w + 2, :3] = (40, 40, 40)
+        img[0:3, x - 2:x + w + 2, 3] = 255
+        x += w + int(r.integers(4, 14))
+    img[0:2, :, :3] = (50, 50, 50)
+    img[0:2, :, 3] = 255
+    return img
+
+
+def blade_sign(kind):
+    im = Image.new("RGB", (128, 128), (20, 40, 110) if kind == "tabacchi" else (20, 130, 60))
+    d = ImageDraw.Draw(im)
+    if kind == "tabacchi":
+        d.rectangle([6, 6, 121, 121], outline=(240, 240, 240), width=4)
+        d.text((40, 18), "T", fill=(250, 250, 250), font=_font(84))
+    else:
+        d.rectangle([0, 0, 127, 127], fill=(10, 30, 16))
+        d.rectangle([48, 14, 80, 114], fill=(60, 230, 110))
+        d.rectangle([14, 48, 114, 80], fill=(60, 230, 110))
+    return from_img(im)
+
+
+def street_plaque(seed=52):
+    r = np.random.default_rng(seed)
+    a = np.ones((64, 160, 3)) * 232 * (0.95 + 0.05 * r.random((64, 160)))[..., None]
+    im = Image.fromarray(a.astype(np.uint8))
+    d = ImageDraw.Draw(im)
+    d.rectangle([3, 3, 156, 60], outline=(40, 40, 40), width=2)
+    d.text((14, 8), "VIA GASPARE", fill=(20, 20, 20), font=_font(18))
+    d.text((34, 32), "AMODEO", fill=(20, 20, 20), font=_font(20))
+    return from_img(im)
+
+
+def cable(seed=53):
+    return from_img(Image.new("RGB", (16, 16), (18, 18, 20)))
+
+
 def build(pk):
     put = pk.put
     put("ca_intonaco", plaster())
@@ -362,3 +449,11 @@ def build(pk):
     put("ca_tenda_rossa", awning())
     put("ca_rete", scaffold_net())
     put("ca_frutta", fruit())
+    put("ca_bidone_verde", bin_plastic((46, 110, 62), 60))
+    put("ca_bidone_grigio", bin_plastic((92, 96, 100), 61))
+    put("ca_condizionatore", ac_unit())
+    put("ca_panni", laundry())
+    put("ca_insegna_tabacchi", blade_sign("tabacchi"))
+    put("ca_insegna_farmacia", blade_sign("farmacia"))
+    put("ca_targa_via", street_plaque())
+    put("ca_cavo", cable())

@@ -108,7 +108,7 @@ def make_level():
     return level
 
 
-ATLAS_NAMES = ["coda_atlas"] + ["coda_atlas%d" % i for i in range(2, 12)]
+ATLAS_NAMES = ["coda_atlas"] + ["coda_atlas%d" % i for i in range(2, 13)]
 
 
 def macro_tiles(atlas_list):
@@ -261,7 +261,7 @@ def write_gameflow(only=None):
     strings += ["    cdv_level_%s = { %s }," % (k.lower(), luagen.lua_str(LEVELS[k]["title"])) for k in ORDER]
     objs = ["        TEN.Flow.InventoryItem(%s, ID.PUZZLE_ITEM%d, %d, %.2f, Rot(%d, 0, 0), Axis.Y, -1, Act.USE)," % (
         (luagen.lua_str(k), i) + INV_LOOK[i]) for i, (k, _) in ITEMS.items()]
-    objs += ["        TEN.Flow.InventoryItem(%s, ID.KEY_ITEM%d, 0, 4.0, Rot(-60, 0, 0), Axis.Y, -1, Act.USE)," % (
+    objs += ["        TEN.Flow.InventoryItem(%s, ID.KEY_ITEM%d, 0, 2.0, Rot(-80, 0, 0), Axis.Y, -1, Act.USE)," % (
         luagen.lua_str(k), i) for i, (k, _) in KEYS.items()]
     parts = [GAMEFLOW_HEAD % ("\n".join(strings), "\n".join(objs))]
     for k in ORDER:

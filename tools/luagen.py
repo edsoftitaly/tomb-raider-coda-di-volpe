@@ -95,7 +95,7 @@ end
 
 -- Key into a lock moveable, scripted: Lara steps to the plate, plays the native "use key" animation,
 -- then the target (a door) is enabled as if triggered.
-function CDV.InsertKey(lockName, targetName)
+function CDV.InsertKey(lockName, targetName, leafName)
     local lock = CDV.M(lockName)
     if lock ~= nil and lock:GetValid() then
         local lp = lock:GetPosition()
@@ -106,7 +106,29 @@ function CDV.InsertKey(lockName, targetName)
         Lara:SetAnim(131)
         Lara:SetState(42)
     end
-    CDV.After(45, function() CDV.Enable(targetName) end)
+    CDV.After(45, function()
+        CDV.Enable(targetName)
+        if leafName then CDV.Swing(leafName, "y", 90, 40) end
+    end)
+end
+
+-- Turn a named static about its own origin (hinged leaves and hatches): axis "x", "y" or "z",
+-- `by` degrees over `frames` frames.
+function CDV.Swing(name, axis, by, frames)
+    local ok, st = pcall(TEN.Objects.GetStaticByName, name)
+    if not ok or st == nil then return end
+    local r0 = st:GetRotation()
+    local start = { x = r0.x, y = r0.y, z = r0.z }
+    local f = 0
+    local function step()
+        f = f + 1
+        local t = math.min(f / frames, 1.0)
+        local r = { x = start.x, y = start.y, z = start.z }
+        r[axis] = start[axis] + by * (1 - (1 - t) * (1 - t))
+        st:SetRotation(TEN.Rotation(r.x, r.y, r.z))
+        if f < frames then CDV.After(1, step) end
+    end
+    CDV.After(1, step)
 end
 
 function CDV.Has(item)
