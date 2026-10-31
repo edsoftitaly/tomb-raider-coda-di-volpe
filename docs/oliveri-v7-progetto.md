@@ -110,3 +110,19 @@ Tutte disegnate da riferimento, nessuna copiata da Google.
 ## 6. Livelli 2–6
 
 Stessa procedura, uno alla volta, ognuno con pianta e criteri propri: Lungomare, Marinello, Laghetti, Tindari, Città sommersa. I livelli vecchi sul PC vengono archiviati, non cancellati, nel momento in cui il nuovo livello 1 li sostituisce.
+
+## 7. Stato al 31/10/2026 sera (Oliveri v7)
+
+Provato in gioco sul PC di Ed, un pezzo alla volta (con teletrasporto di test):
+- [x] Scale camera → piano terra (due rampe)
+- [x] Chiave del ripostiglio: la porta blocca, la chiave la apre (animazione + anta che gira)
+- [x] Scala a pioli, botola che si apre salendo, uscita sul tetto
+- [x] Pluviale sulla facciata
+- [x] Manovella → argano → cancello del cortile, passaggio sotto l'arco
+- [x] Palo ucciso → zona di fine all'incrocio con Via Stesicoro → carica il livello 2
+- [ ] Partita completa dall'inizio senza file di test (combattimenti, chiave lasciata dal ladro, manovella raccolta)
+- [ ] Botola: verificare il verso di apertura (ora +75° attorno a z)
+- [ ] Icone d'inventario di chiave e manovella: verificare la scala
+
+Cambiato rispetto al progetto: il cortile ha un cancello con argano + manovella (al posto della leva dietro il furgone e della pompa).
+L'orologio del cortile non c'e'.
