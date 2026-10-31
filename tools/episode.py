@@ -45,7 +45,7 @@ VIDEOS = {"Oliveri": "cdv_intro", "Lungomare": "cdv_02_lungomare", "Marinello": 
           "Laghetti": "cdv_04_laghetti", "Tindari": "cdv_05_tindari", "Sommersa": "cdv_06_sommersa"}
 
 WADS = ["TombEngine.wad2"] + ["CodaDiVolpe\\%s.wad2" % w for w in (
-    "CdV_Oggetti_A", "CdV_Oggetti_B", "TR4_Baddy1", "TR4_Baddy2", "TR2_Doberman", "TR1_Rat", "TR4_Bat",
+    "CdV_Oggetti", "TR4_Baddy1", "TR4_Baddy2", "TR2_Doberman", "TR1_Rat", "TR4_Bat",
     "TEN_Wraith", "TR5_Lagoon_Witch", "TR2_Shark", "TR4_Skeleton", "TR4_Doors", "TR5_Floor_Trapdoor",
     "TR4_Lever_Switch", "TR4_Rolling_Ball", "TR1_Teeth_Spikes", "TEN_Fish_Emitter", "TEN_Firefly",
     "CdV_Decorazioni")]
@@ -61,6 +61,11 @@ ITEMS = {
     7: ("cdv_astro_castore", "Astro di Castore"),
     8: ("cdv_astro_polluce", "Astro di Polluce"),
 }
+# Keys (KEY_ITEM n, opened with the native keyholes KEY_HOLE n).
+KEYS = {1: ("cdv_chiave_ripostiglio", "Chiave del ripostiglio")}
+# Inventory look of the objects of CdV_Oggetti.wad2 (build_objects.py): (y offset, scale, x rotation).
+INV_LOOK = {1: (0, 1.4, -30), 2: (0, 1.6, -60), 3: (0, 1.2, -40), 4: (0, 1.1, -60), 5: (0, 1.6, -20),
+            6: (0, 1.6, -45), 7: (0, 1.4, -55), 8: (0, 1.4, -55)}
 
 
 class Ctx:
@@ -247,10 +252,12 @@ LEVEL_FLOW = {
 
 
 def write_gameflow(only=None):
-    strings = ["    %s = { %s }," % (k, luagen.lua_str(name)) for k, name in ITEMS.values()]
+    strings = ["    %s = { %s }," % (k, luagen.lua_str(name)) for k, name in list(ITEMS.values()) + list(KEYS.values())]
     strings += ["    cdv_level_%s = { %s }," % (k.lower(), luagen.lua_str(LEVELS[k]["title"])) for k in ORDER]
-    objs = ["        TEN.Flow.InventoryItem(%s, ID.PUZZLE_ITEM%d, 0, 0.5, Rot(0, 0, 0), Axis.Y, -1, Act.USE)," % (
-        luagen.lua_str(k), i) for i, (k, _) in ITEMS.items()]
+    objs = ["        TEN.Flow.InventoryItem(%s, ID.PUZZLE_ITEM%d, %d, %.2f, Rot(%d, 0, 0), Axis.Y, -1, Act.USE)," % (
+        (luagen.lua_str(k), i) + INV_LOOK[i]) for i, (k, _) in ITEMS.items()]
+    objs += ["        TEN.Flow.InventoryItem(%s, ID.KEY_ITEM%d, 0, 2.0, Rot(-60, 0, 0), Axis.Y, -1, Act.USE)," % (
+        luagen.lua_str(k), i) for i, (k, _) in KEYS.items()]
     parts = [GAMEFLOW_HEAD % ("\n".join(strings), "\n".join(objs))]
     for k in ORDER:
         if only is not None and k not in only:

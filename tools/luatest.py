@@ -16,7 +16,7 @@ local ids = {}
 local n = 1
 for _, k in ipairs({"PUZZLE_ITEM1","PUZZLE_ITEM2","PUZZLE_ITEM3","PUZZLE_ITEM4","PUZZLE_ITEM5","PUZZLE_ITEM6",
                     "PUZZLE_ITEM7","PUZZLE_ITEM8","SMALLMEDI_ITEM","BIGMEDI_ITEM","SHOTGUN_AMMO1_ITEM","UZI_AMMO_ITEM",
-                    "FLARE_INV_ITEM","PISTOLS_AMMO_ITEM","REVOLVER_AMMO_ITEM"}) do ids[k] = n; n = n + 1 end
+                    "FLARE_INV_ITEM","KEY_ITEM1","KEY_HOLE1","PISTOLS_AMMO_ITEM","REVOLVER_AMMO_ITEM"}) do ids[k] = n; n = n + 1 end
 TEN.Objects.ObjID = ids
 TEN.Vec2 = function(x, y) return { x = x, y = y } end
 TEN.Vec3 = function(x, y, z) return { x = x, y = y, z = z } end

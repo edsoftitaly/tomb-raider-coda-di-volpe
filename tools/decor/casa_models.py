@@ -300,7 +300,7 @@ def finestra():
     return m, None
 
 
-def porta_vano(top):
+def porta_vano(top, leaf=True):
     """The doorway is a whole sector (2 x 2 m) between two wall sectors: the jambs sit on the walls'
     faces (local z = +-1), the passage runs along local x. Above 2.3 m the opening is closed with
     plaster up to the ceiling, so the frame never floats in the middle of the hole."""
@@ -315,6 +315,8 @@ def porta_vano(top):
     fface(m, [V(-1.0, 2.3, -0.99), V(1.0, 2.3, -0.99), V(1.0, 2.3, 0.99), V(-1.0, 2.3, 0.99)], "ca_noce", -UP)
     for x in (-1.0, 1.0):
         box(m, 0.1, 0.12, 2.0, "ca_noce", x=x, y=2.3)
+    if not leaf:
+        return m, None
     # door leaf open against the jamb
     leaf = G.Mesh()
     rectf(leaf, V(0.0, 0.0, 0.0), V(1, 0, 0), UP, 0.95, 2.25, "ca_porta", V(0, 0, 1), tile=None, double=True)
@@ -325,6 +327,11 @@ def porta_vano(top):
 @furniture(216, "CASA_PORTA", "Vano porta (stanze alte 3 m): stipiti a filo dei muri, architrave fino al soffitto, anta aperta", coll=False)
 def porta():
     return porta_vano(2.98)
+
+
+@furniture(222, "CASA_VANO_RIPOSTIGLIO", "Vano della porta del ripostiglio (stanze alte 3,5 m), senza anta: la chiude la porta vera", coll=False)
+def vano_ripostiglio():
+    return porta_vano(3.48, leaf=False)
 
 
 @furniture(221, "CASA_PORTA_ALTA", "Vano porta (stanze alte 3,5 m)", coll=False)
