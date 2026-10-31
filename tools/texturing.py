@@ -176,6 +176,9 @@ class Texturer:
 
     def column_for(self, wi, wj, d):
         b = self.bid[wi, wj]
+        fc = getattr(self, "facade_cols", None)
+        if fc and (wi, wj, d) in fc:
+            return fc[(wi, wj, d)], self.bases[b] if b >= 0 else None
         if b < 0:
             if "roccia_faccia_0" in self.columns:
                 along = wi if d in ("+z", "-z") else wj   # position along the wall: continuous rock face

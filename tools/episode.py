@@ -55,7 +55,7 @@ WADS = ["TombEngine.wad2"] + ["CodaDiVolpe\\%s.wad2" % w for w in (
 # Puzzle items: slot -> (Strings key, Italian name). Same slots in every level (inventory carries over).
 ITEMS = {
     1: ("cdv_diario", "Diario bizantino"),
-    2: ("cdv_chiave_terrazza", "Chiave del ripostiglio"),
+    2: ("cdv_chiave_terrazza", "Chiave della terrazza"),
     3: ("cdv_mappa_maree", "Mappa delle maree"),
     4: ("cdv_chiave_casello", "Chiave del Casello"),
     5: ("cdv_conchiglia", "Conchiglia del canto"),
@@ -64,7 +64,7 @@ ITEMS = {
     8: ("cdv_astro_polluce", "Astro di Polluce"),
 }
 # Keys (KEY_ITEM n, opened with the native keyholes KEY_HOLE n).
-KEYS = {}
+KEYS = {1: ("cdv_chiave_ripostiglio", "Chiave del ripostiglio")}
 # Inventory look of the objects of CdV_Oggetti.wad2 (build_objects.py): (y offset, scale, x rotation).
 INV_LOOK = {i: (0, 0.5, 0) for i in range(1, 9)}   # the object models in Ed's project (CdV_Oggetti_A/B)
 
@@ -108,7 +108,7 @@ def make_level():
     return level
 
 
-ATLAS_NAMES = ["coda_atlas"] + ["coda_atlas%d" % i for i in range(2, 10)]
+ATLAS_NAMES = ["coda_atlas"] + ["coda_atlas%d" % i for i in range(2, 12)]
 
 
 def macro_tiles(atlas_list):
@@ -125,7 +125,7 @@ def extra_columns(atlas_list):
         if i == 0:
             continue
         for name, (x0, y0, x1, y1) in a.get("columns", {}).items():
-            if name.startswith("roccia_faccia"):
+            if name.startswith("roccia_faccia") or name.startswith("fac_"):
                 out[name] = (i, x0, x1)
     return out
 
@@ -170,6 +170,7 @@ def build_terrain_level(key, content):
     texer = texturing.Texturer(atlas_list[0], world.floor, world.mat, world.building_id, styles,
                                [b["base_m"] for b in world.buildings], macro=macro_tiles(atlas_list), columns=extra_columns(atlas_list))
 
+    texer.facade_cols = getattr(world, "facade_cols", {})
     level = make_level()
     level.use_tombide_ten(LEVELS[key].get("ten", key + ".ten"), wads=WADS)
     setup_textures(level, atlas_list)
@@ -260,7 +261,7 @@ def write_gameflow(only=None):
     strings += ["    cdv_level_%s = { %s }," % (k.lower(), luagen.lua_str(LEVELS[k]["title"])) for k in ORDER]
     objs = ["        TEN.Flow.InventoryItem(%s, ID.PUZZLE_ITEM%d, %d, %.2f, Rot(%d, 0, 0), Axis.Y, -1, Act.USE)," % (
         (luagen.lua_str(k), i) + INV_LOOK[i]) for i, (k, _) in ITEMS.items()]
-    objs += ["        TEN.Flow.InventoryItem(%s, ID.KEY_ITEM%d, 0, 2.0, Rot(-60, 0, 0), Axis.Y, -1, Act.USE)," % (
+    objs += ["        TEN.Flow.InventoryItem(%s, ID.KEY_ITEM%d, 0, 4.0, Rot(-60, 0, 0), Axis.Y, -1, Act.USE)," % (
         luagen.lua_str(k), i) for i, (k, _) in KEYS.items()]
     parts = [GAMEFLOW_HEAD % ("\n".join(strings), "\n".join(objs))]
     for k in ORDER:

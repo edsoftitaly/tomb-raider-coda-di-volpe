@@ -92,3 +92,13 @@ Coda di Volpe - decorazioni
 219 CASA_CORRIMANO: Ringhiera della scala (2 m)
 220 CASA_GRADINI: Gradini in marmo sopra la rampa (6 m, 3 m di salita)
 223 CASA_PLUVIALE: Pluviale in rame sulla facciata (9,5 m), dove Lara scende dal tetto
+224 BALCONE_VERDE: Balcone con ringhiera verde (casa di Ed), 2 m
+225 BALCONE_NERO: Balcone con ringhiera in ferro battuto, 2 m
+226 BALCONE_ARANCIO: Balcone con ringhiera color terracotta, 2 m
+227 TENDA_PIZZERIA: Tenda rossa a sbalzo della pizzeria, 2 m
+228 PONTEGGIO: Ponteggio con rete verde-bianca, 2 m x 9,6 m
+229 BANCO_FRUTTA: Banco della frutta davanti alla rosticceria
+230 PARAPETTO: Parapetto del tetto, 2 m (con collisione)
+231 SERBATOIO: Serbatoio dell'acqua sul tetto, su cavalletto (con collisione)
+232 ANTENNA_TV: Antenna TV con parabola
+233 PERGOLATO: Pergolato in legno con stuoia di canne, 4 x 3 m

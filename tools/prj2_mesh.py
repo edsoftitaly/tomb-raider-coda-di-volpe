@@ -175,6 +175,9 @@ def build_mesh(rooms, prefixes):
     return pos, uv, tix
 
 
+NATLAS = 11
+
+
 def add_statics(rooms, statics, keep, pos, uv, tix, out_dir):
     """Decoration statics (CdV_Decorazioni) as real meshes, textures 3.. = decor pages."""
     import math
@@ -205,7 +208,7 @@ def add_statics(rooms, statics, keep, pos, uv, tix, out_dir):
                 x, y, z = p * sc
                 pos.extend([(ox + x * ca + z * sa) / 512.0, (oy + y) / 512.0, (oz - x * sa + z * ca) / 512.0])
                 uv.extend([t[0] / 512.0, t[1] / 512.0])
-            tix.append(9 + page)
+            tix.append(NATLAS + page)
 
 
 if __name__ == "__main__":
@@ -228,7 +231,7 @@ if __name__ == "__main__":
         color = 0xff2020 if t in kit.ENEMIES else 0xffd020 if (950 <= t <= 990 or 500 <= t < 520) else \
             0x20e020 if 800 <= t < 830 else 0xffffff
         marks.append(w + [color])
-    sizes = [2048.0, 2048.0, 1024.0] + [2048.0] * 6 + [2048.0] * 7
+    sizes = [2048.0, 2048.0, 1024.0] + [2048.0] * (NATLAS - 3) + [2048.0] * 20
     for i, t in enumerate(tix):
         for k in range(3):
             j = (i * 3 + k) * 2

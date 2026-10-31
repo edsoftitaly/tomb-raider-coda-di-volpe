@@ -82,6 +82,33 @@ function CDV.Disable(name)
     if m ~= nil and m:GetValid() then m:Disable() end
 end
 
+-- Run fn after a number of frames (30 = 1 s). Not saved: use only for short visual sequences.
+local timers = {}
+function CDV.After(frames, fn) timers[#timers + 1] = { t = frames, fn = fn } end
+local function TimersTick()
+    for i = #timers, 1, -1 do
+        local t = timers[i]
+        t.t = t.t - 1
+        if t.t <= 0 then table.remove(timers, i); t.fn() end
+    end
+end
+
+-- Key into a lock moveable, scripted: Lara steps to the plate, plays the native "use key" animation,
+-- then the target (a door) is enabled as if triggered.
+function CDV.InsertKey(lockName, targetName)
+    local lock = CDV.M(lockName)
+    if lock ~= nil and lock:GetValid() then
+        local lp = lock:GetPosition()
+        local yaw = lock:GetRotation().y
+        local a = math.rad(yaw)
+        Lara:SetPosition(TEN.Vec3(lp.x + math.sin(a) * 312, lp.y, lp.z + math.cos(a) * 312), false)
+        Lara:SetRotation(TEN.Rotation(0, yaw, 0))
+        Lara:SetAnim(131)
+        Lara:SetState(42)
+    end
+    CDV.After(45, function() CDV.Enable(targetName) end)
+end
+
 function CDV.Has(item)
     return TEN.Inventory.GetItemCount(item) > 0
 end
@@ -99,6 +126,10 @@ function CDV.Near(x, y, z, r, dy)
     local dx, dz = p.x - x, p.z - z
     if dx * dx + dz * dz > r * r then return false end
     return math.abs(p.y - y) <= (dy or 1536)
+end
+
+function CDV.Done(id)
+    return St().done[id] == true
 end
 
 function CDV.Flag(name, value)
@@ -180,6 +211,7 @@ CDV.RipreseTick = RipreseTick
 
 function CDV.Tick()
     local S = St()
+    TimersTick()
     RipreseTick()
     TeleportStep()
     for _, z in ipairs(zones) do
@@ -238,14 +270,71 @@ end
 FOOTER = r'''
 if CDV_TEST ~= nil then CDV_TEST(CDV, zones, uses) end
 
+-- Playtest hook: Engine\Scripts\CdvTest.lua -> return { Oliveri = { tp = {x, y, z, "ROOM", yaw}, give = {"KEY_ITEM1"} } }
+local okT, TST = pcall(require, "CdvTest")
+if not okT or type(TST) ~= "table" then TST = {} end
+local function TestStart()
+    local t = TST[CDV.KEY or ""]
+    if t == nil then return end
+    if t.tp then
+        Lara:SetPosition(TEN.Vec3(t.tp[1], t.tp[2], t.tp[3]), false)
+        local room = TEN.Objects.GetRoomByName(t.tp[4])
+        if room ~= nil then Lara:SetRoomNumber(room:GetRoomNumber()) end
+        if t.tp[5] then Lara:SetRotation(TEN.Rotation(0, t.tp[5], 0)) end
+    end
+    for _, name in ipairs(t.kill or {}) do
+        local m = CDV.M(name)
+        if m ~= nil and m:GetValid() then m:SetHP(0) end
+    end
+end
+
 LevelFuncs.OnStart = function()
     if CDV.VIDEO then CDV.Video(CDV.VIDEO) end
     if CDV.Start then CDV.Start() end
+    TestStart()
 end
 LevelFuncs.OnLoad = function() end
 LevelFuncs.OnSave = function() end
+local hudStr = nil
+local testFrame = 0
+local testInfo = ""
+local function TestHud()
+    local t = TST[CDV.KEY or ""]
+    if t == nil then return end
+    testFrame = testFrame + 1
+    if testFrame == 10 then
+        for _, name in ipairs(t.give or {}) do
+            local id = TEN.Objects.ObjID[name]
+            if id ~= nil then TEN.Inventory.GiveItem(id, 1, false); testInfo = testInfo .. " +" .. name
+            else testInfo = testInfo .. " ?" .. name end
+        end
+    end
+    if not t.hud then return end
+    local p = Lara:GetPosition()
+    local r = Lara:GetRotation()
+    local txt = string.format("x %d  y %d  z %d  yaw %d  room %d  sx %d sz %d%s", p.x, p.y, p.z, math.floor(r.y), Lara:GetRoomNumber(), math.floor(p.x / 1024), math.floor(p.z / 1024), testInfo)
+    if t.watch then
+        local m = CDV.M(t.watch)
+        if m ~= nil and m:GetValid() then
+            local q = m:GetPosition()
+            local a = math.rad(m:GetRotation().y)
+            local dx, dz = p.x - q.x, p.z - q.z
+            local rx = dx * math.cos(a) - dz * math.sin(a)
+            local rz = dx * math.sin(a) + dz * math.cos(a)
+            txt = txt .. string.format("\n%s rel x %d y %d z %d  rot %d", t.watch, math.floor(rx), p.y - q.y, math.floor(rz), math.floor(m:GetRotation().y))
+        end
+    end
+    if hudStr == nil then
+        local x, y = TEN.Util.PercentToScreen(2, 4)
+        hudStr = TEN.Strings.DisplayString(txt, TEN.Vec2(x, y), 0.7, TEN.Color(255, 255, 0), false, {})
+    else
+        hudStr:SetKey(txt)
+    end
+    TEN.Strings.ShowString(hudStr, 1)
+end
 LevelFuncs.OnLoop = function()
     CDV.Tick()
+    TestHud()
 end
 LevelFuncs.OnUseItem = function()
     CDV.UseItem()
@@ -322,7 +411,7 @@ class LuaLevel:
     def text(self):
         head = "-- Coda di Volpe - %s (TombEngine level script)\n" % self.title
         head += "-- Va in C:\\CodaDiVolpe\\Engine\\Scripts\\Levels\\%s.lua (generato da tools/episode.py)\n" % self.key
-        data = []
+        data = ["CDV.KEY = %s" % lua_str(self.key)]
         if self.video:
             data.append("CDV.VIDEO = %s" % lua_str(self.video))
         if self.shots:

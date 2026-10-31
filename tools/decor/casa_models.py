@@ -385,3 +385,100 @@ def pluviale():
     for y in (1.0, 3.5, 6.0, 8.5):
         box(m, 0.25, 0.05, 0.12, "ca_noce", y=y, z=-0.05)
     return m, None
+
+
+# ------------------------------------------------------------------------------- Via Amodeo street pieces
+def balcony(region, depth=1.0, length=2.0):
+    """Balcony slab + railing, 2 m long, against a wall on its -z side (local +z = out to the street)."""
+    m = G.Mesh()
+    box(m, length, 0.16, depth, "tn_marmo", z=depth / 2)
+    rectf(m, V(-length / 2, 0.16, depth - 0.03), V(1, 0, 0), UP, length, 1.0, region, V(0, 0, 1), tile=None, double=True, blend=1)
+    for sx in (-1, 1):
+        rectf(m, V(sx * length / 2, 0.16, 0.0), V(0, 0, 1), UP, depth, 1.0, region, V(sx, 0, 0), tile=None, double=True, blend=1)
+    box(m, length, 0.05, 0.06, "ca_noce", y=1.14, z=depth - 0.03)
+    return m, None
+
+
+@furniture(224, "BALCONE_VERDE", "Balcone con ringhiera verde (casa di Ed), 2 m", coll=False)
+def balcone_verde():
+    return balcony("ca_ringhiera_verde")
+
+
+@furniture(225, "BALCONE_NERO", "Balcone con ringhiera in ferro battuto, 2 m", coll=False)
+def balcone_nero():
+    return balcony("ca_ringhiera_nera", depth=0.8)
+
+
+@furniture(226, "BALCONE_ARANCIO", "Balcone con ringhiera color terracotta, 2 m", coll=False)
+def balcone_arancio():
+    return balcony("ca_ringhiera_arancio", depth=0.9)
+
+
+@furniture(227, "TENDA_PIZZERIA", "Tenda rossa a sbalzo della pizzeria, 2 m", coll=False)
+def tenda():
+    m = G.Mesh()
+    p = [V(-1.0, 2.9, 0.0), V(1.0, 2.9, 0.0), V(1.0, 2.4, 1.6), V(-1.0, 2.4, 1.6)]
+    fface(m, p, "ca_tenda_rossa", V(0, 1, 0.3), double=True)
+    rectf(m, V(-1.0, 2.15, 1.6), V(1, 0, 0), UP, 2.0, 0.25, "ca_tenda_rossa", V(0, 0, 1), tile=None, double=True)
+    return m, None
+
+
+@furniture(228, "PONTEGGIO", "Ponteggio con rete verde-bianca, 2 m x 9,6 m", coll=False)
+def ponteggio():
+    m = G.Mesh()
+    for x in (-1.0, 1.0):
+        for z in (0.1, 1.0):
+            m.merge(G.cylinder(0.03, 0.03, 9.6, "tn_cornice", n=6, base=(x, 0, z)))
+    for yy in np.arange(2.0, 9.7, 2.0):
+        box(m, 2.0, 0.05, 1.0, "ca_rovere", y=yy, z=0.55)
+    rectf(m, V(-1.0, 0.0, 1.05), V(1, 0, 0), UP, 2.0, 9.6, "ca_rete", V(0, 0, 1), tile=(2.0, 2.0), double=True, blend=1)
+    return m, None
+
+
+@furniture(229, "BANCO_FRUTTA", "Banco della frutta davanti alla rosticceria")
+def banco_frutta():
+    m = G.Mesh()
+    box(m, 1.6, 0.8, 0.8, "ca_rovere")
+    p = [V(-0.8, 0.8, -0.4), V(0.8, 0.8, -0.4), V(0.8, 1.0, 0.4), V(-0.8, 1.0, 0.4)]
+    fface(m, p, "ca_frutta", V(0, 1, -0.3))
+    return m, ((-0.8 * M, 0, -0.4 * M), (0.8 * M, 1.0 * M, 0.4 * M))
+
+
+@furniture(230, "PARAPETTO", "Parapetto del tetto, 2 m (con collisione)")
+def parapetto():
+    m = G.Mesh()
+    box(m, 2.0, 0.9, 0.22, "ca_intonaco", top="tn_marmo")
+    return m, cb(2.0, 0.9, 0.22)
+
+
+@furniture(231, "SERBATOIO", "Serbatoio dell'acqua sul tetto, su cavalletto (con collisione)")
+def serbatoio():
+    m = G.Mesh()
+    for x, z in ((-0.5, -0.4), (0.5, -0.4), (-0.5, 0.4), (0.5, 0.4)):
+        box(m, 0.06, 0.5, 0.06, "tn_cornice", x=x, z=z)
+    t = G.cylinder(0.5, 0.5, 1.4, "ca_ceramica", n=12, base=(0, 0, 0), cap="ca_ceramica")
+    m.merge(t.transformed(rz=math.pi / 2, t=(0.7 * M, 1.0 * M, 0)))
+    return m, cb(1.4, 1.5, 1.0)
+
+
+@furniture(232, "ANTENNA_TV", "Antenna TV con parabola", coll=False)
+def antenna():
+    m = G.Mesh()
+    m.merge(G.cylinder(0.03, 0.03, 3.0, "tn_cornice", n=6))
+    for yy, w in ((2.2, 1.2), (2.6, 1.0), (2.95, 0.8)):
+        box(m, w, 0.03, 0.03, "tn_cornice", y=yy)
+    m.merge(G.disc(0.35, "ca_ceramica", center=(0.2, 1.2, 0.2), n=10, tilt=1.2, cone=0.1))
+    return m, None
+
+
+@furniture(233, "PERGOLATO", "Pergolato in legno con stuoia di canne, 4 x 3 m", coll=False)
+def pergolato():
+    m = G.Mesh()
+    for x, z in ((-2.0, -1.5), (2.0, -1.5), (-2.0, 1.5), (2.0, 1.5)):
+        box(m, 0.12, 2.4, 0.12, "ca_rovere", x=x, z=z)
+    for z in (-1.5, 1.5):
+        box(m, 4.2, 0.12, 0.12, "ca_rovere", y=2.4, z=z)
+    for x in (-2.0, 0.0, 2.0):
+        box(m, 0.1, 0.1, 3.2, "ca_rovere", x=x, y=2.5)
+    fface(m, [V(-2.1, 2.62, -1.6), V(2.1, 2.62, -1.6), V(2.1, 2.62, 1.6), V(-2.1, 2.62, 1.6)], "ca_canne", UP, double=True, blend=1)
+    return m, None

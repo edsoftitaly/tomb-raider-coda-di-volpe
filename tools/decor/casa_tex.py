@@ -279,6 +279,52 @@ def door_leaf(seed=33):
     return from_img(im)
 
 
+def railing_col(color, seed=40):
+    """Balcony railing, transparent between the bars (128 x 64 = 2 x 1 m)."""
+    img = np.zeros((64, 128, 4))
+    img[..., :3] = color
+    img[0:5, :, 3] = 255
+    img[58:64, :, 3] = 255
+    for x in range(0, 128, 9):
+        img[:, x:x + 3, 3] = 255
+    for x in range(4, 128, 18):          # small scrolls
+        img[20:44, x:x + 2, 3] = 255
+    return img
+
+
+def awning(seed=41):
+    im = Image.new("RGB", (128, 64), (176, 36, 32))
+    d = ImageDraw.Draw(im)
+    for x in range(0, 128, 16):
+        d.rectangle([x, 0, x + 7, 64], fill=(196, 52, 44))
+    for x in range(0, 128, 16):
+        d.polygon([(x, 54), (x + 8, 64), (x + 16, 54)], fill=(150, 30, 26))
+    return from_img(im)
+
+
+def scaffold_net(seed=42):
+    """Green-white construction mesh on scaffolding (alpha holes)."""
+    img = np.zeros((128, 128, 4))
+    img[..., :3] = (214, 222, 214)
+    img[..., 3] = 200
+    for k in range(0, 128, 4):
+        img[k:k + 1, :, 3] = 255
+        img[:, k:k + 1, 3] = 255
+    img[:, :, 3][(np.indices((128, 128)).sum(0) % 6) == 0] = 0
+    return img
+
+
+def fruit(seed=43):
+    r = np.random.default_rng(seed)
+    im = Image.new("RGB", (128, 64), (120, 84, 52))
+    d = ImageDraw.Draw(im)
+    for _ in range(140):
+        x, yy = r.integers(0, 128), r.integers(0, 64)
+        c = tuple(int(v) for v in r.choice([(220, 120, 30), (200, 40, 30), (240, 200, 60), (90, 150, 50)]))
+        d.ellipse([x - 4, yy - 4, x + 4, yy + 4], fill=c)
+    return from_img(im)
+
+
 def build(pk):
     put = pk.put
     put("ca_intonaco", plaster())
@@ -310,3 +356,9 @@ def build(pk):
     put("ca_tenda", curtain())
     put("ca_finestra_notte", night_window())
     put("ca_porta", door_leaf())
+    put("ca_ringhiera_verde", railing_col((48, 96, 86)))
+    put("ca_ringhiera_nera", railing_col((34, 34, 36)))
+    put("ca_ringhiera_arancio", railing_col((176, 98, 64)))
+    put("ca_tenda_rossa", awning())
+    put("ca_rete", scaffold_net())
+    put("ca_frutta", fruit())

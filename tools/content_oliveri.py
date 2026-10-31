@@ -21,7 +21,7 @@ from kit import CLICK
 HOUSE_LATLON = (38.1241402, 15.0600308)
 W_COLS, H_ROWS = 8, 5            # interior plan: 8 x 5 sectors (16 x 10 m), the street on the south side
 H0 = H1 = 1536                   # storeys 3 m
-H2 = 1792                        # second floor 3.5 m (6 clicks under the hatch, standing on a 1-click step)
+H2 = 1792                        # second floor 3.5 m (4 clicks under the hatch, standing on a 3-click step)
 
 # Plans: rows from north (back) to south (street); columns west to east.
 F0_PLAN = ["....#..P",           # stairs up (cols 1-3, rising east); pantry (secret) behind the wall
@@ -35,8 +35,9 @@ F1_PLAN = ["........",           # stairwell from the ground floor at cols 2-3
            "##.###.#",
            "...T...."]           # living room on the balcony side
 F2_PLAN = ["...#....",           # stairwell at cols 1-2, arrival at col 0
-           "...#....",
-           "...#.1..",           # box room: the hatch over the 1-click step at col 5
+           "...#.7..",           # chimney stack north of the hatch, a floor raised to the ceiling (not a
+                                 # wall: TEN finds the roof ledge above it), the wall Lara grabs to climb out
+           "...#.3..",           # box room: the hatch over the 3-click step at col 5
            "##.##.##",           # doorways: col 2 (stairs), col 5 (box room, closed by the door)
            ".S.....M"]           # Ed's bedroom (Lara wakes up here)
 STAIR0 = [(1, 4), (2, 4), (3, 4)]          # (col, row) rising east, top lands at (4, 4) on F1
@@ -78,6 +79,71 @@ def prepare(world):
     world.mat[soft] = "marciapiede"
     world.buildings[bid]["roof_m"] = roof / 512.0
     world.casa = dict(bid=bid, x0=x0, z0=z0, G=street, ROOF=roof)
+    street_fronts(world, street)
+
+
+# Street fronts (Street View, 31/10/2026). x ranges in sectors of the level frame, inclusive; side = the
+# direction the facade faces; pattern = facade columns from west to east; h = height in metres.
+STREET_FRONTS = [
+    dict(name="casa", side="-z", x=(25, 32), h=9.5, lato="fac_lato_crema",
+         pattern=["fac_casa_tubo", "fac_casa_finestra", "fac_casa_porta", "fac_casa_finestra", "fac_casa_finestra",
+                  "fac_casa_piena", "fac_casa_finestra", "fac_casa_finestra"],
+         balconies=[("BALCONE_VERDE", 3.2, range(1, 8))]),
+    dict(name="rosa", side="-z", x=(33, 36), h=9.5, lato="fac_lato_rosa",
+         pattern=["fac_rosa_porta", "fac_rosa_finestra", "fac_rosa_finestra", "fac_rosa_finestra"],
+         balconies=[("BALCONE_NERO", 3.2, range(1, 3)), ("BALCONE_NERO", 6.2, range(1, 3))]),
+    dict(name="arancio", side="-z", x=(37, 45), h=9.5, lato="fac_lato_beige",
+         pattern=["fac_arancio_porta", "fac_arancio_finestra", "fac_arancio_finestra", "fac_arancio_finestra",
+                  "fac_arancio_porta", "fac_arancio_finestra", "fac_arancio_finestra"],
+         balconies=[("BALCONE_ARANCIO", 3.2, (1, 2, 5, 6)), ("BALCONE_ARANCIO", 6.2, (1, 2, 5, 6))]),
+    dict(name="bianco", side="-z", x=(10, 19), h=6.9, lato="fac_lato_bianco",
+         pattern=["fac_bianco_finestra", "fac_bianco_finestra", "fac_bianco_porta"]),
+    dict(name="bianco_s", side="+z", x=(22, 25), h=6.9, lato="fac_lato_bianco",
+         pattern=["fac_bianco_finestra", "fac_bianco_porta", "fac_bianco_finestra"]),
+    dict(name="ponteggio", side="+z", x=(26, 28), h=9.5, lato="fac_lato_beige",
+         pattern=["fac_lato_beige"], scaffold=True),
+    dict(name="rosa_s", side="+z", x=(29, 31), h=9.5, lato="fac_lato_rosa",
+         pattern=["fac_rosa_finestra", "fac_rosa_porta", "fac_rosa_finestra"],
+         balconies=[("BALCONE_NERO", 3.2, (0, 2)), ("BALCONE_NERO", 6.2, (0, 2))]),
+    dict(name="pizzeria", side="+z", x=(32, 40), h=6.6, lato="fac_lato_beige",
+         pattern=["fac_pizzeria_vetrina", "fac_pizzeria_vetrina", "fac_pizzeria_porta"], awning=(32, 37)),
+]
+
+
+def street_fronts(world, street_h):
+    """Assigns the facade columns of the street fronts and the real heights of those buildings."""
+    cols = {}
+    fronts = []
+    for f in STREET_FRONTS:
+        dz = -1 if f["side"] == "-z" else 1
+        bids, row = set(), {}
+        for x in range(f["x"][0], f["x"][1] + 1):
+            # the front sector: the building sector next to the open street in direction `side`
+            zs = [z for z in range(world.nz - 1) if world.building_id[x, z] >= 0
+                  and world.building_id[x, z + dz] < 0 and 0 <= z + dz < world.nz]
+            if not zs:
+                continue
+            z = min(zs, key=lambda z: abs(z - (24 if dz < 0 else 17)))
+            row[x] = z
+            bids.add(int(world.building_id[x, z]))
+        if not row:
+            continue
+        top = street_h + int(f["h"] * 512) // 64 * 64
+        for b in bids:
+            mask = world.building_id == b
+            world.floor[mask] = max(top, world.floor[mask].max()) if f["name"] == "casa" else top
+            world.buildings[b]["base_m"] = street_h / 512.0
+            world.buildings[b]["roof_m"] = top / 512.0
+            for (x, z) in zip(*np.nonzero(mask)):
+                for d, (ddx, ddz) in (("+x", (1, 0)), ("-x", (-1, 0)), ("+z", (0, 1)), ("-z", (0, -1))):
+                    nx_, nz_ = x + ddx, z + ddz
+                    if 0 <= nx_ < world.nx and 0 <= nz_ < world.nz and world.building_id[nx_, nz_] != b:
+                        cols.setdefault((int(x), int(z), d), f["lato"])
+        for i, x in enumerate(sorted(row)):
+            cols[(x, row[x], f["side"])] = f["pattern"][i % len(f["pattern"])]
+        fronts.append(dict(f, row=row, top=top))
+    world.facade_cols = cols
+    world.fronts = fronts
 
 
 def cell(c, col, row):
@@ -124,7 +190,7 @@ FURNITURE = [
     ("CASA_TAVOLINO", 1, 4, 0.6, 0.5, 0.0, 1), ("CASA_GRADINI", 2, 1, 0.5, 0.5, 180.0, 1),
     ("CASA_CORRIMANO", 2, 0, 1.0, 0.0, 0.0, 1),
     ("CASA_LETTO", 0, 4, 0.55, 0.5, 0.0, 2), ("CASA_COMODINO", 0, 4, 0.25, 0.92, 0.0, 2),
-    ("CASA_ARMADIO", 3, 4, 0.75, 0.5, 180.0, 2), ("CASA_SCAFFALE", 7, 1, 0.8, 0.5, 180.0, 2),
+    ("CASA_ARMADIO", 3, 4, 0.5, 0.84, 90.0, 2), ("CASA_SCAFFALE", 7, 1, 0.8, 0.5, 180.0, 2),
     ("CASA_CORRIMANO", 1, 1, 1.0, 0.0, 0.0, 2), ("CASA_BAGNO", 7, 4, 0.55, 0.6, 90.0, 2),
 ]
 DOORFRAMES = {0: [(3, 3), (6, 2)], 1: [(2, 3), (6, 3)], 2: [(2, 3)]}   # doorways in wall rows (frame across x)
@@ -157,6 +223,56 @@ def house_dressing(ctx, floors):
             ctx.level.add_light(it.room, 0, pos, color=(1.0, 0.82, 0.6), intensity=0.6, inner=1.5, outer=5.0)
     x, z = cell(c, DOORWAY[0], DOORWAY[1])
     k.prop("CASA_VANO_RIPOSTIGLIO", x + 0.5, z + 0.5, rot=90.0, h=floors[2].floor_h, room=floors[2].room)
+
+
+def fronts_dressing(ctx):
+    """Balconies, the pizzeria's awning and fruit stand, scaffolding, and the street lights at night."""
+    k, w, c = ctx.kit, ctx.world, ctx.world.casa
+    G = c["G"]
+    for f in w.fronts:
+        dz = -1 if f["side"] == "-z" else 1
+        rot = 0.0 if dz > 0 else 180.0              # model +z points out of the wall
+        xs = sorted(f["row"])
+        for name, hm, idx in f.get("balconies", []):
+            for i in idx:
+                if i < len(xs):
+                    x = xs[i]
+                    zf = f["row"][x] + (1 if dz > 0 else 0)
+                    k.prop(name, x + 0.5, zf, rot=rot, h=G + int(hm * 512))
+        if f.get("scaffold"):
+            for x in xs:
+                k.prop("PONTEGGIO", x + 0.5, f["row"][x] + (1 if dz > 0 else 0), rot=rot, h=G)
+        if f.get("awning"):
+            a0, a1 = f["awning"]
+            for x in range(a0, a1 + 1):
+                if x in f["row"]:
+                    k.prop("TENDA_PIZZERIA", x + 0.5, f["row"][x] + 1, rot=rot, h=G)
+            x = a0 + 1
+            if x in f["row"]:
+                k.prop("BANCO_FRUTTA", x + 0.5, f["row"][x] + 1.5, rot=rot, h=G)
+    # Roofs: parapets on the house's street edge (gap over the drainpipe), water tanks, antennas, the pergola.
+    R = c["ROOF"]
+    for col in range(1, W_COLS):
+        k.prop("PARAPETTO", c["x0"] + col + 0.5, c["z0"] + 0.11, rot=0.0, h=R)
+    k.prop("PERGOLATO", c["x0"] + 5.0, c["z0"] + 3.2, rot=0.0, h=R)
+    k.prop("SERBATOIO", c["x0"] + 1.6, c["z0"] + 4.2, rot=0.0, h=R)
+    k.prop("ANTENNA_TV", c["x0"] + 3.5, c["z0"] + 4.5, rot=0.0, h=R)
+    for f in w.fronts:
+        if f["name"] in ("rosa", "arancio", "rosa_s"):
+            xs = sorted(f["row"])
+            x = xs[len(xs) // 2]
+            z = f["row"][x] + (2 if f["side"] == "-z" else -2)
+            k.prop("SERBATOIO", x + 0.5, z + 0.5, rot=90.0, h=f["top"])
+            k.prop("ANTENNA_TV", x + 1.5, z + 1.0, rot=0.0, h=f["top"])
+    # warm street lights every 14 m on both pavements, and a cold moonlight
+    room = k.room_at(c["x0"], c["z0"] - 3)
+    for x in range(4, w.nx - 4, 7):
+        for z in (c["z0"] - 1, c["z0"] - 8):
+            if 0 <= z < w.nz and w.building_id[x, z] < 0:
+                r = k.room_at(x, z)
+                pos = ((x + 0.5 - r.x) * 1024, G + 2600 - r.y, (z + 0.5 - r.z) * 1024)
+                ctx.level.add_light(r, 0, pos, color=(1.0, 0.78, 0.5), intensity=0.9, inner=2.0, outer=7.0)
+    del room
 
 
 def street(ctx):
@@ -192,6 +308,7 @@ def build(ctx):
     F0, F1, F2, roof_room = house(ctx)
     house_dressing(ctx, (F0, F1, F2))
     street(ctx)
+    fronts_dressing(ctx)
 
     def at(it, col, row, dh=0):
         x, z = cell(c, col, row)
@@ -207,7 +324,12 @@ def build(ctx):
     k.place(K.BADDY2, *cell(c, 6, 3), room=F0.room, name="ladro_terra")
     k.place(K.BADDY1, *cell(c, 1, 4), room=F0.room, name="ladro_chiave")
     hx, hz = cell(c, *HATCH)
-    k.place(K.CEILING_TRAPDOOR1, hx, hz, room=roof_room, name="botola_tetto")
+    # TEN ceiling trapdoor (generic_trapdoor.cpp): the player must be 256..768 units behind the item
+    # (local z -768..-256) and 0..900 below it; the leaf spans local z 0..-1024 and hangs from the item
+    # when open. Turned 180 on the south edge of the hatch sector the leaf covers the hatch, Lara is
+    # caught jumping from the middle of the 3-click step, and the open leaf hangs on the door side, away
+    # from the chimney wall she then grabs to climb through.
+    k.place(K.CEILING_TRAPDOOR1, hx, hz, room=roof_room, rot=180.0, dz=0.0, name="botola_tetto")
     dx, dz = cell(c, *DOOR)
     door = k.place(K.DOOR_TYPE1, dx, dz, room=F2.room, rot=180.0, name="porta_ripostiglio")
     lx, lz = cell(c, *LOCK)
@@ -227,10 +349,13 @@ def build(ctx):
              "Il tombarolo aveva la chiave del ripostiglio. Il diario pero' non c'e': l'ha preso il loro capo.")
     lua.zone("portone", at(F0, 6, 4), r=1200, dy=900, once=True,
              text="Il portone e' sbarrato da fuori. Resta la botola del ripostiglio, sul tetto.")
+    lua.use("chiave_ripostiglio", "ID.KEY_ITEM1", at(F2, *LOCK), r=700, dy=600,
+            text="La serratura scatta: il ripostiglio e' aperto.",
+            fn='CDV.InsertKey("serratura_ripostiglio", "porta_ripostiglio")')
     lua.zone("ripostiglio_chiuso", at(F2, *LOCK), r=1100, dy=900, once=False, secs=4,
-             need="not CDV.Has(ID.KEY_ITEM1)",
+             need='not CDV.Has(ID.KEY_ITEM1) and not CDV.Done("use_chiave_ripostiglio")',
              text="Il ripostiglio della botola e' chiuso a chiave. Uno dei ladri ha la chiave.")
-    lua.zone("tetto", k.lua_pos(hx, hz, c["ROOF"]), r=1800, dy=900,
+    lua.zone("tetto", k.lua_pos(hx, hz, c["ROOF"]), r=1800, dy=300,
              text="Sulla terrazza. Sul davanti, verso la via, si scende lungo il pluviale.")
 
     # Via Amodeo: the look-out and two dogs; the thief runs off towards Via Stesicoro.

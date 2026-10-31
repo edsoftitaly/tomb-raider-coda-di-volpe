@@ -49,6 +49,10 @@ local function newMov(name)
     function m:SetPosition(p) log("teleport", self.name) end
     function m:SetRoomNumber() end
     function m:SetRotation() end
+    function m:GetRotation() return { x = 0, y = 0, z = 0 } end
+    function m:GetPosition() return { x = 0, y = 0, z = 0 } end
+    function m:SetAnim(a) log("anim", tostring(a)) end
+    function m:SetState() end
     function m:SetAir(v) log("air", tostring(v)) end
     return m
 end
