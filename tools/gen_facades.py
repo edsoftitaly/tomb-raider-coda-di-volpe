@@ -132,14 +132,23 @@ def window(d, m0, m1, shutters=GREEN, open_=True, frame=(236, 232, 222), width=1
         d.rectangle([cx - hw - 18, bot, cx + hw + 18, bot + 12], fill=(206, 202, 192))
 
 
-def roller_window(d, m0, m1, color=BROWN_SH, frame=(220, 214, 200), width=1.2):
+def roller_window(d, m0, m1, color=BROWN_SH, frame=(220, 214, 200), width=1.2, open_frac=0.4):
+    """Window with a roller blind half down: dark glass above, slatted blind (shaded slats) below,
+    the blind box and guides in the frame colour."""
     cx, hw = W // 2, int(width * PX / 2)
     top, bot = y(m1), y(m0)
-    d.rectangle([cx - hw - 8, top - 8, cx + hw + 8, bot], fill=frame)
-    d.rectangle([cx - hw, top, cx + hw, bot], fill=color)
-    for yy in range(top + 4, bot, 7):
-        d.line([(cx - hw, yy), (cx + hw, yy)], fill=tuple(int(c * 0.78) for c in color), width=2)
-    d.rectangle([cx - hw - 14, bot, cx + hw + 14, bot + 10], fill=(206, 202, 192))
+    d.rectangle([cx - hw - 10, top - 18, cx + hw + 10, bot], fill=frame)
+    d.rectangle([cx - hw, top, cx + hw, bot], fill=(36, 44, 58))
+    split = top + int((bot - top) * open_frac)
+    d.line([(cx, top), (cx, split)], fill=frame, width=4)
+    dark = tuple(int(c * 0.62) for c in color)
+    for yy in range(split, bot, 12):
+        for k in range(12):
+            t = k / 11.0
+            c = tuple(int(dc + (cc - dc) * (1 - abs(t - 0.35) * 1.4)) for cc, dc in zip(color, dark))
+            d.line([(cx - hw, yy + k), (cx + hw, yy + k)], fill=c)
+    d.rectangle([cx - hw - 4, split - 6, cx + hw + 4, split], fill=tuple(int(c * 0.5) for c in color))
+    d.rectangle([cx - hw - 16, bot, cx + hw + 16, bot + 10], fill=(206, 202, 192))
 
 
 def artdeco_door(d):

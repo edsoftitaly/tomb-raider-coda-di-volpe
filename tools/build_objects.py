@@ -255,6 +255,15 @@ def porta():
     return m
 
 
+def manovella():
+    """Iron crank of a shutter winch: square socket shaft, arm, wooden grip."""
+    m = G.Mesh()
+    m.merge(G.box(0.05, 0.05, 0.36, "it_ferro", center=(0, 0, 0.0)))
+    m.merge(G.box(0.26, 0.04, 0.05, "it_ferro", center=(0.11, 0, 0.17)))
+    m.merge(G.cylinder(0.025, 0.025, 0.14, "it_legno_bordo", n=8, base=(0.22, 0.02, 0.17)))
+    return m
+
+
 PICKUPS = {
     500: ("Diario bizantino", diario),
     501: ("Chiave della terrazza", lambda: key("it_ottone", 1.0)),
@@ -264,6 +273,7 @@ PICKUPS = {
     505: ("Sigillo della tonnara", sigillo),
     506: ("Astro di Castore", lambda: astro("it_oro", "it_rubino")),
     507: ("Astro di Polluce", lambda: astro("it_argento", "it_zaffiro")),
+    508: ("Manovella", manovella),
     548: ("Chiave del ripostiglio", lambda: key("it_ottone", 1.8, 0.06)),
     700: ("Serratura del ripostiglio", serratura),
 }

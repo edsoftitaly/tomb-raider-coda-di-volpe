@@ -88,7 +88,26 @@ def prepare(world):
     world.mat[soft] = "marciapiede"
     world.buildings[bid]["roof_m"] = roof / 512.0
     world.casa = dict(bid=bid, x0=x0, z0=z0, G=street, ROOF=roof)
+    courtyard(world, street)
     street_fronts(world, street)
+
+
+# The courtyard inside the block south of the street (open on the satellite view, x 37-48, z 5-10), reached
+# through an archway cut in the building at x = PASSAGE_X; an iron gate on the pavement side, opened by
+# the shutter winch with the crank Lara finds in the house.
+PASSAGE_X = 43
+PASSAGE_Z = (11, 15)
+YARD = (37, 48, 5, 10)
+
+
+def courtyard(world, street):
+    for z in range(PASSAGE_Z[0], PASSAGE_Z[1] + 1):
+        world.building_id[PASSAGE_X, z] = -1
+    x0, x1, z0, z1 = YARD
+    cells = [(x, z) for x in range(x0, x1 + 1) for z in range(z0, z1 + 1) if world.building_id[x, z] < 0]
+    cells += [(PASSAGE_X, z) for z in range(PASSAGE_Z[0], PASSAGE_Z[1] + 2)]
+    K.flatten(world, cells, h=street, mat="lastricato")
+    world.cortile = dict(cells=cells)
 
 
 # Street fronts (Street View, 31/10/2026). x ranges in sectors of the level frame, inclusive; side = the
@@ -351,7 +370,7 @@ def fronts_dressing(ctx):
             if 0 <= z < w.nz and w.building_id[x, z] < 0:
                 r = k.room_at(x, z)
                 pos = ((x + 0.5 - r.x) * 1024, G + 2600 - r.y, (z + 0.5 - r.z) * 1024)
-                ctx.level.add_light(r, 0, pos, color=(1.0, 0.78, 0.5), intensity=0.9, inner=2.0, outer=7.0)
+                ctx.level.add_light(r, 0, pos, color=(1.0, 0.78, 0.5), intensity=1.1, inner=2.5, outer=9.0)
     del room
 
 
@@ -385,6 +404,11 @@ DECOR = dict(centre=None)
 def build(ctx):
     k, lua, c, w = ctx.kit, ctx.lua, ctx.world.casa, ctx.world
     ctx.decor_block = [(c["x0"] - 14, c["z0"] - 10, c["x0"] + 16, c["z0"] + H_ROWS + 1)]
+    # Dusk: a dimmer, bluer ambient outside than the daytime levels, so the street lamps and the lit
+    # windows carry the light.
+    for rm in ctx.level.rooms:
+        if rm.name.startswith("T_"):
+            rm.ambient = (0.34, 0.33, 0.42)
     R, roof_room = house(ctx)
     house_dressing(ctx, R)
     street(ctx)
@@ -437,7 +461,7 @@ def build(ctx):
     lua.zone("ripostiglio_chiuso", at("CORRIDOIO", *LOCK), r=900, dy=700, once=False, secs=4,
              need='not CDV.Has(ID.KEY_ITEM1) and not CDV.Done("use_chiave_ripostiglio")',
              text="Il ripostiglio e' chiuso a chiave. Uno dei ladri ha la chiave.")
-    lua.zone("botola", at("RIPOSTIGLIO", *HATCH, dh=1100), r=600, dy=500, fn='CDV.Swing("botola_legno", "z", -110, 30)',
+    lua.zone("botola", at("RIPOSTIGLIO", *HATCH, dh=1100), r=600, dy=500, fn='CDV.Swing("botola_legno", "z", 75, 30)',
              text="Una spinta e la botola si apre.")
     lua.zone("tetto", k.lua_pos(hx - 1, hz, c["ROOF"]), r=1400, dy=300,
              text="Sulla terrazza. Sul davanti, verso la via, si scende lungo il pluviale.")
@@ -446,19 +470,46 @@ def build(ctx):
     zf = c["z0"] - 1
     k.place(K.DOBERMAN, *k.spot(c["x0"] + 10, zf - 4), name="cane1")
     k.place(K.DOBERMAN, *k.spot(c["x0"] + 12, zf - 5), name="cane2")
-    k.place(K.BADDY1, *k.spot(c["x0"] - 8, zf - 4), rot=90.0, name="palo")
+    k.place(K.BADDY1, 40, 6, rot=0.0, name="palo")
+    G_ = c["G"]
+    gz = PASSAGE_Z[1] + 1                       # pavement sector in front of the archway
+    k.prop("CANCELLO", PASSAGE_X + 0.02, gz, rot=0.0, h=G_, lua_name="cancello_cortile")
+    k.place(K.DOOR_TYPE1, PASSAGE_X, gz, rot=0.0, name="blocco_cancello", h=G_)
+    k.prop("ARGANO", PASSAGE_X - 0.5, gz, rot=180.0, h=G_)
+    k.prop("LAMPIONE_MURO", PASSAGE_X + 0.5, PASSAGE_Z[0], rot=0.0, h=G_)
+    put(K.PUZZLE_ITEM[9], "LAB", 4, 2)
+    lua.use("argano", "ID.PUZZLE_ITEM9", k.lua_pos(PASSAGE_X - 1, gz, G_), r=1300, dy=900,
+            text="La manovella entra nell'argano. Qualche giro, e il cancello del cortile si apre.",
+            fn='CDV.Enable("blocco_cancello")\nCDV.Swing("cancello_cortile", "y", 90, 50)')
+    lua.zone("cancello_chiuso", k.lua_pos(PASSAGE_X, gz, G_), r=1300, dy=900, once=False, secs=5,
+             need='not CDV.Done("use_argano")',
+             text="Il cancello del cortile e' chiuso. L'argano accanto e' senza manovella: ce n'era una in casa, nel laboratorio.")
+    lua.zone("cortile", k.lua_pos(PASSAGE_X, PASSAGE_Z[0], G_), r=2500, dy=1500, fn='CDV.Enable("palo")',
+             text="Eccolo, il palo della banda. Ha qualcosa che mi serve.")
+    yx, yz = (YARD[0] + YARD[1]) // 2, YARD[2] + 1
+    rr = k.room_at(yx, yz)
+    ctx.level.add_light(rr, 0, ((PASSAGE_X + 0.5 - rr.x) * 1024, G_ + 2400 - rr.y, (PASSAGE_Z[0] - 0.3 - rr.z) * 1024),
+                        color=(1.0, 0.78, 0.5), intensity=0.9, inner=2.0, outer=8.0)
+    k.prop("CASSONETTI", YARD[1] - 0.6, YARD[2] + 3.5, rot=90.0, h=G_)
+    k.prop("VASO_BIANCO_FIORI", YARD[0] + 0.5, YARD[3] + 0.4, rot=0.0, h=G_)
+    k.prop("BICICLETTA", YARD[0] + 1.5, YARD[3] + 0.3, rot=90.0, h=G_)
+    k.place(K.SHOTGUN_AMMO1, YARD[0] + 1, YARD[2] + 1)
+    lua.secret(1, k.lua_pos(YARD[1], YARD[2], G_), r=700, give="ID.SMALLMEDI_ITEM",
+               text="Hai trovato una Stella dei Dioscuri, dietro i bidoni del cortile!")
+    lua.secret(2, k.lua_pos(c["x0"] + 19, c["z0"] + 3, c["ROOF"]), r=800, give="ID.SHOTGUN_AMMO1_ITEM",
+               text="Hai trovato una Stella dei Dioscuri sui tetti dei vicini!")
     k.place(K.SMALLMEDI, *k.spot(c["x0"] + 14, zf - 1))
     street_c = k.spot(c["x0"], zf - 2)
     lua.zone("via", k.lua_pos(*street_c, ctx.ground(*street_c)), r=4000, dy=6000,
              fn='CDV.Enable("cane1")\nCDV.Enable("cane2")\nCDV.Enable("palo")',
-             text="I cani della banda! E il ladro corre verso Via Stesicoro.")
+             text="I cani della banda! E il palo e' scappato nel cortile, dietro il cancello.")
     jx, jz = w.sector_of(38.124132, 15.059829)
     ex, ez = k.spot(jx, jz)
     lua.zone("fine", k.lua_pos(ex, ez, ctx.ground(ex, ez)), r=2600, dy=4000,
              need='CDV.Dead("palo")', fn="CDV.End(2, 1)",
              text="Il ladro ha preso Via Stesicoro, verso la piazza e il castello.")
     lua.zone("fine_no", k.lua_pos(ex, ez, ctx.ground(ex, ez)), r=2600, dy=4000, once=False, secs=4,
-             need='not CDV.Dead("palo")', text="Prima devo togliermi di torno il palo della banda.")
+             need='not CDV.Dead("palo")', text="Prima devo prendere il palo della banda: e' nel cortile dietro il cancello.")
     lua.secret(0, at("DISPENSA", 7, 4), r=800)
     ctx.notes += [
         "LIVELLO 1 - OLIVERI, VIA GASPARE AMODEO",

@@ -565,6 +565,28 @@ def cavi_aerei():
     return m, None
 
 
+@furniture(244, "CANCELLO", "Anta di cancello in ferro (2 x 2.4 m), cardine nell'origine, lungo +x", coll=False)
+def cancello():
+    m = G.Mesh()
+    box(m, 1.96, 0.06, 0.06, "ca_cavo", x=1.0, y=0.1)
+    box(m, 1.96, 0.06, 0.06, "ca_cavo", x=1.0, y=1.2)
+    box(m, 1.96, 0.06, 0.06, "ca_cavo", x=1.0, y=2.3)
+    x = 0.04
+    while x < 1.98:
+        box(m, 0.03, 2.45, 0.03, "ca_cavo", x=x, y=0.05)
+        box(m, 0.05, 0.12, 0.05, "ca_grondaia", x=x, y=2.4)
+        x += 0.14
+    return m, None
+
+
+@furniture(245, "ARGANO", "Cassetta dell'argano della saracinesca, con innesto per la manovella (verso +z)", coll=False)
+def argano():
+    m = G.Mesh()
+    box(m, 0.35, 0.45, 0.16, "ca_bidone_grigio", y=0.85, z=0.08)
+    box(m, 0.06, 0.06, 0.06, "ca_cavo", y=1.05, z=0.18)
+    return m, None
+
+
 @furniture(233, "PERGOLATO", "Pergolato in legno con stuoia di canne, 4 x 3 m", coll=False)
 def pergolato():
     m = G.Mesh()
