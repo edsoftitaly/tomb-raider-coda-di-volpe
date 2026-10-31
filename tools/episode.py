@@ -53,7 +53,7 @@ WADS = ["TombEngine.wad2"] + ["CodaDiVolpe\\%s.wad2" % w for w in (
 # Puzzle items: slot -> (Strings key, Italian name). Same slots in every level (inventory carries over).
 ITEMS = {
     1: ("cdv_diario", "Diario bizantino"),
-    2: ("cdv_chiave_terrazza", "Chiave della terrazza"),
+    2: ("cdv_chiave_terrazza", "Chiave del ripostiglio"),
     3: ("cdv_mappa_maree", "Mappa delle maree"),
     4: ("cdv_chiave_casello", "Chiave del Casello"),
     5: ("cdv_conchiglia", "Conchiglia del canto"),
@@ -62,10 +62,9 @@ ITEMS = {
     8: ("cdv_astro_polluce", "Astro di Polluce"),
 }
 # Keys (KEY_ITEM n, opened with the native keyholes KEY_HOLE n).
-KEYS = {1: ("cdv_chiave_ripostiglio", "Chiave del ripostiglio")}
+KEYS = {}
 # Inventory look of the objects of CdV_Oggetti.wad2 (build_objects.py): (y offset, scale, x rotation).
-INV_LOOK = {1: (0, 1.4, -30), 2: (0, 1.6, -60), 3: (0, 1.2, -40), 4: (0, 1.1, -60), 5: (0, 1.6, -20),
-            6: (0, 1.6, -45), 7: (0, 1.4, -55), 8: (0, 1.4, -55)}
+INV_LOOK = {i: (0, 0.5, 0) for i in range(1, 9)}   # the object models in Ed's project (CdV_Oggetti_A/B)
 
 
 class Ctx:

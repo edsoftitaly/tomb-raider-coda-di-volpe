@@ -239,13 +239,9 @@ def build(ctx):
     k.place(K.BADDY2, 214, 159, room=F0.room, name="ladro_terra")
     k.place(K.BADDY1, 209, 157, room=F0.room, name="ladro_chiave")
     k.place(K.CEILING_TRAPDOOR1, HATCH[0], HATCH[1], room=TOP.room, name="botola_tetto")
-    # Box-room door (painted wood, TR4 door animations) and its lock on the wall beside it: the key of
-    # the thug opens it natively (KEY_HOLE1 + key trigger). Door placed as Ed set it in the editor:
-    # in the corridor sector south of the doorway, turned 180 degrees, so it closes the opening flush.
-    door = k.place(K.DOOR_TYPE1, BOXDOOR[0], BOXDOOR[1], room=F2.room, rot=180.0, name="porta_ripostiglio")
-    lock = k.place(K.KEY_HOLE1, LOCK[0], LOCK[1], room=F2.room, rot=0.0, name="serratura_ripostiglio")
-    k.trigger(LOCK[0], LOCK[1], room=F2.room, trig_type=K.T_KEY, target=lock)
-    k.trigger(LOCK[0], LOCK[1], room=F2.room, trig_type=K.T_KEY, target=door)
+    # Box-room door: placed as Ed set it in the editor (corridor sector south of the doorway, turned 180
+    # degrees). The thug's key is used at the door (inventory or Action) and the script opens it.
+    k.place(K.DOOR_TYPE3, BOXDOOR[0], BOXDOOR[1], room=F2.room, rot=180.0, name="porta_ripostiglio")
 
     def at(it, cell, dh=0):
         return k.lua_pos(cell[0], cell[1], it.floor_h + dh)
@@ -256,13 +252,16 @@ def build(ctx):
     lua.zone("primo", at(F1, (212, 162)), r=1400, dy=900, fn='CDV.Enable("ladro_primo")',
              text="Uno della banda della Volpe! Cercano il diario bizantino.")
     lua.zone("terra", at(F0, (212, 161)), r=1600, dy=900, fn='CDV.Enable("ladro_terra")\nCDV.Enable("ladro_chiave")')
-    lua.drop("chiave", "ladro_chiave", "ID.KEY_ITEM1",
+    lua.drop("chiave", "ladro_chiave", "ID.PUZZLE_ITEM2",
              "Il tombarolo aveva la chiave del ripostiglio. Il diario pero' non c'e': l'ha preso il loro capo.")
     lua.zone("portone", at(F0, F0.anchors["E"]), r=1200, dy=900, once=True,
              text="Il portone e' sbarrato da fuori. Resta la botola del ripostiglio, sul tetto.")
-    lua.zone("ripostiglio_chiuso", at(F2, LOCK), r=1100, dy=900, once=False, secs=4,
-             need="not CDV.Has(ID.KEY_ITEM1)",
-             text="Il ripostiglio della botola e' chiuso a chiave: la serratura e' qui accanto alla porta.")
+    lua.zone("ripostiglio_chiuso", at(F2, LOCK), r=1300, dy=900, once=False, secs=4,
+             need='not CDV.Has(ID.PUZZLE_ITEM2) and not CDV.Flag("ripostiglio")',
+             text="Il ripostiglio della botola e' chiuso a chiave. Uno dei ladri deve avere la chiave.")
+    lua.use("ripostiglio", "ID.PUZZLE_ITEM2", at(F2, LOCK), r=1500, dy=1200,
+            text="La chiave gira: la porta del ripostiglio si apre.",
+            fn='CDV.Enable("porta_ripostiglio")\nCDV.Flag("ripostiglio", true)')
     lua.zone("sul_tetto", at(TOP, (HATCH[0] + 1, HATCH[1] + 1)), r=900, dy=700, once=False,
              fn='CDV.Teleport(%d, %d, %d, "%s", 225)' % (k.lua_pos(rx, rz, casa.ROOF) + (roof_room.name,)))
     lua.zone("tetto", k.lua_pos(rx, rz, casa.ROOF), r=1800, dy=900,
@@ -274,7 +273,7 @@ def build(ctx):
         "2. Primo piano: un tombarolo. Altre scale scendono al piano terra.",
         "3. Piano terra: due tombaroli; uno lascia la Chiave del ripostiglio. Fucile in cucina, cartucce nell'ingresso.",
         "   Segreto 1: la dispensa nell'angolo nord-est del piano terra (dietro la cucina).",
-        "4. Si risale al secondo piano: la chiave va nella serratura sul muro accanto alla porta del ripostiglio.",
+        "4. Si risale al secondo piano: davanti alla porta del ripostiglio si usa la chiave (inventario o Azione).",
         "   La porta si apre; nel ripostiglio, dal gradino si salta e si tira giu'",
         "   la botola del soffitto (Azione durante il salto), poi si salta di nuovo, ci si aggrappa al bordo e si sale.",
         "5. Sulla terrazza (pergolato). Dal lato di Via Amodeo, nella rientranza col pluviale, ci si cala lungo il muro.",
