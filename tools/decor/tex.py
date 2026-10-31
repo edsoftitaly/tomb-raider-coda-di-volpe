@@ -276,6 +276,9 @@ def build():
     pk.new_page()
     from decor import santuario_tex
     santuario_tex.build(pk)
+    pk.new_page()
+    from decor import casa_tex
+    casa_tex.build(pk)
     return pages, REG
 
 

@@ -21,18 +21,21 @@ def run():
 
     F1 = C.G0 + C.H0
     F2 = F1 + C.H1
-    t.at(P(*C.F2_HOLE, F1))
+    t.at(P(212, 162, F1))
     check("ladro_primo" in t.last("enable"), "thug on first floor wakes up")
-    t.at(P(*C.F1_HOLE, C.G0))
+    t.at(P(212, 161, C.G0))
     check("ladro_chiave" in t.last("enable") and "ladro_terra" in t.last("enable"), "ground floor thugs wake up")
     check(t.H.count(t.item("PUZZLE_ITEM2")) == 0, "no key before the kill")
     t.H.kill("ladro_chiave")
     t.H.tick(2)
     check(t.H.count(t.item("PUZZLE_ITEM2")) == 1, "key dropped by ladro_chiave")
-    t.at(P(*C.ROOF_HATCH, F2))
+    t.at(P(213, 158, F2))
     t.use("PUZZLE_ITEM2")
-    check("botola_tetto" in t.last("enable"), "roof trapdoor opens with the key")
+    check("porta_ripostiglio" in t.last("enable"), "box-room door opens with the key")
     check(t.H.count(t.item("PUZZLE_ITEM2")) == 0, "key consumed")
+    t.at(P(C.HATCH[0] + 1, C.HATCH[1] + 1, F2 + C.H2))
+    t.H.tick(14)
+    check(len(t.last("teleport")) > 0, "hatch box leads onto the roof")
     # Saia levers: wrong combination first.
     t.H.tick(1)
     t.H.pull("leva_castore")

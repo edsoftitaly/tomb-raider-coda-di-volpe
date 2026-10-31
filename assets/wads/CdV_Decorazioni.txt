@@ -45,20 +45,47 @@ Coda di Volpe - decorazioni
 143 DEHORS_OMBRELLONE: Tavolino, due sedie e ombrellone verde
 144 DEHORS_FIORIERA: Fioriera divisoria in legno con piante, 1,6 m
 145 OMBRELLONE_SPIAGGIA: Ombrellone da spiaggia a strisce blu
-150 SANTUARIO_FACCIATA: Facciata: corpo centrale aggettante, portale, oculo, frontone AVE MARIA
-151 SANTUARIO_CAMPANILE_SX: Campanile sinistro (nord): orologio nell'oculo cieco e piccola cella esterna
-152 SANTUARIO_CAMPANILE_DX: Campanile destro (sud): monofore alla cella campanaria
-153 SANTUARIO_NAVATA_NORD: Fianco nord della navata (verso la loggia)
-154 SANTUARIO_NAVATA_SUD: Fianco sud della navata fino al transetto
-155 SANTUARIO_TRANSETTO: Braccio sud del transetto
-156 SANTUARIO_NAVATA_SUD_EST: Fianco sud dopo il transetto
-157 SANTUARIO_ABSIDE: Testata est con abside semicircolare e tetto a semicono
-158 SANTUARIO_TETTO: Tetto della navata in ceramica azzurra
-159 SANTUARIO_CUPOLA: Tetto del transetto e cupola sull'incrocio
-160 SANTUARIO_LOGGIA_1: Loggia nord (76 x 8 m) sui laghetti, tratto 1 di 4
-161 SANTUARIO_LOGGIA_2: Loggia nord (76 x 8 m) sui laghetti, tratto 2 di 4
-162 SANTUARIO_LOGGIA_3: Loggia nord (76 x 8 m) sui laghetti, tratto 3 di 4
-163 SANTUARIO_LOGGIA_4: Loggia nord (76 x 8 m) sui laghetti, tratto 4 di 4
-164 SANTUARIO_PILASTRO: Pilastro della loggia (con collisione), piazzato a ogni campata
-165 SANTUARIO_ANTICO: Santuario antico (1552-1598): intonaco, portale con chiave datata 1598, campanile a vela, tetto in coppi
-166 SANTUARIO_BASAMENTO: Basamento in pietra sotto la facciata e i campanili (fino alla roccia)
+150 SANTUARIO_FACCIATA: Facciata e torre campanaria in conci rosa: portale bronzeo, trifora, cella, Madonna in mosaico
+151 SANTUARIO_FIANCO_NORD: Fianco nord della navata, sul ciglio della rupe
+152 SANTUARIO_FIANCO_SUD: Fianco sud della navata, sulla terrazza
+153 SANTUARIO_TRANSETTO: Braccio sud del transetto e testata est
+154 SANTUARIO_TETTO: Tetto grigio a due falde della navata e del transetto
+155 SANTUARIO_CUPOLA: Tiburio, tamburo arancio con finestre e oculi, cupola dorata, lanterna
+156 SANTUARIO_CONVENTO: Convento a L e santuario antico fortificato sulla rupe, pannelli solari sul tetto
+157 SANTUARIO_BLOCCO_NE: Edificio alto a nord-est (sei piani) sul ciglio della rupe
+158 SANTUARIO_ALA_NORD: Ala bassa lungo il fianco nord, tetto in coppi
+159 SANTUARIO_ANNESSO: Corpo basso a sud del transetto
+160 SANTUARIO_TERRAZZA: Muro della terrazza sud (edificio sottostante) e cordolo in marmo
+161 SANTUARIO_SEGRETERIA: Segreteria del santuario: corpo basso arancio con aperture ad arco e tetto in coppi
+162 SANTUARIO_RINGHIERA: Ringhiera in ferro sulla terrazza (2.5 m, con collisione)
+170 INTERNO_PAVIMENTO: Pavimenti in marmo: stelle nella navata centrale, rombi nelle navate laterali
+171 INTERNO_PARETI: Pareti: zoccolo in marmo rosso, mosaici dei Misteri, vetrate, cleristorio
+172 INTERNO_VOLTA: Volta a botte dipinta: cassettoni, scene affrescate, costoloni dorati
+173 INTERNO_CUPOLA: Incrocio: pennacchi, tamburo con vetrate (luna, stella, sole), scritta AVE MARIA, cupola affrescata
+174 INTERNO_CAPPELLA: Cappella nel transetto sud: pareti dorate con stelle rosse, altare laterale
+175 INTERNO_COLONNA: Colonna in marmo rosa con base bianca e capitello dorato (con collisione)
+176 INTERNO_BANCO: Banco in legno, 3.2 m (con collisione)
+177 INTERNO_ALTARE: Altare maggiore in marmo con fronte dorato (con collisione)
+178 INTERNO_LAMPADARIO: Lampadario in ottone a due giri di bracci
+190 CASA_ESTERNO: Casa di Via Gaspare Amodeo 1: facciate, balcone, portone liberty, terrazza con pergolato
+200 CASA_LETTO: Letto matrimoniale con testiera in noce
+201 CASA_COMODINO: Comodino con lampada
+202 CASA_ARMADIO: Armadio a due ante
+203 CASA_LIBRERIA: Libreria piena di libri
+204 CASA_SCRIVANIA: Scrivania messa a soqquadro, carte sparse
+205 CASA_SEDIA: Sedia impagliata
+206 CASA_SEDIA_ROVESCIATA: Sedia rovesciata dai ladri
+207 CASA_DIVANO: Divano a tre posti
+208 CASA_TAVOLINO: Tavolino basso su tappeto
+209 CASA_TAVOLO: Tavolo da pranzo con quattro sedie
+210 CASA_CUCINA: Cucina componibile: mobili, piano cottura, lavello, piastrelle
+211 CASA_FRIGO: Frigorifero
+212 CASA_BAGNO: Bagno: vasca, lavabo, water
+213 CASA_MOBILE_TV: Mobile basso con televisore
+214 CASA_QUADRO: Quadro: la rupe di Tindari al tramonto
+215 CASA_FINESTRA: Finestra vista da dentro, di notte, con tende
+216 CASA_PORTA: Stipite con porta interna aperta
+217 CASA_PORTONE_INT: Portone di casa visto da dentro, sbarrato
+218 CASA_SCAFFALE: Scaffale della dispensa con barattoli
+219 CASA_CORRIMANO: Ringhiera della scala (2 m)
+220 CASA_GRADINI: Gradini in marmo sopra la rampa (6 m, 3 m di salita)

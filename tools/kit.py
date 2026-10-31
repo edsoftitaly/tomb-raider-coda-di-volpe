@@ -20,6 +20,7 @@ BADDY1, BADDY2, SKELETON = 174, 175, 255
 WRAITH1, WRAITH2, WRAITH3, LAGOON_WITCH = 268, 269, 270, 289
 TEETH_SPIKES, FLAME_EMITTER, FLAME_EMITTER2, FLAME_EMITTER3 = 341, 359, 360, 361
 FLOOR_TRAPDOOR1, ROLLINGBALL, RAISING_BLOCK1 = 378, 383, 389
+CEILING_TRAPDOOR1 = 380
 SEARCH_OBJECT4, PUSHABLE = 420, 436
 PUZZLE_ITEM = {i: 499 + i for i in range(1, 17)}
 SWITCH_TYPE2, AIRLOCK_SWITCH, WALL_SWITCH1, LEVER_SWITCH, SHOOT_SWITCH1 = 801, 820, 821, 827, 816
@@ -141,14 +142,14 @@ class Kit:
         return self.level.add_trigger(room, area, trig_type, target_type, target, timer=timer, extra=extra,
                                       code_bits=code_bits, one_shot=one_shot)
 
-    def prop(self, name, wx, wz, rot=0.0, h=None, scale=1.0):
+    def prop(self, name, wx, wz, rot=0.0, h=None, scale=1.0, room=None):
         """A decoration static (CdV_Decorazioni) placed by content: clues, cover, set dressing."""
         from decorate import S as DECOR_IDS
         if name not in DECOR_IDS:
-            from decor import santuario_models  # noqa: F401  (registers the sanctuary pieces)
+            from decor import santuario_models, santuario_interno_models, casa_models  # noqa: F401  (registers the sanctuary and house pieces)
             from decor.models import MODELS
             DECOR_IDS = dict(DECOR_IDS, **{n: sid for sid, n, _, _ in MODELS})
-        room = self.room_at(wx, wz)
+        room = room or self.room_at(wx, wz)
         lx, lz = int(wx) - room.x, int(wz) - room.z
         if h is None:
             h = room.y + int(np.mean(room.sectors[lx][lz].floor))

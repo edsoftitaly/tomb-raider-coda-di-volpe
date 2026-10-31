@@ -87,12 +87,12 @@ SHOTS = {
              note="Dal ciglio della rupe: la lingua di sabbia e i laghetti (luna, stella, sole)."),
         dict(name="Il santuario", v=1.2, fov=60,
              path=[_sant(-44, 7, "F+1.8"), _sant(-32, 4, "F+2.4"), _sant(-20, 1, "F+3")],
-             look=[_sant(0, 0, "F+11"), _sant(0, 0, "F+12"), _sant(0, 0, "F+14")],
-             note="Dal piazzale verso la facciata della basilica, tra i due campanili."),
-        dict(name="La loggia", v=1.2, fov=70,
-             path=[_sant(-1, 15, "F+1.7"), _sant(20, 15, "F+1.7"), _sant(40, 15, "F+1.7")],
-             look=[_sant(20, 15.5, "F+2"), _sant(40, 16, "F+2"), _sant(60, 16, "F+2")],
-             note="Lungo la loggia nord, con i laghetti oltre le arcate."),
+             look=[_sant(0, 0, "F+14"), _sant(0, 0, "F+16"), _sant(0, 0, "F+18")],
+             note="Dal piazzale verso la facciata e la torre campanaria, la Segreteria a destra."),
+        dict(name="Il fianco e la cupola", v=1.2, fov=70,
+             path=[_sant(20, -14.2, "F+1.8"), _sant(28, -17.6, "F+2"), _sant(36, -21.5, "F+2.5")],
+             look=[_sant(34, -5, "F+12"), _sant(42, -4, "F+18"), _sant(46, 0, "F+24")],
+             note="Lungo la terrazza sud: il fianco arancio e la cupola dorata."),
         dict(name="Il parco archeologico", v=2.0, fov=70,
              path=[(110, 310, 4), (125, 312, 4), (136, 302, 4)],
              look=[(122, 296, 3)],
@@ -101,11 +101,11 @@ SHOTS = {
 }
 
 # Title level (built from the Tindari terrain): slow endless loop on the edge of the cape, over the Laghetti.
-# Title: a slow orbit around the basilica on the promontory (about 60 m out), always looking at it.
+# Title: a slow orbit around the basilica on the promontory (64 m out), always looking at it.
 TITLE = dict(name="Titolo", v=2.0, fov=60, loop=True,
-             path=[_sant(33 + 50 * math.cos(a), 50 * math.sin(a), "F+16") for a in
-                   [math.radians(d) for d in (200, 150, 110, 70, 30, -10, -50, -110, -160)]],
-             look=[_sant(30, 0, "F+11")])
+             path=[_sant(36 + 64 * math.cos(a), 64 * math.sin(a), "F+22") for a in
+                   [math.radians(d) for d in (200, 160, 110, 70, 30, -10, -50, -110, -160)]],
+             look=[_sant(36, 0, "F+16")])
 
 
 def _ground(world, x, z):

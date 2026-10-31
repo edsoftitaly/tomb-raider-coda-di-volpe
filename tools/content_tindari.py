@@ -57,19 +57,22 @@ def santuario_scene(ctx):
     k = ctx.kit
     S.place(ctx)
     F = ctx.world.santuario["F"]
-    # Square: four lamps, benches facing the facade, two big white pots by the steps.
-    for u, v in ((-6, -9), (-6, 9), (-20, -9), (-20, 9)):
+    # Square (Piazza Quasimodo): double lamps along the axis, benches on the open north side and along
+    # the Segreteria, big white pots at the doors. The Segreteria fills the south-west side.
+    for u, v in ((-6, -8), (-6, 8), (-20, -6), (-20, 8)):
         k.prop("LAMPIONE_PIAZZA", *S.to_world(u, v), rot=S.AXIS_DEG, h=F)
-    for u, v in ((-14, -13), (-14, 13), (-24, -13), (-24, 13)):
+    for u, v in ((-12, 13), (-24, 13), (-12, -9)):
         k.prop("PANCHINA", *S.to_world(u, v), rot=S.AXIS_DEG + (0 if v < 0 else 180), h=F)
-    for v in (-4.2, 4.2):
-        k.prop("VASO_BIANCO_FIORI", *S.to_world(-3.0, v), rot=S.AXIS_DEG, h=F)
+    for v in (-5.6, 5.6):
+        k.prop("VASO_BIANCO_FIORI", *S.to_world(-1.5, v), rot=S.AXIS_DEG, h=F)
 
 
 def build(ctx):
     ctx.decor_block = [(30, 322, 72, 362), (78, 296, 92, 312), (204, 198, 252, 232)]
     k, lua = ctx.kit, ctx.lua
     santuario_scene(ctx)
+    import santuario_interno
+    santuario_interno.build(ctx)
     sx, sz = k.spot(*START)
     k.place(K.LARA, sx, sz, rot=315.0, name="lara_start")
     k.place(K.LARA_START_POS, sx, sz, ocb=1)

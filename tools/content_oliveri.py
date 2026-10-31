@@ -12,14 +12,14 @@ from kit import CLICK
 
 # --- coordinates (world sectors) -----------------------------------------------------------
 HOUSE_X0, HOUSE_Z0, HOUSE_W, HOUSE_H = 208, 157, 8, 6
-G0, H0 = 1344, 1536          # ground floor height and storey heights (units)
-H1 = 1536
-ROOF = 6208
-H2 = ROOF - (G0 + H0 + H1)   # 1792
-ROOF_HATCH = (214, 161)
-F2_HOLE = (213, 159)         # F2 -> F1
-F1_HOLE = (209, 158)         # F1 -> F0
-LADDER = (207, 160)          # street sector, climbable wall towards +x
+# The rooms of the house are built 57.5 m under the street (the real house is rotated 44 degrees to
+# the grid): see casa.py. Storeys 3 m, the second floor 3.5 m with a raised step under the hatch.
+G0 = -29440
+H0 = H1 = 1536
+H2 = 1792
+HATCH = (213, 160)           # second floor, ceiling trapdoor to the stair box on the roof
+STAIR0 = [(209, 162), (210, 162), (211, 162)]     # ground -> first, rising east
+STAIR1 = [(211, 161), (210, 161), (209, 161)]     # first -> second, rising west
 
 MANHOLE = (197, 102)
 SAIA_EXIT = (152, 101)
@@ -36,7 +36,7 @@ E3_SPOT = (55, 38)
 
 
 def prepare(world):
-    # House roof hatch area and street ladder are already flat (roof / pavement).
+    prepare_casa(world)
     K.flatten(world, K.rect(MANHOLE[0] - 1, MANHOLE[1] - 1, MANHOLE[0] + 1, MANHOLE[1] + 1))
     K.flatten(world, K.rect(SAIA_EXIT[0] - 1, SAIA_EXIT[1] - 1, SAIA_EXIT[0] + 1, SAIA_EXIT[1] + 1), mat="terra")
     # Castle: flat courtyard, a gate through the west wall, a ramp up the north slope.
@@ -57,37 +57,157 @@ def prepare(world):
     K.ramp(world, RAMP, "z", 38, 73, YARD_H, bottom)
 
 
+def prepare_casa(world):
+    """The house block: only the sectors entirely inside the footprint stay solid (plus the ones that
+    lean on the neighbours); the others go back to the street, under the static facades."""
+    import casa
+    bid = int(world.building_id[212, 160])
+    full = casa.full_sectors()
+    P = casa.POLY
+    for x, z in zip(*np.nonzero(world.building_id == bid)):
+        if (x, z) in full:
+            continue
+        c = (x + 0.5, z + 0.5)
+
+        def dist(i):
+            (ax, az), (bx, bz) = P[i], P[(i + 1) % len(P)]
+            t = max(0.0, min(1.0, ((c[0] - ax) * (bx - ax) + (c[1] - az) * (bz - az)) / ((bx - ax) ** 2 + (bz - az) ** 2)))
+            return np.hypot(c[0] - ax - t * (bx - ax), c[1] - az - t * (bz - az))
+        if min(range(len(P)), key=dist) in (0, 1):
+            continue
+        world.building_id[x, z] = -1
+        world.floor[x, z] = world.floor_terrain[x, z]
+        world.mat[x, z] = "marciapiede"
+    world.casa_bid = bid
+
+
 def house(ctx):
+    """Three floors with real stairs (ramps under marble steps), furniture, windows and doors."""
     k = ctx.kit
     x0, z0 = HOUSE_X0, HOUSE_Z0
     # Plans: rows z = 162 (top) .. 157 (bottom), columns x = 208 .. 215.
-    f2 = ["...#....",
-          ".S.#..r.",
-          "........",
-          "####....",
-          "........",
-          "M..#...."]
-    f1 = ["........",
-          "........",
-          "..##....",
-          "..#..u..",
-          "........",
-          "...T...."]
-    f0 = ["......#P",
-          ".K.#..#.",
+    f0 = ["....#..P",       # stairs up (209-211), dispensa (secret) behind the kitchen
+          "....#...",
+          ".K..##.#",
+          "........",       # kitchen + dining (north), living room (south-east)
+          "###.#...",
+          "..A.#.E."]       # entrance hall with the barred street door
+    f1 = ["........",       # stairwell from the ground floor at 210-211
+          "....#...",       # stairs up (211 -> 209)
+          ".....#..",
+          "##.###.#",
+          "...T....",       # living room with the balcony (south), study (north-east)
+          "........"]
+    f2 = ["...#....",       # stairwell at 209-210, arrival at 208
           "...#....",
-          "........",
-          ".v..#...",
-          "....#.A."]
-    F0 = k.interior("CASA_TERRA", f0, x0, z0, G0, H0, "cementine", "soffitto", "intonaco_interno")
-    F1 = k.interior("CASA_PRIMO", f1, x0, z0, G0 + H0, H1, "maiolica", "soffitto", "intonaco_interno")
-    F2 = k.interior("CASA_SECONDO", f2, x0, z0, G0 + H0 + H1, H2, "parquet", "soffitto", "intonaco_interno")
-    k.link_vertical(F0, F1, [F1_HOLE])
-    k.link_vertical(F1, F2, [F2_HOLE])
-    roof_room = k.room_at(*ROOF_HATCH)
-    k.link_vertical(F2, roof_room, [ROOF_HATCH])
-    k.climb(LADDER[0], LADDER[1], "+x")
-    return F0, F1, F2
+          "...#.1..",       # box room with the roof hatch (raised step under it)
+          "##.##.##",
+          ".S......",       # Ed's bedroom
+          "M..#...."]       # bathroom
+    F0 = k.interior("CASA_TERRA", f0, x0, z0, G0, H0, "cementine", "soffitto", "intonaco_interno",
+                    ambient=(0.32, 0.3, 0.34))
+    F1 = k.interior("CASA_PRIMO", f1, x0, z0, G0 + H0, H1, "maiolica", "soffitto", "intonaco_interno",
+                    ambient=(0.32, 0.3, 0.34))
+    F2 = k.interior("CASA_SECONDO", f2, x0, z0, G0 + H0 + H1, H2, "parquet", "soffitto", "intonaco_interno",
+                    ambient=(0.32, 0.3, 0.34))
+    TOP = k.interior("CASA_BOTOLA", ["..", ".."], HATCH[0], HATCH[1], G0 + H0 + H1 + H2, 4 * CLICK,
+                     "cementine", "soffitto", "intonaco_interno", ambient=(0.4, 0.4, 0.45))
+
+    def ramp(it, cells, step):
+        """Ramp rising 2 clicks per sector; step = +1 (east) or -1 (west). Corner order XnZp, XpZp, XpZn, XnZn."""
+        for i, (wx, wz) in enumerate(cells):
+            s = it.room.sectors[wx - it.room.x][wz - it.room.z]
+            lo, hi = i * 2 * CLICK, (i + 1) * 2 * CLICK
+            s.floor = [lo, hi, hi, lo] if step > 0 else [hi, lo, lo, hi]
+    k.link_vertical(F0, F1, STAIR0[1:])
+    k.link_vertical(F1, F2, STAIR1[1:])
+    ramp(F0, STAIR0, +1)
+    ramp(F1, STAIR1, -1)
+    k.link_vertical(F2, TOP, [HATCH])
+    return F0, F1, F2, TOP
+
+
+# Furniture: (name, x, z, rot, floor) in world sectors (floats). rot 0 = model +X towards east.
+CASA_FURNITURE = [
+    # ground floor
+    ("CASA_CUCINA", 208.32, 160.6, 0.0, 0), ("CASA_FRIGO", 208.35, 161.75, 0.0, 0),
+    ("CASA_TAVOLO", 210.4, 160.3, 0.0, 0), ("CASA_SCAFFALE", 215.8, 162.0, 180.0, 0),
+    ("CASA_DIVANO", 215.55, 158.5, 180.0, 0), ("CASA_TAVOLINO", 214.4, 158.5, 0.0, 0),
+    ("CASA_MOBILE_TV", 213.25, 158.5, 0.0, 0), ("CASA_QUADRO", 213.02, 157.9, 0.0, 0),
+    ("CASA_SEDIA_ROVESCIATA", 211.0, 159.3, 30.0, 0), ("CASA_PORTONE_INT", 212.0, 157.02, 270.0, 0),
+    ("CASA_GRADINI", 210.5, 162.5, 0.0, 0),
+    # first floor
+    ("CASA_LIBRERIA", 215.8, 161.6, 180.0, 1), ("CASA_SCRIVANIA", 214.6, 161.7, 180.0, 1),
+    ("CASA_SEDIA_ROVESCIATA", 214.0, 160.9, 120.0, 1), ("CASA_LIBRERIA", 213.25, 161.0, 0.0, 1),
+    ("CASA_DIVANO", 208.45, 158.0, 0.0, 1), ("CASA_TAVOLINO", 209.6, 158.0, 0.0, 1),
+    ("CASA_QUADRO", 208.02, 158.0, 0.0, 1), ("CASA_GRADINI", 210.5, 161.5, 180.0, 1),
+    ("CASA_CORRIMANO", 211.0, 162.0, 0.0, 1), ("CASA_CORRIMANO", 210.0, 162.5, 90.0, 1),
+    # second floor
+    ("CASA_LETTO", 208.55, 158.0, 0.0, 2), ("CASA_COMODINO", 208.25, 158.85, 0.0, 2),
+    ("CASA_COMODINO", 208.25, 157.15, 0.0, 2), ("CASA_ARMADIO", 211.25, 158.0, 180.0, 2),
+    ("CASA_BAGNO", 210.55, 157.6, 90.0, 2), ("CASA_SCAFFALE", 215.8, 161.5, 180.0, 2),
+    ("CASA_CORRIMANO", 210.0, 161.0, 0.0, 2), ("CASA_CORRIMANO", 210.0, 162.0, 0.0, 2),
+    ("CASA_QUADRO", 208.02, 159.6, 0.0, 2),
+]
+# Windows (inside view) on the outer walls, and interior door frames in the doorways.
+CASA_WINDOWS = [(208.0, 159.5, 0.0), (213.0, 157.0, 270.0), (215.0, 157.0, 270.0), (216.0, 159.5, 180.0),
+                (210.0, 157.0, 270.0)]
+CASA_DOORS = {0: [(211.5, 158.5, 90.0), (214.5, 160.5, 90.0)],
+              1: [(210.5, 159.5, 90.0), (214.5, 159.5, 90.0)],
+              2: [(210.5, 159.5, 90.0)]}
+
+
+def street_dressing(ctx):
+    """Via Gaspare Amodeo as on Street View: cars parked along the kerb opposite the house, palms and
+    big white pots on the pavement, a couple of scooters by the door."""
+    import math
+    import casa
+    k, w = ctx.kit, ctx.world
+    (ax, az), (bx, bz) = casa.POLY[3], casa.POLY[4]
+    L = math.hypot(bx - ax, bz - az)
+    d = ((bx - ax) / L, (bz - az) / L)
+    n = (d[1], -d[0])                     # outward (south-west) normal of the facade
+    rot_car = math.degrees(math.atan2(d[0], d[1]))
+    cx, cz, _ = casa.climb_spot()
+
+    def free(x, z, r=1):
+        xi, zi = int(x), int(z)
+        if not (0 <= xi < w.nx and 0 <= zi < w.nz):
+            return False
+        if abs(xi - cx) <= 1 and abs(zi - cz) <= 1:
+            return False
+        return all(0 <= xi + i < w.nx and 0 <= zi + j < w.nz and w.building_id[xi + i, zi + j] < 0 and not w.water[xi + i, zi + j]
+                   for i in range(-r, r + 1) for j in range(-r, r + 1))
+    cars = ["AUTO_UTILITARIA_BIANCA", "AUTO_BERLINA_GRIGIA", "AUTO_UTILITARIA_ROSSA", "FURGONE_BIANCO", "AUTO_SUV_BLU"]
+    i = 0
+    for t in (-6.0, -3.2, 1.5, 4.3, 10.5, 13.3):
+        x, z = ax + d[0] * t + n[0] * 3.6, az + d[1] * t + n[1] * 3.6
+        if free(x, z):
+            k.prop(cars[i % len(cars)], x, z, rot=rot_car + (180 if i % 2 else 0))
+            i += 1
+    for t, name in ((0.8, "VASO_BIANCO_PALMA"), (5.6, "VASO_BIANCO_PALMA"), (8.6, "VASO_BIANCO_FIORI")):
+        x, z = ax + d[0] * t + n[0] * 1.3, az + d[1] * t + n[1] * 1.3
+        if free(x, z, 0):
+            k.prop(name, x, z, rot=rot_car)
+    for t, name in ((4.6, "SCOOTER_ROSSO"), (6.6, "SCOOTER_CREMA")):
+        x, z = ax + d[0] * t + n[0] * 1.6, az + d[1] * t + n[1] * 1.6
+        if free(x, z, 0):
+            k.prop(name, x, z, rot=rot_car + 90)
+
+
+def house_dressing(ctx, floors):
+    k = ctx.kit
+    for name, x, z, rot, f in CASA_FURNITURE:
+        it = floors[f]
+        k.prop(name, x, z, rot=rot, h=it.floor_h, room=it.room)
+    for f, it in enumerate(floors[:3]):
+        for x, z, rot in CASA_WINDOWS:
+            k.prop("CASA_FINESTRA", x, z, rot=rot, h=it.floor_h, room=it.room)
+        for x, z, rot in CASA_DOORS.get(f, []):
+            k.prop("CASA_PORTA", x, z, rot=rot, h=it.floor_h, room=it.room)
+        for lx, lz in ((210.0, 160.0), (214.0, 158.5), (214.0, 161.5)):
+            pos = ((lx - it.room.x) * 1024, 1100, (lz - it.room.z) * 1024)
+            ctx.level.add_light(it.room, 0, pos, color=(1.0, 0.82, 0.6), intensity=0.6, inner=1.5, outer=5.0)
 
 
 DECOR = dict(centre=(190, 160, 70))
@@ -96,7 +216,13 @@ DECOR = dict(centre=(190, 160, 70))
 def build(ctx):
     ctx.decor_block = [(30, 34, 37, 74), (34, 35, 42, 38), (39, 30, 54, 45), (205, 155, 218, 165)]
     k, lua, L = ctx.kit, ctx.lua, ctx.level
-    F0, F1, F2 = house(ctx)
+    street_dressing(ctx)
+    import casa
+    F0, F1, F2, TOP = house(ctx)
+    house_dressing(ctx, (F0, F1, F2, TOP))
+    k.prop("CASA_ESTERNO", *casa.ANCHOR, rot=0.0, h=casa.GROUND)
+    cx, cz, _ = casa.climb_spot()
+    k.climb(cx, cz, "+z")
 
     # Lara wakes up on the second floor.
     sx, sz = F2.anchors["S"]
@@ -106,33 +232,44 @@ def build(ctx):
     k.place(K.SHOTGUN_ITEM, *F0.anchors["K"], room=F0.room)
     k.place(K.SHOTGUN_AMMO1, *F0.anchors["A"], room=F0.room)
     k.place(K.BADDY2, *F1.anchors["T"], room=F1.room, name="ladro_primo")
-    k.place(K.BADDY2, 213, 161, room=F0.room, name="ladro_terra")
-    k.place(K.BADDY1, 214, 157, room=F0.room, name="ladro_chiave")
-    trap = k.place(K.FLOOR_TRAPDOOR1, ROOF_HATCH[0], ROOF_HATCH[1], name="botola_tetto")
+    k.place(K.BADDY2, 214, 159, room=F0.room, name="ladro_terra")
+    k.place(K.BADDY1, 209, 157, room=F0.room, name="ladro_chiave")
+    k.place(K.CEILING_TRAPDOOR1, HATCH[0], HATCH[1], room=TOP.room, name="botola_tetto")
+    k.place(K.DOOR_TYPE3, 213, 159, room=F2.room, rot=0.0, name="porta_ripostiglio")
 
     def at(it, cell, dh=0):
         return k.lua_pos(cell[0], cell[1], it.floor_h + dh)
 
+    rx, rz = casa.roof_spot()
+    roof_room = k.room_at(rx, rz)
     lua.start('CDV.Say("Oliveri, notte. Rumori al piano di sotto... qualcuno e\' entrato in casa.", 7)')
-    lua.zone("primo", at(F1, F2_HOLE), r=1200, dy=900, fn='CDV.Enable("ladro_primo")',
+    lua.zone("primo", at(F1, (212, 162)), r=1400, dy=900, fn='CDV.Enable("ladro_primo")',
              text="Uno della banda della Volpe! Cercano il diario bizantino.")
-    lua.zone("terra", at(F0, F1_HOLE), r=1400, dy=900, fn='CDV.Enable("ladro_terra")\nCDV.Enable("ladro_chiave")')
+    lua.zone("terra", at(F0, (212, 161)), r=1600, dy=900, fn='CDV.Enable("ladro_terra")\nCDV.Enable("ladro_chiave")')
     lua.drop("chiave", "ladro_chiave", "ID.PUZZLE_ITEM2",
-             "Il tombarolo aveva la chiave della botola della terrazza. Il diario pero' non c'e': l'ha preso il loro capo.")
-    lua.zone("portone", at(F0, (215, 160)), r=1200, dy=900, once=True,
-             text="Il portone e' sbarrato da fuori. Resta la botola sul tetto.")
-    lua.use("botola", "ID.PUZZLE_ITEM2", at(F2, ROOF_HATCH), r=1300, dy=1200,
-            text="La botola si apre. Sul tetto!", fn='CDV.Enable("botola_tetto")')
-    lua.zone("tetto", k.lua_pos(ROOF_HATCH[0], ROOF_HATCH[1], ROOF), r=1500, dy=900,
-             text="Dalla terrazza si scende con la grondaia sul lato di Via Amodeo. Il ladro scappa verso la piazza.")
+             "Il tombarolo aveva la chiave del ripostiglio della terrazza. Il diario pero' non c'e': l'ha preso il loro capo.")
+    lua.zone("portone", at(F0, F0.anchors["E"]), r=1200, dy=900, once=True,
+             text="Il portone e' sbarrato da fuori. Resta la botola del ripostiglio, sul tetto.")
+    lua.zone("ripostiglio_chiuso", at(F2, (213, 158)), r=1100, dy=900, once=False, secs=4,
+             need="not CDV.Has(ID.PUZZLE_ITEM2) and not CDV.Flag(\"ripostiglio\")",
+             text="Il ripostiglio della botola e' chiuso a chiave. I ladri l'avranno presa...")
+    lua.use("ripostiglio", "ID.PUZZLE_ITEM2", at(F2, (213, 158)), r=1300, dy=1200,
+            text="La chiave gira: il ripostiglio. Sopra il gradino c'e' la botola del tetto: salto e la tiro giu'.",
+            fn='CDV.Enable("porta_ripostiglio")\nCDV.Flag("ripostiglio", true)')
+    lua.zone("sul_tetto", at(TOP, (HATCH[0] + 1, HATCH[1] + 1)), r=900, dy=700, once=False,
+             fn='CDV.Teleport(%d, %d, %d, "%s", 225)' % (k.lua_pos(rx, rz, casa.ROOF) + (roof_room.name,)))
+    lua.zone("tetto", k.lua_pos(rx, rz, casa.ROOF), r=1800, dy=900,
+             text="Sulla terrazza. Dal lato di Via Amodeo si scende lungo il pluviale, nella rientranza della facciata.")
     ctx.notes += [
         "LIVELLO 1 - OLIVERI",
-        "1. Secondo piano: medikit nel bagno, razzi in camera. Il buco nel pavimento del corridoio porta al primo piano.",
-        "2. Primo piano: un tombarolo. Il buco vicino alle scale porta al piano terra.",
-        "3. Piano terra: due tombaroli; uno lascia la Chiave della terrazza. Fucile in cucina, cartucce nell'ingresso.",
-        "   Segreto 1: la dispensa nell'angolo nord-est del piano terra.",
-        "4. Si risale sulle casse (salto + aggrappo) fino al secondo piano, si usa la chiave sotto la botola e si sale sul tetto.",
-        "5. Dal tetto ci si cala con la grondaia (muro scalabile) sul lato ovest, su Via Amodeo.",
+        "1. Secondo piano: Lara si sveglia in camera. Medikit in bagno, razzi vicino alle scale.",
+        "   Le scale (sul lato nord) scendono al primo piano: soggiorno col balcone e lo studio messo a soqquadro.",
+        "2. Primo piano: un tombarolo. Altre scale scendono al piano terra.",
+        "3. Piano terra: due tombaroli; uno lascia la Chiave del ripostiglio. Fucile in cucina, cartucce nell'ingresso.",
+        "   Segreto 1: la dispensa nell'angolo nord-est del piano terra (dietro la cucina).",
+        "4. Si risale al secondo piano, si apre il ripostiglio con la chiave: dal gradino si salta e si tira giu'",
+        "   la botola del soffitto (Azione durante il salto), poi si salta di nuovo, ci si aggrappa al bordo e si sale.",
+        "5. Sulla terrazza (pergolato). Dal lato di Via Amodeo, nella rientranza col pluviale, ci si cala lungo il muro.",
     ]
     lua.secret(0, at(F0, F0.anchors["P"]), r=800)
 

@@ -12,17 +12,24 @@ PROJECT = "C:\\CodaDiVolpe"
 LEGGIMI = r"""TOMB RAIDER - CODA DI VOLPE  (episodio completo, 6 livelli, TombEngine)
 ==========================================================================
 
-NOVITA' DELLA v4
-- Santuario di Tindari modellato: basilica con facciata a capanna tra due campanili (orologio e monofore),
-  portale bugnato con le porte in bronzo e San Pietro e San Paolo nelle nicchie, oculo, frontone AVE MARIA,
-  tetti e cupola in ceramica azzurra, loggia nord di 76 m sui laghetti, santuario antico con il portale
-  del 1598. Il title level ora gira intorno alla basilica.
-- Terreno: texture grandi senza giunte (si ripetono ogni 16-32 m invece di 2 m), rupi a gradoni di roccia
-  invece dei pendii con la texture stirata.
-- Percorsi: i Laghetti passano da circa 1,3 km a circa 250 m (niente andata e ritorno), Tindari finisce
-  nella cripta con un cunicolo verso il mare (niente corsa di 470 m alla Rocca).
-- Incontri in piu' sui tratti lunghi (Oliveri, Lungomare, Marinello, Laghetti), imboscata ai Laghetti,
-  topi se si sbaglia l'ordine delle leve nella cripta, meno soluzioni scritte a schermo.
+NOVITA' DELLA v5
+- Santuario di Tindari rifatto sulle tue foto e sulla pianta reale (OpenStreetMap): torre-facciata in conci
+  rosa con portale bronzeo, San Pietro e San Paolo, fregio AVE MARIA, trifora, cella campanaria con la
+  Madonna in mosaico e tre statue in cima; fianchi arancio con archi ciechi, oculi blu e finestre;
+  tetto grigio; tamburo arancio con finestre e oculi, cupola dorata con ringhiera e lanterna; convento a L
+  con pannelli solari e santuario antico fortificato col bastione; blocco alto a nord-est; terrazza sud
+  con ringhiera; Segreteria sul piazzale. Tutte le facce sono orientate verso l'esterno: niente piu'
+  chiesa "mezza trasparente".
+- La basilica si visita: dal portale si entra (dissolvenza). Navata con colonne di marmo rosa, banchi,
+  pavimenti a stelle e a rombi, mosaici, vetrate, volta dipinta, cupola con la scritta AVE MARIA GRATIA
+  PLENA DOMINUS TECUM e tre vetrate (luna, stella, sole) che richiamano l'enigma delle leve, altare e
+  icona della Madonna Nera, cappella dorata nel transetto.
+- Casa di Via Gaspare Amodeo 1 rifatta: facciata color crema con zoccolo marrone, persiane verdi,
+  portone liberty, saracinesca, balcone lungo al primo piano, terrazza con pergolato in canne.
+  Dentro: scale vere tra i piani, cucina, soggiorno, studio messo a soqquadro, camera, bagno, dispensa,
+  finestre, porte, quadri. La botola sul soffitto e' una botola vera di TombEngine (CEILING_TRAPDOOR1):
+  si salta sotto e si tiene premuto Azione per tirarla giu'. Si scende dalla terrazza lungo il pluviale.
+- Via Amodeo arredata come su Street View: auto parcheggiate, palme e vasi, scooter.
 
 INSTALLAZIONE
 1. Estrai lo zip DENTRO C:\CodaDiVolpe e sovrascrivi tutto. Vengono aggiunti/sostituiti:
