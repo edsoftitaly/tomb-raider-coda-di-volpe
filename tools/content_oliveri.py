@@ -180,16 +180,16 @@ def street_dressing(ctx):
                    for i in range(-r, r + 1) for j in range(-r, r + 1))
     cars = ["AUTO_UTILITARIA_BIANCA", "AUTO_BERLINA_GRIGIA", "AUTO_UTILITARIA_ROSSA", "FURGONE_BIANCO", "AUTO_SUV_BLU"]
     i = 0
-    for t in (-6.0, -3.2, 1.5, 4.3, 10.5, 13.3):
-        x, z = ax + d[0] * t + n[0] * 3.6, az + d[1] * t + n[1] * 3.6
+    for t in (-6.0, -3.2, 2.2, 5.0, 10.5, 13.3):     # parked along the kerb on the house side (satellite view)
+        x, z = ax + d[0] * t + n[0] * 2.4, az + d[1] * t + n[1] * 2.4
         if free(x, z):
             k.prop(cars[i % len(cars)], x, z, rot=rot_car + (180 if i % 2 else 0))
             i += 1
-    for t, name in ((0.8, "VASO_BIANCO_PALMA"), (5.6, "VASO_BIANCO_PALMA"), (8.6, "VASO_BIANCO_FIORI")):
-        x, z = ax + d[0] * t + n[0] * 1.3, az + d[1] * t + n[1] * 1.3
+    for t, name in ((0.8, "VASO_BIANCO_PALMA"), (7.6, "VASO_BIANCO_PALMA"), (8.6, "VASO_BIANCO_FIORI")):
+        x, z = ax + d[0] * t + n[0] * 1.4, az + d[1] * t + n[1] * 1.4
         if free(x, z, 0):
             k.prop(name, x, z, rot=rot_car)
-    for t, name in ((4.6, "SCOOTER_ROSSO"), (6.6, "SCOOTER_CREMA")):
+    for t, name in ((6.2, "SCOOTER_ROSSO"), (6.9, "SCOOTER_CREMA")):
         x, z = ax + d[0] * t + n[0] * 1.6, az + d[1] * t + n[1] * 1.6
         if free(x, z, 0):
             k.prop(name, x, z, rot=rot_car + 90)
