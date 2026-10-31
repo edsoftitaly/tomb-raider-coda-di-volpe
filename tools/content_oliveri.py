@@ -154,7 +154,7 @@ CASA_WINDOWS = [(208.0, 159.5, 0.0), (213.0, 157.0, 270.0), (215.0, 157.0, 270.0
                 (210.0, 157.0, 270.0)]
 CASA_DOORS = {0: [(211.5, 158.5, 90.0), (214.5, 160.5, 90.0)],
               1: [(210.5, 159.5, 90.0), (214.5, 159.5, 90.0)],
-              2: [(210.5, 159.5, 90.0)]}
+              2: [(210.5, 159.5, 90.0), (213.5, 159.5, 90.0)]}
 
 
 def street_dressing(ctx):
@@ -235,27 +235,35 @@ def build(ctx):
     k.place(K.BADDY2, 214, 159, room=F0.room, name="ladro_terra")
     k.place(K.BADDY1, 209, 157, room=F0.room, name="ladro_chiave")
     k.place(K.CEILING_TRAPDOOR1, HATCH[0], HATCH[1], room=TOP.room, name="botola_tetto")
-    k.place(K.DOOR_TYPE3, 213, 159, room=F2.room, rot=0.0, name="porta_ripostiglio")
 
     def at(it, cell, dh=0):
         return k.lua_pos(cell[0], cell[1], it.floor_h + dh)
 
     rx, rz = casa.roof_spot()
     roof_room = k.room_at(rx, rz)
-    lua.start('CDV.Say("Oliveri, notte. Rumori al piano di sotto... qualcuno e\' entrato in casa.", 7)')
+    # The hatch is padlocked: until the key is used under it, the trapdoor keeps the ACTIVE status
+    # (CeilingTrapDoorCollision refuses to open an active trapdoor) without being in the active list,
+    # so it neither opens by itself nor reacts to the jump. The key sets it back to INACTIVE.
+    lua.start('''if not CDV.Flag("botola_libera") then
+    local b = CDV.M("botola_tetto")
+    if b ~= nil and b:GetValid() then b:SetStatus(TEN.Objects.MoveableStatus.ACTIVE) end
+end
+CDV.Say("Oliveri, notte. Rumori al piano di sotto... qualcuno e\' entrato in casa.", 7)''')
     lua.zone("primo", at(F1, (212, 162)), r=1400, dy=900, fn='CDV.Enable("ladro_primo")',
              text="Uno della banda della Volpe! Cercano il diario bizantino.")
     lua.zone("terra", at(F0, (212, 161)), r=1600, dy=900, fn='CDV.Enable("ladro_terra")\nCDV.Enable("ladro_chiave")')
     lua.drop("chiave", "ladro_chiave", "ID.PUZZLE_ITEM2",
-             "Il tombarolo aveva la chiave del ripostiglio della terrazza. Il diario pero' non c'e': l'ha preso il loro capo.")
+             "Il tombarolo aveva la chiave del lucchetto della botola. Il diario pero' non c'e': l'ha preso il loro capo.")
     lua.zone("portone", at(F0, F0.anchors["E"]), r=1200, dy=900, once=True,
              text="Il portone e' sbarrato da fuori. Resta la botola del ripostiglio, sul tetto.")
-    lua.zone("ripostiglio_chiuso", at(F2, (213, 158)), r=1100, dy=900, once=False, secs=4,
-             need="not CDV.Has(ID.PUZZLE_ITEM2) and not CDV.Flag(\"ripostiglio\")",
-             text="Il ripostiglio della botola e' chiuso a chiave. I ladri l'avranno presa...")
-    lua.use("ripostiglio", "ID.PUZZLE_ITEM2", at(F2, (213, 158)), r=1300, dy=1200,
-            text="La chiave gira: il ripostiglio. Sopra il gradino c'e' la botola del tetto: salto e la tiro giu'.",
-            fn='CDV.Enable("porta_ripostiglio")\nCDV.Flag("ripostiglio", true)')
+    lua.zone("botola_chiusa", at(F2, HATCH, CLICK), r=1100, dy=900, once=False, secs=4,
+             need='not CDV.Flag("botola_libera")',
+             text="La botola del tetto e' chiusa con un lucchetto. I ladri avranno la chiave...")
+    lua.use("botola", "ID.PUZZLE_ITEM2", at(F2, HATCH, CLICK), r=1300, dy=1200,
+            text="Il lucchetto si apre. Dal gradino salto e tiro giu' la botola.",
+            fn='''CDV.Flag("botola_libera", true)
+local b = CDV.M("botola_tetto")
+if b ~= nil and b:GetValid() then b:SetStatus(TEN.Objects.MoveableStatus.INACTIVE) end''')
     lua.zone("sul_tetto", at(TOP, (HATCH[0] + 1, HATCH[1] + 1)), r=900, dy=700, once=False,
              fn='CDV.Teleport(%d, %d, %d, "%s", 225)' % (k.lua_pos(rx, rz, casa.ROOF) + (roof_room.name,)))
     lua.zone("tetto", k.lua_pos(rx, rz, casa.ROOF), r=1800, dy=900,
@@ -265,9 +273,9 @@ def build(ctx):
         "1. Secondo piano: Lara si sveglia in camera. Medikit in bagno, razzi vicino alle scale.",
         "   Le scale (sul lato nord) scendono al primo piano: soggiorno col balcone e lo studio messo a soqquadro.",
         "2. Primo piano: un tombarolo. Altre scale scendono al piano terra.",
-        "3. Piano terra: due tombaroli; uno lascia la Chiave del ripostiglio. Fucile in cucina, cartucce nell'ingresso.",
+        "3. Piano terra: due tombaroli; uno lascia la chiave del lucchetto della botola. Fucile in cucina, cartucce nell'ingresso.",
         "   Segreto 1: la dispensa nell'angolo nord-est del piano terra (dietro la cucina).",
-        "4. Si risale al secondo piano, si apre il ripostiglio con la chiave: dal gradino si salta e si tira giu'",
+        "4. Si risale al secondo piano, nel ripostiglio si usa la chiave sotto la botola: dal gradino si salta e si tira giu'",
         "   la botola del soffitto (Azione durante il salto), poi si salta di nuovo, ci si aggrappa al bordo e si sale.",
         "5. Sulla terrazza (pergolato). Dal lato di Via Amodeo, nella rientranza col pluviale, ci si cala lungo il muro.",
     ]

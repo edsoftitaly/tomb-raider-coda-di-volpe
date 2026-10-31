@@ -41,6 +41,7 @@ local function newMov(name)
     local m = { name = name, active = false, valid = true, hp = 10, state = 1 }
     function m:GetState() return self.state end
     function m:Enable() self.active = true; log("enable", self.name) end
+    function m:SetStatus(st) self.status = st; log("status", self.name .. "=" .. tostring(st)) end
     function m:Disable() self.active = false; log("disable", self.name) end
     function m:GetActive() return self.active end
     function m:GetValid() return self.valid end
@@ -52,6 +53,7 @@ local function newMov(name)
     return m
 end
 for name, _ in pairs(names) do objs[name] = newMov(name) end
+TEN.Objects.MoveableStatus = { INACTIVE = "INACTIVE", ACTIVE = "ACTIVE", DEACTIVATED = "DEACTIVATED", INVISIBLE = "INVISIBLE" }
 TEN.Objects.GetMoveableByName = function(name)
     if objs[name] == nil then error("unknown moveable name " .. tostring(name)) end
     return objs[name]
