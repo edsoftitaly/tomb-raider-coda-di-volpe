@@ -204,7 +204,7 @@ def house_dressing(ctx, floors):
         for x, z, rot in CASA_WINDOWS:
             k.prop("CASA_FINESTRA", x, z, rot=rot, h=it.floor_h, room=it.room)
         for x, z, rot in CASA_DOORS.get(f, []):
-            k.prop("CASA_PORTA", x, z, rot=rot, h=it.floor_h, room=it.room)
+            k.prop("CASA_PORTA_ALTA" if f == 2 else "CASA_PORTA", x, z, rot=rot, h=it.floor_h, room=it.room)
         for lx, lz in ((210.0, 160.0), (214.0, 158.5), (214.0, 161.5)):
             pos = ((lx - it.room.x) * 1024, 1100, (lz - it.room.z) * 1024)
             ctx.level.add_light(it.room, 0, pos, color=(1.0, 0.82, 0.6), intensity=0.6, inner=1.5, outer=5.0)

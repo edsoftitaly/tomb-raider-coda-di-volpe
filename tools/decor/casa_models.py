@@ -300,16 +300,36 @@ def finestra():
     return m, None
 
 
-@furniture(216, "CASA_PORTA", "Stipite con porta interna aperta", coll=False)
-def porta():
+def porta_vano(top):
+    """The doorway is a whole sector (2 x 2 m) between two wall sectors: the jambs sit on the walls'
+    faces (local z = +-1), the passage runs along local x. Above 2.3 m the opening is closed with
+    plaster up to the ceiling, so the frame never floats in the middle of the hole."""
     m = G.Mesh()
-    for z in (-0.5, 0.5):
-        box(m, 0.18, 2.2, 0.08, "ca_noce", z=z)
-    box(m, 0.18, 0.1, 1.08, "ca_noce", y=2.2)
+    for z, nz in ((-0.99, 1.0), (0.99, -1.0)):
+        # jamb lining on the wall face, the whole depth of the passage
+        rectf(m, V(-1.0, 0.0, z), V(1, 0, 0), UP, 2.0, 2.3, "ca_noce", V(0, 0, nz), tile=(2.0, 2.3))
+        box(m, 0.12, 2.3, 0.1, "ca_noce", x=-1.0, z=z + 0.04 * nz)
+        box(m, 0.12, 2.3, 0.1, "ca_noce", x=1.0, z=z + 0.04 * nz)
+    # lintel: plaster from 2.3 m up to the ceiling, wood soffit
+    box(m, 2.0, top - 2.3, 1.98, "ca_intonaco", y=2.3)
+    fface(m, [V(-1.0, 2.3, -0.99), V(1.0, 2.3, -0.99), V(1.0, 2.3, 0.99), V(-1.0, 2.3, 0.99)], "ca_noce", -UP)
+    for x in (-1.0, 1.0):
+        box(m, 0.1, 0.12, 2.0, "ca_noce", x=x, y=2.3)
+    # door leaf open against the jamb
     leaf = G.Mesh()
-    rectf(leaf, V(0.0, 0.0, 0.5), V(-1, 0, 0), UP, 0.9, 2.15, "ca_porta", V(0, 0, 1), tile=None, double=True)
-    m.merge(leaf.transformed(t=(0.09 * M, 0, 0)))
+    rectf(leaf, V(0.0, 0.0, 0.0), V(1, 0, 0), UP, 0.95, 2.25, "ca_porta", V(0, 0, 1), tile=None, double=True)
+    m.merge(leaf.transformed(t=(-0.5 * M, 0, 0.93 * M)))
     return m, None
+
+
+@furniture(216, "CASA_PORTA", "Vano porta (stanze alte 3 m): stipiti a filo dei muri, architrave fino al soffitto, anta aperta", coll=False)
+def porta():
+    return porta_vano(2.98)
+
+
+@furniture(221, "CASA_PORTA_ALTA", "Vano porta (stanze alte 3,5 m)", coll=False)
+def porta_alta():
+    return porta_vano(3.48)
 
 
 @furniture(217, "CASA_PORTONE_INT", "Portone di casa visto da dentro, sbarrato", coll=False)
