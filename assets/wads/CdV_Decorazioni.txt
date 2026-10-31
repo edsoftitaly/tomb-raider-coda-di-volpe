@@ -91,3 +91,4 @@ Coda di Volpe - decorazioni
 218 CASA_SCAFFALE: Scaffale della dispensa con barattoli
 219 CASA_CORRIMANO: Ringhiera della scala (2 m)
 220 CASA_GRADINI: Gradini in marmo sopra la rampa (6 m, 3 m di salita)
+223 CASA_PLUVIALE: Pluviale in rame sulla facciata (9,5 m), dove Lara scende dal tetto

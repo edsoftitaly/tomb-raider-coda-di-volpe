@@ -376,3 +376,12 @@ def gradini():
         fface(m, [V(x0, y0, -1.0), V(x0, y0, 1.0), V(x0, y0 + rise, 1.0), V(x0, y0 + rise, -1.0)], "tn_marmo",
               V(-1, 0, 0), [(0, 0.2), (1, 0.2), (1, 0.3), (0, 0.3)])
     return m, None
+
+
+@furniture(223, "CASA_PLUVIALE", "Pluviale in rame sulla facciata (9,5 m), dove Lara scende dal tetto", coll=False)
+def pluviale():
+    m = G.Mesh()
+    m.merge(G.cylinder(0.06, 0.06, 9.5, "ca_noce", n=8, base=(0, 0, -0.1)))
+    for y in (1.0, 3.5, 6.0, 8.5):
+        box(m, 0.25, 0.05, 0.12, "ca_noce", y=y, z=-0.05)
+    return m, None

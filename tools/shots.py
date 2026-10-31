@@ -28,20 +28,7 @@ def _sant(u, v, h):
 
 
 SHOTS = {
-    "Oliveri": [
-        dict(name="Sui tetti di Oliveri", v=2.0, fov=70,
-             path=[(186, 140, 4), (196, 150, 4), (204, 157, 5), (208, 160, 8)],
-             look=[(205, 158, 6), (209, 161, 6), (212, 164, 7), (214, 166, 8)],
-             note="Si scivola tra le case verso Via Gaspare Amodeo 1: apertura del gioco."),
-        dict(name="Il castello", v=3.0, fov=70,
-             path=[(78, 52, 14), (72, 72, 15), (56, 84, 15), (34, 82, 14)],
-             look=[(45, 44, 10)],
-             note="Giro attorno al castello e alle mura."),
-        dict(name="Gli uliveti", v=1.6, fov=75,
-             path=[(40, 190, 2.2), (45, 215, 2.4), (50, 240, 2.6), (55, 265, 2.8)],
-             look=[(42, 205, 2.0), (47, 230, 2.2), (52, 255, 2.4), (57, 280, 2.6)],
-             note="Passaggio basso tra i filari di ulivi."),
-    ],
+    "Oliveri": [],      # small Via Amodeo level (v6): shots to be placed after the in-game test
     "Lungomare": [
         dict(name="Il lungomare all'alba", v=4.0, fov=70,
              path=[(325, 120, 3), (305, 150, 3), (285, 180, 3), (265, 205, 3)],

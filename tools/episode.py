@@ -29,7 +29,9 @@ OUT = os.path.join(ROOT, "build", "levels")
 
 # Level boxes: (lat_min, lon_min, lat_max, lon_max). All under 800 m per side.
 LEVELS = {
-    "Oliveri":   {"title": "Oliveri", "box": (38.1214, 15.0552, 38.1278, 15.0612)},
+    # Small zones in a frame aligned with the main street (World(frame=...)): pivot lat, lon, angle, (u0, v0, u1, v1) m.
+    "Oliveri":   {"title": "Oliveri - Via Amodeo", "box": "frame",
+                  "frame": (38.124132, 15.059829, -33.85, (-40.0, -40.0, 124.0, 40.0))},
     "Lungomare": {"title": "Il Lungomare", "box": (38.1272, 15.0508, 38.1340, 15.0590)},
     "Marinello": {"title": "Marinello", "box": (38.1336, 15.0482, 38.1404, 15.0566)},
     "Laghetti":  {"title": "I Laghetti", "box": (38.1388, 15.0474, 38.1456, 15.0562)},
@@ -144,8 +146,11 @@ def setup_textures(level, atlas_list):
 
 def build_terrain_level(key, content):
     t0 = time.time()
-    la0, lo0, la1, lo1 = LEVELS[key]["box"]
-    world = W.World({key: [(la0, lo0), (la0, lo1), (la1, lo1), (la1, lo0)]})
+    if "frame" in LEVELS[key]:
+        world = W.World(frame=LEVELS[key]["frame"])
+    else:
+        la0, lo0, la1, lo1 = LEVELS[key]["box"]
+        world = W.World({key: [(la0, lo0), (la0, lo1), (la1, lo1), (la1, lo0)]})
     world.build_terrain()
     world.build_materials()
     if content is not None and hasattr(content, "prepare"):
@@ -241,7 +246,7 @@ Flow.AddLevel(title)
 """
 
 LEVEL_FLOW = {
-    "Oliveri": {"track": "108", "fog": None, "far": 96},
+    "Oliveri": {"track": "108", "fog": (14, 18, 32, 14, 34), "far": 40},
     "Lungomare": {"track": "108", "fog": None, "far": 128},
     "Marinello": {"track": "108", "fog": None, "far": 128},
     "Laghetti": {"track": "108", "fog": None, "far": 128},

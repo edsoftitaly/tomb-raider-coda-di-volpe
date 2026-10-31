@@ -65,35 +65,65 @@ _OSM_CACHE = None
 
 
 class World:
-    def __init__(self, zones=None):
+    def __init__(self, zones=None, frame=None):
+        """frame = (pivot_lat, pivot_lon, angle_deg, (u0, v0, u1, v1)): a small zone in a local metric frame
+        rotated by angle_deg (counter-clockwise) about the pivot, so that the main street runs along +x.
+        u/v are metres in that frame; every OSM coordinate goes through xy() and lands aligned to the grid."""
         global _OSM_CACHE
         if _OSM_CACHE is None:
             _OSM_CACHE = load_osm()
         self.nodes, self.ways, self.rels = _OSM_CACHE
-        self.zones = zones or ZONES
-        lats = [p[0] for z in self.zones.values() for p in z]
-        lons = [p[1] for z in self.zones.values() for p in z]
         ds = rasterio.open(DTM)
         dtm = ds.read(1).astype(np.float64)
         dtm[dtm < -100] = 0.0
-        x0, z0 = to3004.transform(min(lons), min(lats))
-        x1, z1 = to3004.transform(max(lons), max(lats))
-        col0 = int(math.floor((x0 - ds.bounds.left) / 2.0))
-        row_top = int(math.floor((ds.bounds.top - z1) / 2.0))
-        span_x = int(math.ceil((x1 - x0) / 2.0)) + 2
-        span_z = int(math.ceil((z1 - z0) / 2.0)) + 2
-        self.nrx, self.nrz = -(-span_x // N), -(-span_z // N)
-        self.nx, self.nz = self.nrx * N + 2, self.nrz * N + 2
-        # Corner (cx, cz) world position = pixel centre of column col0+cx, row (row_bottom - cz).
-        row_bottom = row_top + self.nz
-        self.ox = ds.bounds.left + 1.0 + 2.0 * col0
-        self.oz = ds.bounds.top - 1.0 - 2.0 * row_bottom
-        cols = np.clip(np.arange(col0, col0 + self.nx + 1), 0, dtm.shape[1] - 1)
-        rows = np.clip(np.arange(row_bottom, row_bottom - self.nz - 1, -1), 0, dtm.shape[0] - 1)
-        self.H = dtm[np.ix_(rows, cols)].T  # metres, H[cx, cz]
+        self.frame = frame
+        if frame is not None:
+            plat, plon, ang, (u0, v0, u1, v1) = frame
+            self.px, self.pz = to3004.transform(plon, plat)
+            self.ca, self.sa = math.cos(math.radians(ang)), math.sin(math.radians(ang))
+            self.nrx, self.nrz = -(-int(math.ceil((u1 - u0) / 2.0)) // N), -(-int(math.ceil((v1 - v0) / 2.0)) // N)
+            self.nx, self.nz = self.nrx * N + 2, self.nrz * N + 2
+            self.ox, self.oz = u0 - 2.0, v0 - 2.0
+            # Heights at sector corners: sample the DTM (bilinear) at the rotated corner positions.
+            cu = self.ox + 2.0 * np.arange(self.nx + 1)
+            cv = self.oz + 2.0 * np.arange(self.nz + 1)
+            U, Vv = np.meshgrid(cu, cv, indexing="ij")
+            X = self.px + U * self.ca - Vv * self.sa
+            Z = self.pz + U * self.sa + Vv * self.ca
+            colf = (X - ds.bounds.left) / 2.0 - 0.5
+            rowf = (ds.bounds.top - Z) / 2.0 - 0.5
+            self.H = ndimage.map_coordinates(dtm, [rowf, colf], order=1, mode="nearest")
+            corners = [(u0, v0), (u1, v0), (u1, v1), (u0, v1)]
+            self.zones = {"Z": [self.latlon(u, v) for u, v in corners]}
+        else:
+            self.zones = zones or ZONES
+            lats = [p[0] for z in self.zones.values() for p in z]
+            lons = [p[1] for z in self.zones.values() for p in z]
+            x0, z0 = to3004.transform(min(lons), min(lats))
+            x1, z1 = to3004.transform(max(lons), max(lats))
+            col0 = int(math.floor((x0 - ds.bounds.left) / 2.0))
+            row_top = int(math.floor((ds.bounds.top - z1) / 2.0))
+            span_x = int(math.ceil((x1 - x0) / 2.0)) + 2
+            span_z = int(math.ceil((z1 - z0) / 2.0)) + 2
+            self.nrx, self.nrz = -(-span_x // N), -(-span_z // N)
+            self.nx, self.nz = self.nrx * N + 2, self.nrz * N + 2
+            # Corner (cx, cz) world position = pixel centre of column col0+cx, row (row_bottom - cz).
+            row_bottom = row_top + self.nz
+            self.ox = ds.bounds.left + 1.0 + 2.0 * col0
+            self.oz = ds.bounds.top - 1.0 - 2.0 * row_bottom
+            cols = np.clip(np.arange(col0, col0 + self.nx + 1), 0, dtm.shape[1] - 1)
+            rows = np.clip(np.arange(row_bottom, row_bottom - self.nz - 1, -1), 0, dtm.shape[0] - 1)
+            self.H = dtm[np.ix_(rows, cols)].T  # metres, H[cx, cz]
         self.inside_dtm = np.ones_like(self.H, dtype=bool)
         self.centres = self._centres()
         self.zone_mask = self._zone_mask()
+
+    def latlon(self, u, v):
+        """Local frame metres -> (lat, lon)."""
+        X = self.px + u * self.ca - v * self.sa
+        Z = self.pz + u * self.sa + v * self.ca
+        lon, lat = to3004.transform(X, Z, direction="INVERSE")
+        return (lat, lon)
 
     # Coordinates ---------------------------------------------------------------
     def _centres(self):
@@ -102,7 +132,11 @@ class World:
         return gx, gz
 
     def xy(self, lat, lon):
-        return to3004.transform(lon, lat)
+        x, z = to3004.transform(lon, lat)
+        if self.frame is None:
+            return x, z
+        dx, dz = x - self.px, z - self.pz
+        return dx * self.ca + dz * self.sa, -dx * self.sa + dz * self.ca
 
     def sector_of(self, lat, lon):
         x, z = self.xy(lat, lon)
