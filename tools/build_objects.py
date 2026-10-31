@@ -125,6 +125,10 @@ def build_textures():
     tex.build()
     first = len(tex.pages)
     pk = tex.Packer()
+    # Packer counts pages from 0 (made for the decoration wad, which starts from an empty list): point it
+    # at the page it has just appended, or the objects are drawn over decoration page 0 and the
+    # objects' own page stays empty (invisible items).
+    pk.page = len(tex.pages) - 1
     for name, img in (("it_cuoio", leather()), ("it_pagine", pages()), ("it_mappa", tide_map()),
                       ("it_ferro", solid((52, 50, 48), 11, 0.25)), ("it_ottone", solid((196, 158, 70), 12)),
                       ("it_conchiglia", shell()), ("it_bronzo_sigillo", seal()),
