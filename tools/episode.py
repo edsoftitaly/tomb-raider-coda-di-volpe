@@ -249,7 +249,10 @@ Flow.AddLevel(title)
 """
 
 LEVEL_FLOW = {
-    "Oliveri": {"track": "108", "fog": (14, 18, 32, 14, 34), "far": 40},
+    # Night in town: no sunset horizon mesh, a dark blue sky layer with stars, and fog of the very same colour
+    # that reaches full strength before the draw distance, so the ring of buildings and the street ends melt
+    # into the night sky and the edge of the map is never seen.
+    "Oliveri": {"track": "108", "fog": (16, 20, 36, 16, 36), "far": 40, "sky": (16, 20, 36), "stars": 2500},
     "Lungomare": {"track": "108", "fog": None, "far": 128},
     "Marinello": {"track": "108", "fog": None, "far": 128},
     "Laghetti": {"track": "108", "fog": None, "far": 128},
@@ -285,6 +288,11 @@ def write_gameflow(only=None):
 {k}.farView = {far}
 {k}.objects = CdvObjects()
 """.format(k=k, lk=k.lower(), track=lf["track"], far=lf["far"], hz="false" if k == "Sommersa" else "true")
+        if lf.get("sky"):
+            r, g, b = lf["sky"]
+            block += "{k}.horizon1.enabled = false\n".format(k=k)
+            block += "{k}.layer1 = TEN.Flow.SkyLayer(TEN.Color({r}, {g}, {b}), 2)\n".format(k=k, r=r, g=g, b=b)
+            block += "{k}.starfield = TEN.Flow.Starfield({n})\n".format(k=k, n=lf.get("stars", 0))
         if lf["fog"]:
             r, g, b, mn, mx = lf["fog"]
             block += "{k}.fog = TEN.Flow.Fog(TEN.Color({r}, {g}, {b}), {mn}, {mx})\n".format(k=k, r=r, g=g, b=b, mn=mn, mx=mx)

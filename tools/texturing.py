@@ -125,6 +125,17 @@ def building_styles(buildings, casa_id=None):
     return out
 
 
+def wall_order(tl_tr_br_bl):
+    """Texture corners (TL, TR, BR, BL of the image) -> the order Tomb Editor stores for a wall quad.
+
+    v7.2 fix, seen in game (01/11/2026): passing TL, TR, BR, BL turned every facade 90 degrees clockwise
+    (doors lying on their side, the plinth as a vertical strip). The editor's wall vertices start at the
+    top right corner seen from the open side.
+    """
+    tl, tr, br, bl = tl_tr_br_bl
+    return [tr, br, bl, tl]
+
+
 class Texturer:
     def __init__(self, atlas, floor, mat, building_id, styles, bases, macro=None, columns=None):
         self.a = atlas
@@ -213,13 +224,13 @@ class Texturer:
                 hs = [world[0], world[1], world[2], world[3]]
                 lo, hi = min(hs), max(hs)
                 vv = [ty1 - 0.5 - (h - lo) / (hi - lo) * 255.0 for h in hs]
-                return [(tx0 + 0.5, vv[0]), (tx1 - 0.5, vv[1]), (tx1 - 0.5, vv[2]), (tx0 + 0.5, vv[3])]
+                return wall_order([(tx0 + 0.5, vv[0]), (tx1 - 0.5, vv[1]), (tx1 - 0.5, vv[2]), (tx0 + 0.5, vv[3])])
             vmax = max(v)
             v = [vmax - (vmax - y) * 255.0 / span for y in v]
         v = [float(np.clip(y, 0.5, self.size - 0.5)) for y in v]
         if max(v) - min(v) > 255.5:
             v = [max(min(y, min(v) + 255.5), min(v)) for y in v]
-        return [(x0 + 0.5, v[0]), (x1 - 0.5, v[1]), (x1 - 0.5, v[2]), (x0 + 0.5, v[3])]
+        return wall_order([(x0 + 0.5, v[0]), (x1 - 0.5, v[1]), (x1 - 0.5, v[2]), (x0 + 0.5, v[3])])
 
     def make_splits(self, room, lx, lz):
         s = room.sectors[lx][lz]

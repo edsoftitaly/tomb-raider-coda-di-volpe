@@ -131,6 +131,26 @@ function CDV.Swing(name, axis, by, frames)
     CDV.After(1, step)
 end
 
+-- Classic keyhole behaviour without a floor trigger: Lara in front of the lock plate, facing it,
+-- presses Action while holding the key -> the inventory opens on that key (using it there runs the
+-- CDV.Use entry of the lock). The lock's position is read at run time, so it can be moved in the editor.
+function CDV.KeyPrompt(lockName, item, doneId)
+    if doneId and CDV.Done(doneId) then return end
+    if not CDV.Has(item) then return end
+    if not TEN.Input.IsKeyHit(TEN.Input.ActionID.ACTION) then return end
+    local lock = CDV.M(lockName)
+    if lock == nil or not lock:GetValid() then return end
+    local lp, p = lock:GetPosition(), Lara:GetPosition()
+    local a = math.rad(lock:GetRotation().y)
+    local dx, dz = p.x - lp.x, p.z - lp.z
+    local side = dx * math.cos(a) - dz * math.sin(a)
+    local ahead = dx * math.sin(a) + dz * math.cos(a)
+    local dyaw = math.abs(((Lara:GetRotation().y - lock:GetRotation().y) + 540) % 360 - 180)
+    if math.abs(side) < 450 and ahead > -350 and ahead < 520 and math.abs(p.y - lp.y) < 400 and dyaw < 50 then
+        TEN.Inventory.SetFocusedItem(item)
+    end
+end
+
 function CDV.Has(item)
     return TEN.Inventory.GetItemCount(item) > 0
 end
@@ -267,7 +287,12 @@ function CDV.UseItem()
     local S = St()
     local item = TEN.Inventory.GetUsedItem()
     for _, u in ipairs(uses) do
-        if item == u.item and not S.done["use_" .. u.id] and CDV.Near(u.x, u.y, u.z, u.r, u.dy) then
+        local ux, uy, uz = u.x, u.y, u.z
+        if u.near then
+            local m = CDV.M(u.near)
+            if m ~= nil and m:GetValid() then local q = m:GetPosition(); ux, uy, uz = q.x, q.y, q.z end
+        end
+        if item == u.item and not S.done["use_" .. u.id] and CDV.Near(ux, uy, uz, u.r, u.dy) then
             if u.need == nil or u.need() then
                 TEN.Inventory.ClearUsedItem()
                 S.done["use_" .. u.id] = true
@@ -399,9 +424,11 @@ class LuaLevel:
             items.append("fn = function()\n        %s\n    end" % fn.strip().replace("\n", "\n        "))
         self.add("CDV.Zone({ %s })" % ", ".join(items))
 
-    def use(self, uid, item, p, r=1536, dy=1536, consume=True, text=None, fn=None, need=None, fail=None):
+    def use(self, uid, item, p, r=1536, dy=1536, consume=True, text=None, fn=None, need=None, fail=None, near=None):
         items = ["id = %s" % lua_str(uid), "item = %s" % item, pos(p), "r = %d" % r, "dy = %d" % dy,
                  "consume = %s" % ("true" if consume else "false")]
+        if near:
+            items.append("near = %s" % lua_str(near))
         if text:
             items.append("text = %s" % lua_str(text))
         if need:

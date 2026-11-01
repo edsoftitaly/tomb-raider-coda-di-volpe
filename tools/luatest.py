@@ -50,7 +50,11 @@ local function newMov(name)
     function m:SetRoomNumber() end
     function m:SetRotation() end
     function m:GetRotation() return { x = 0, y = 0, z = 0 } end
-    function m:GetPosition() return { x = 0, y = 0, z = 0 } end
+    function m:GetPosition()
+        local q = names[self.name]
+        if type(q) == "table" then return { x = q.x, y = q.y, z = q.z } end
+        return { x = 0, y = 0, z = 0 }
+    end
     function m:SetAnim(a) log("anim", tostring(a)) end
     function m:SetState() end
     function m:SetAir(v) log("air", tostring(v)) end
@@ -62,6 +66,8 @@ TEN.Objects.GetStaticByName = function(n) local st = { r = { x = 0, y = 0, z = 0
     function st:SetRotation(r) self.r = r; log("swing", n) end
     return st end
 TEN.Rotation = TEN.Rotation or function(x, y, z) return { x = x, y = y, z = z } end
+TEN.Input = TEN.Input or { ActionID = { ACTION = 1 }, IsKeyHit = function() return false end }
+TEN.Inventory.SetFocusedItem = function(i) log("focus", tostring(i)) end
 TEN.Objects.MoveableStatus = { INACTIVE = "INACTIVE", ACTIVE = "ACTIVE", DEACTIVATED = "DEACTIVATED", INVISIBLE = "INVISIBLE" }
 TEN.Objects.GetMoveableByName = function(name)
     if objs[name] == nil then error("unknown moveable name " .. tostring(name)) end
@@ -101,7 +107,8 @@ class Harness:
         for mod, code in (preload or {}).items():
             self.lua.execute("package.preload[%r] = function() %s end" % (mod, code))
         self.events = []
-        tbl = self.lua.table_from({n: True for n in names})
+        tbl = self.lua.table_from({n: (self.lua.table_from({"x": v[0], "y": -v[1], "z": v[2]}) if isinstance(v, list) else True)
+                                   for n, v in names.items()})
         self.H = self.lua.execute(MOCK, tbl, lambda kind, val: self.events.append((kind, val)))
         src = open(script_path, encoding="utf-8").read()
         self.captured = {}

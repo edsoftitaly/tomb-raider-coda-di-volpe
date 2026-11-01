@@ -75,28 +75,125 @@ def house_rect(world):
     return bid, best
 
 
+G_STREET = 1280                  # street level (units): the house interiors hang on it
+
+# v7.1: a straight town plan ("a croce") instead of the rasterised map: every street runs along x or z,
+# every building is a rectangle, so no staircase of obliquely cut blocks. Real places kept: the house,
+# its two neighbours, the street front opposite (pizzeria), the courtyard inside the southern block,
+# the crossing with Via Stesicoro at the west end of the house block. The map border is a ring of tall
+# buildings, and every street ends against a facade: from the street and from the roofs the town never
+# just stops.
+STREETS_X = [(19, 22)]                   # Via Gaspare Amodeo (z range), runs along x
+STREETS_Z = [(15, 18), (70, 73)]         # Via Stesicoro and the next cross street (x range), along z
+STREET_N = (42, 45)                      # the street behind the house block, along x
+PAVE = 2                                 # pavement width on each side (sectors)
+
+
+def town_plan(world):
+    """Returns (building cells -> block id map, heights in metres per block)."""
+    nx, nz = world.nx, world.nz
+    road = np.zeros((nx, nz), bool)
+    pave = np.zeros((nx, nz), bool)
+    for z0, z1 in STREETS_X + [STREET_N]:
+        road[2:nx - 2, z0:z1 + 1] = True
+        pave[2:nx - 2, z0 - PAVE:z1 + PAVE + 1] = True
+    for x0, x1 in STREETS_Z:
+        road[x0:x1 + 1, 2:nz - 2] = True
+        pave[x0 - PAVE:x1 + PAVE + 1, 2:nz - 2] = True
+    pave &= ~road
+    return road, pave
+
+
 def prepare(world):
-    bid, (x0, z0) = house_rect(world)
-    street = int(np.median(world.floor[x0:x0 + W_COLS, z0 - 1].mean(axis=1)) // 64 * 64)
-    roof = street + H0 + H1 + H2
-    mask = world.building_id == bid
-    world.floor[mask] = roof
-    # Town ground: pavements (brick pavers) instead of dirt wherever a street or a building is near.
-    from scipy import ndimage
-    town = ndimage.binary_dilation((world.building_id >= 0) | (world.mat == "asfalto"), iterations=3)
-    soft = (world.building_id < 0) & (world.mat != "asfalto") & town & ~world.water
-    world.mat[soft] = "marciapiede"
+    import zlib
+    G = G_STREET
+    nx, nz = world.nx, world.nz
+    road, pave = town_plan(world)
+    open_ = road | pave
+    yard_x0, yard_x1, yard_z0, yard_z1 = YARD
+    open_[yard_x0:yard_x1 + 1, yard_z0:yard_z1 + 1] = True
+    for z in range(PASSAGE_Z[0], PASSAGE_Z[1] + 1):
+        open_[PASSAGE_X, z] = True
+    world.water[:, :] = False
+    world.floor[:, :, :] = G
+    world.floor_terrain[:, :, :] = G
+    world.building_id[:, :] = -1
+    world.buildings = []
+    # Blocks: everything not open is built; split into buildings 4..9 sectors long along the street
+    # they face, one depth band of 5..7 sectors, heights 2..5 storeys; the outer ring is 5 storeys.
+    fixed = [("casa", 25, 32, 25, 29, 9.5), ("rosa", 33, 36, 25, 30, 9.5), ("arancio", 37, 45, 25, 31, 9.5)]
+    taken = np.zeros((nx, nz), bool)
+
+    def add(name, x0, x1, z0, z1, h):
+        cells = np.zeros((nx, nz), bool)
+        cells[x0:x1 + 1, z0:z1 + 1] = True
+        cells &= ~open_ & ~taken
+        if not cells.any():
+            return None
+        bid = len(world.buildings)
+        world.building_id[cells] = bid
+        taken[cells] = True
+        top = G + int(round(h * 512 / 256.0)) * 256
+        world.floor[cells] = top
+        world.buildings.append({"id": name, "tags": {"building": "yes"}, "sectors": int(cells.sum()),
+                                "ground_m": G / 512.0, "base_m": G / 512.0, "roof_m": top / 512.0})
+        return bid
+
+    for f in fixed:
+        add(*f)
+    heights = (6.6, 9.5, 9.5, 12.6, 12.6, 15.7)
+    # outer ring first (tall), then the rest in strips
+    ring = np.zeros((nx, nz), bool)
+    ring[:2, :] = ring[-2:, :] = True
+    ring[:, :2] = ring[:, -2:] = True
+    k = 0
+    for x in range(0, nx, 6):
+        add("anello_s%d" % k, x, min(nx - 1, x + 5), 0, 1, 15.7); add("anello_n%d" % k, x, min(nx - 1, x + 5), nz - 2, nz - 1, 15.7)
+        k += 1
+    for z in range(2, nz - 2, 6):
+        add("anello_w%d" % k, 0, 1, z, min(nz - 3, z + 5), 15.7); add("anello_e%d" % k, nx - 2, nx - 1, z, min(nz - 3, z + 5), 15.7)
+        k += 1
+    # remaining built cells: split into rectangles by scanning x strips of the blocks
+    free = ~open_ & ~taken
+    ids = 0
+    for z0 in range(0, nz):
+        for x0 in range(0, nx):
+            if not free[x0, z0]:
+                continue
+            h_seed = zlib.crc32(b"%d,%d" % (x0, z0))
+            w = 4 + h_seed % 6
+            x1 = x0
+            while x1 + 1 < nx and free[x1 + 1, z0] and x1 - x0 + 1 < w:
+                x1 += 1
+            d = 5 + (h_seed >> 4) % 3
+            z1 = z0
+            while z1 + 1 < nz and z1 - z0 + 1 < d and free[x0:x1 + 1, z1 + 1].all():
+                z1 += 1
+            add("palazzina_%d" % ids, x0, x1, z0, z1, heights[(h_seed >> 8) % len(heights)])
+            ids += 1
+            free[x0:x1 + 1, z0:z1 + 1] = False
+    # materials
+    world.mat[:, :] = "marciapiede"
+    world.mat[road] = "asfalto"
+    world.mat[world.building_id >= 0] = "terrazza"
+    world.mat[yard_x0:yard_x1 + 1, yard_z0:yard_z1 + 1] = "lastricato"
+    for z in range(PASSAGE_Z[0], PASSAGE_Z[1] + 1):
+        world.mat[PASSAGE_X, z] = "lastricato"
+    bid = int(world.building_id[25, 25])
+    x0, z0 = 25, 25
+    roof = G + H0 + H1 + H2
+    world.floor[world.building_id == bid] = roof
     world.buildings[bid]["roof_m"] = roof / 512.0
-    world.casa = dict(bid=bid, x0=x0, z0=z0, G=street, ROOF=roof)
-    courtyard(world, street)
-    street_fronts(world, street)
+    world.casa = dict(bid=bid, x0=x0, z0=z0, G=G, ROOF=roof)
+    world.cortile = dict(cells=[(x, z) for x in range(yard_x0, yard_x1 + 1) for z in range(yard_z0, yard_z1 + 1)])
+    street_fronts(world, G)
 
 
 # The courtyard inside the block south of the street (open on the satellite view, x 37-48, z 5-10), reached
 # through an archway cut in the building at x = PASSAGE_X; an iron gate on the pavement side, opened by
 # the shutter winch with the crank Lara finds in the house.
 PASSAGE_X = 43
-PASSAGE_Z = (11, 15)
+PASSAGE_Z = (11, 16)
 YARD = (37, 48, 5, 10)
 
 
@@ -124,7 +221,7 @@ STREET_FRONTS = [
          pattern=["fac_arancio_porta", "fac_arancio_finestra", "fac_arancio_finestra", "fac_arancio_finestra",
                   "fac_arancio_porta", "fac_arancio_finestra", "fac_arancio_finestra"],
          balconies=[("BALCONE_ARANCIO", 3.2, (1, 2, 5, 6)), ("BALCONE_ARANCIO", 6.2, (1, 2, 5, 6))]),
-    dict(name="bianco", side="-z", x=(10, 19), h=6.9, lato="fac_lato_bianco",
+    dict(name="bianco", side="-z", x=(3, 12), h=6.9, lato="fac_lato_bianco",
          pattern=["fac_bianco_finestra", "fac_bianco_finestra", "fac_bianco_porta"]),
     dict(name="bianco_s", side="+z", x=(22, 25), h=6.9, lato="fac_lato_bianco",
          pattern=["fac_bianco_finestra", "fac_bianco_porta", "fac_bianco_finestra"]),
@@ -365,12 +462,15 @@ def fronts_dressing(ctx):
             k.prop("ANTENNA_TV", x + 1.5, z + 1.0, rot=0.0, h=f["top"])
     # warm street lights every 14 m on both pavements, and a cold moonlight
     room = k.room_at(c["x0"], c["z0"] - 3)
+    # (v7.2: staggered, one pool of light every 7 m along the street, dimmer and shorter: the overlapping
+    # lamps of v7.1 burned the facades white)
     for x in range(4, w.nx - 4, 7):
-        for z in (c["z0"] - 1, c["z0"] - 8):
-            if 0 <= z < w.nz and w.building_id[x, z] < 0:
-                r = k.room_at(x, z)
-                pos = ((x + 0.5 - r.x) * 1024, G + 2600 - r.y, (z + 0.5 - r.z) * 1024)
-                ctx.level.add_light(r, 0, pos, color=(1.0, 0.78, 0.5), intensity=1.1, inner=2.5, outer=9.0)
+        for z, dx in ((c["z0"] - 1, 0), (c["z0"] - 8, 3)):
+            xx = x + dx
+            if 0 <= z < w.nz and xx < w.nx and w.building_id[xx, z] < 0:
+                r = k.room_at(xx, z)
+                pos = ((xx + 0.5 - r.x) * 1024, G + 2600 - r.y, (z + 0.5 - r.z) * 1024)
+                ctx.level.add_light(r, 0, pos, color=(1.0, 0.84, 0.62), intensity=0.42, inner=0.8, outer=4.5)
     del room
 
 
@@ -408,7 +508,7 @@ def build(ctx):
     # windows carry the light.
     for rm in ctx.level.rooms:
         if rm.name.startswith("T_"):
-            rm.ambient = (0.34, 0.33, 0.42)
+            rm.ambient = (0.27, 0.28, 0.37)
     R, roof_room = house(ctx)
     house_dressing(ctx, R)
     street(ctx)
@@ -455,7 +555,8 @@ def build(ctx):
              "Il tombarolo aveva la chiave del ripostiglio. Il diario pero' non c'e': l'ha preso il loro capo.")
     lua.zone("portone", at("INGRESSO", 2, 0), r=1100, dy=700, once=True,
              text="Il portone e' sbarrato da fuori. Resta la botola del ripostiglio, sul tetto.")
-    lua.use("chiave_ripostiglio", "ID.KEY_ITEM1", at("CORRIDOIO", *LOCK), r=700, dy=600,
+    lua.add('CDV.Loop(function() CDV.KeyPrompt("serratura_ripostiglio", ID.KEY_ITEM1, "use_chiave_ripostiglio") end)')
+    lua.use("chiave_ripostiglio", "ID.KEY_ITEM1", at("CORRIDOIO", *LOCK), r=900, dy=600, near="serratura_ripostiglio",
             text="La serratura scatta: il ripostiglio e' aperto.",
             fn='CDV.InsertKey("serratura_ripostiglio", "porta_ripostiglio", "anta_ripostiglio")')
     lua.zone("ripostiglio_chiuso", at("CORRIDOIO", *LOCK), r=900, dy=700, once=False, secs=4,
@@ -503,8 +604,7 @@ def build(ctx):
     lua.zone("via", k.lua_pos(*street_c, ctx.ground(*street_c)), r=4000, dy=6000,
              fn='CDV.Enable("cane1")\nCDV.Enable("cane2")\nCDV.Enable("palo")',
              text="I cani della banda! E il palo e' scappato nel cortile, dietro il cancello.")
-    jx, jz = w.sector_of(38.124132, 15.059829)
-    ex, ez = k.spot(jx, jz)
+    ex, ez = (STREETS_Z[0][0] + STREETS_Z[0][1]) // 2, (STREETS_X[0][0] + STREETS_X[0][1]) // 2   # Stesicoro crossing
     lua.zone("fine", k.lua_pos(ex, ez, ctx.ground(ex, ez)), r=2600, dy=4000,
              need='CDV.Dead("palo")', fn="CDV.End(2, 1)",
              text="Il ladro ha preso Via Stesicoro, verso la piazza e il castello.")

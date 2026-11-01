@@ -8,7 +8,7 @@ their floor/ceiling at a mid height plus extra floor/ceiling splits every 2 m.
 import numpy as np
 
 import prj2
-from texturing import DIRS, h32
+from texturing import DIRS, h32, wall_order
 
 M = 512
 SEG = 1024
@@ -41,7 +41,7 @@ class Atlases:
             lo, hi = min(world), max(world)
             span = max(hi - lo, 1e-6)
             v = [y1 - 0.5 - (h - lo) / span * min(255.0, span * PX) for h in world]
-            return i, [(x0 + 0.5, v[0]), (x1 - 0.5, v[1]), (x1 - 0.5, v[2]), (x0 + 0.5, v[3])]
+            return i, wall_order([(x0 + 0.5, v[0]), (x1 - 0.5, v[1]), (x1 - 0.5, v[2]), (x0 + 0.5, v[3])])
         if ref is None:
             lo = min(world[2], world[3])
             ref = lo - (lo % 14.0)
@@ -51,7 +51,7 @@ class Atlases:
             span = max(v) - min(v)
             v = [vmax - (vmax - y) * 255.0 / span for y in v]
         v = [float(np.clip(y, 0.5, SIZE - 0.5)) for y in v]
-        return i, [(x0 + 0.5, v[0]), (x1 - 0.5, v[1]), (x1 - 0.5, v[2]), (x0 + 0.5, v[3])]
+        return i, wall_order([(x0 + 0.5, v[0]), (x1 - 0.5, v[1]), (x1 - 0.5, v[2]), (x0 + 0.5, v[3])])
 
 
 def floor_face_coords(f, split, coords):
