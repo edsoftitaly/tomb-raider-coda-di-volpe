@@ -116,3 +116,12 @@ Coda di Volpe - decorazioni
 244 CANCELLO: Anta di cancello in ferro (2 x 2.4 m), cardine nell'origine, lungo +x
 245 ARGANO: Argano manuale della saracinesca: cassetta zincata a muro, innesto per la manovella e tubo verso il rullo (verso +z, base a terra)
 233 PERGOLATO: Pergolato in legno con stuoia di canne, 4 x 3 m
+246 SCALA_RAMPA: Rampa di 6 gradini in marmo su un settore (2 x 2 m, sale 1 m verso +x, y = 0 in cima)
+247 SCALA_RINGHIERA: Ringhiera inclinata di una rampa (2 m, sale 1 m verso +x, base a y = 0 nel mezzo)
+248 SCALA_PANNELLO_RAMPA: Muretto intonacato sotto una rampa sospesa: da terra al sottorampa (0.5 -> 1.5 m lungo +x)
+249 SCALA_PANNELLO: Muretto intonacato sotto il pianerottolo sospeso (2 m x 1.8 m)
+250 CASA_LETTINO: Letto singolo (cameretta), testiera a -x
+251 CASA_WC: Water e lavabo del bagno di servizio, contro il muro a -x
+252 CASA_LAVATRICE: Lavatrice con oblo', fronte verso +x
+253 SCALA_PIANEROTTOLO: Lastra di marmo del pianerottolo (2 x 2 m), sopra il pavimento della stanza
+254 CASA_PORTAFINESTRA: Portafinestra sul balcone vista da dentro, di notte, con tende

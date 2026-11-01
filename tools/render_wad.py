@@ -19,11 +19,14 @@ def load(path):
                 data = dict(wadtool._chunks(p2, q, len(p2)))[b"W2TxtData"]
                 a = np.frombuffer(data, np.uint8).reshape(h, w, 4)[..., [2, 1, 0, 3]]
                 pages.append(a)
-        if cid == b"W2Statics":
+        if cid in (b"W2Statics", b"W2Moveables"):
             for c2, p2 in wadtool._chunks(p, 0, len(p)):
                 sid, q = wadtool._leb_u(p2, 0)
-                fl, q = wadtool._leb_u(p2, q)
+                if cid == b"W2Statics":
+                    fl, q = wadtool._leb_u(p2, q)
                 ch = dict(wadtool._chunks(p2, q, len(p2)))
+                if b"W2Mesh" not in ch:
+                    continue
                 mesh = dict(wadtool._chunks(ch[b"W2Mesh"], 0, len(ch[b"W2Mesh"])))
                 V = [struct.unpack_from("<3f", pp, 0) for _, pp in wadtool._chunks(mesh[b"W2VrtPos"], 0, len(mesh[b"W2VrtPos"]))]
                 polys = []
@@ -50,6 +53,9 @@ def main():
     names = []
     for sid in ids:
         V, polys = stat[sid]
+        ymin = min(v[1] for v in V)
+        if ymin < 0:       # the viewer has a ground plane at y = 0: lift meshes that hang below their origin
+            V = [(v[0], v[1] - ymin, v[2]) for v in V]
         pos, uv, tix = [], [], []
         for ids_, page, uvs in polys:
             ps = [np.array(V[i]) / 512.0 for i in ids_]
@@ -64,10 +70,14 @@ def main():
                    "tix": [tix[i] for i in order], "npages": len(pages)}, open(os.path.join(D, "mesh.json"), "w"))
         P = np.array(V) / 512.0
         lo, hi = P.min(0), P.max(0)
-        L, H = hi[2] - lo[2], hi[1]
+        c = (lo + hi) / 2
+        L, H = max(hi[2] - lo[2], hi[0] - lo[0]), hi[1] - lo[1]
         d = max(L, H * 1.6) * 1.3
-        views = {"w%d_a" % sid: [d * 0.7, H * 0.8, d * 0.7, 0, H * 0.4, 0], "w%d_b" % sid: [-d * 0.75, H * 0.8, -d * 0.7, 0, H * 0.4, 0],
-                 "w%d_c" % sid: [-d * 0.6, H * 0.9, d * 0.8, 0, H * 0.4, 0], "w%d_d" % sid: [0.3, H * 0.75, d * 0.9, 0, H * 0.5, 0]}
+        cy = c[1]
+        views = {"w%d_a" % sid: [c[0] + d * 0.7, cy + H * 0.8 + 0.3, c[2] + d * 0.7, c[0], cy, c[2]],
+                 "w%d_b" % sid: [c[0] - d * 0.75, cy + H * 0.8 + 0.3, c[2] - d * 0.7, c[0], cy, c[2]],
+                 "w%d_c" % sid: [c[0] - d * 0.6, cy - H * 0.9 - 0.3, c[2] + d * 0.8, c[0], cy, c[2]],
+                 "w%d_d" % sid: [c[0] + 0.3, cy + H * 0.3, c[2] + d * 0.9, c[0], cy, c[2]]}
         subprocess.run(["node", "shot.js", json.dumps(views)], cwd=D, capture_output=True, text=True)
         for n in views:
             os.replace(os.path.join(D, n + ".png"), out + n + ".png")

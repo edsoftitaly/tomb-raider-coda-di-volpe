@@ -380,6 +380,22 @@ local function TestHud()
             txt = txt .. string.format("\n%s rel x %d y %d z %d  rot %d", t.watch, math.floor(rx), p.y - q.y, math.floor(rz), math.floor(m:GetRotation().y))
         end
     end
+    -- probe = {{x, y, z[, room number]}, ...}: engine floor/ceiling heights there (TEN.Collision.Probe, bridges included);
+    -- slots = {"BRIDGE_TILT2", ...}: how many moveables of those slots exist in the level.
+    for i, q in ipairs(t.probe or {}) do
+        local ok, pr
+        if q[4] then ok, pr = pcall(TEN.Collision.Probe, TEN.Vec3(q[1], q[2], q[3]), q[4])
+        else ok, pr = pcall(TEN.Collision.Probe, TEN.Vec3(q[1], q[2], q[3])) end
+        if ok and pr ~= nil then
+            txt = txt .. string.format("\nP%d floor %s ceil %s %s", i, tostring(pr:GetFloorHeight()), tostring(pr:GetCeilingHeight()), pr:GetRoomName())
+        else
+            txt = txt .. string.format("\nP%d probe error", i)
+        end
+    end
+    for _, s in ipairs(t.slots or {}) do
+        local ok, l = pcall(TEN.Objects.GetMoveablesBySlot, TEN.Objects.ObjID[s])
+        txt = txt .. string.format("\n%s: %s", s, ok and tostring(#l) or "error")
+    end
     if hudStr == nil then
         local x, y = TEN.Util.PercentToScreen(2, 4)
         hudStr = TEN.Strings.DisplayString(txt, TEN.Vec2(x, y), 0.7, TEN.Color(255, 255, 0), false, {})

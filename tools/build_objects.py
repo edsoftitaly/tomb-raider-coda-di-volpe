@@ -4,6 +4,10 @@
   Conchiglia del canto, Sigillo della tonnara, Astro di Castore, Astro di Polluce.
 - KEY_ITEM1 (548) Chiave del ripostiglio, KEY_HOLE1 (700) its lock plate on the wall.
 - DOOR_TYPE1 (850): a painted wooden house door, with the animations of TR4 DOOR_TYPE3 (852).
+- BRIDGE_FLAT (1340): a marble landing slab, one sector; BRIDGE_TILT2 (1342): a one-sector flight of six
+  steps rising 1 m toward +x (TEN generic_bridge.cpp: collision = keyframe box top, plus 2 clicks of tilt
+  per sector for TILT2; the ceiling under a tilted bridge is 1 click below its plane). They carry the
+  house stair over the stair well, where a sector can only have one floor.
 
 Each pickup is one mesh with one bone and a one-frame animation built from the template of the old
 items (identity rotation, keyframe bounding box = the mesh). The door keeps 852's bone and animations
@@ -174,6 +178,10 @@ def build_textures():
                       ("it_serratura", lock_plate()), ("it_porta", door_leaf()),
                       ("it_legno_bordo", solid((214, 206, 190), 18, 0.1))):
         pk.put(name, img)
+    # the stair bridges wear the house's own marble and plaster (copied from the decoration pages)
+    for src, dst in (("tn_marmo", "it_marmo"), ("ca_intonaco", "it_intonaco")):
+        pg, x0, y0, x1, y1 = tex.REG[src]
+        pk.put(dst, tex.pages[pg][y0:y1, x0:x1].copy())
     return first
 
 
@@ -378,6 +386,29 @@ def anim_for(mesh, ani):
     return ani
 
 
+def anim_box(lo, hi, ani):
+    """Keyframe box set by hand (bridges: the box top is the walking surface, the box spans the sector).
+
+    lo/hi are the box corners, Y up. Tomb Editor compiles a keyframe box as Y1 = -Minimum.Y, Y2 = -Maximum.Y
+    (TombLib Compilers/TombEngine/Wad.cs), i.e. a wad2 keyframe box keeps its TOP in "Minimum.Y": the Y values
+    are written swapped. (Measured in game with TEN.Collision.Probe before this was done: the bridges'
+    walking surface was their bottom.)"""
+    ani = _patch_vec(ani, b"W2KfOffs", (0.0, 0.0, 0.0))
+    ani = _patch_vec(ani, b"W2BBMin", (float(lo[0]), float(hi[1]), float(lo[2])))
+    ani = _patch_vec(ani, b"W2BBMax", (float(hi[0]), float(lo[1]), float(hi[2])))
+    ani = _patch_vec(ani, b"W2KfA", (0.0, 0.0, 0.0))
+    return ani
+
+
+def bridges():
+    """(id, name, mesh, box lo, box hi) for the stair bridges, units of 512 per metre, Y up."""
+    from decor import scala as SC
+    fl = SC.flight_bridge("it_marmo", "it_intonaco")
+    la = SC.landing("it_marmo", "it_intonaco", thick=0.2, hw=0.99)
+    return [(1340, "Pianerottolo (BRIDGE_FLAT)", la, (-512, -0.2 * M, -512), (512, 0, 512)),
+            (1342, "Rampa (BRIDGE_TILT2)", fl, (-512, -1.5 * M, -512), (512, 0, 512))]
+
+
 def remap_pages(mesh, first):
     mesh.f = [(idx, px, page - first, blend, dbl) for idx, px, page, blend, dbl in mesh.f]
     return mesh
@@ -405,6 +436,10 @@ def main():
         mesh = remap_pages(porta(), first)
         mc, _ = W.mesh_chunk(mesh, "Porta di casa")
         movs.append(moveable(850, mc, rest))
+    for mid, name, mesh, lo, hi in bridges():
+        mesh = remap_pages(mesh, first)
+        mc, _ = W.mesh_chunk(mesh, name)
+        movs.append(moveable(mid, mc, [wadtool._chunk(b"W2Bone2", bone), wadtool._chunk(b"W2Ani2", anim_box(lo, hi, ani))]))
     pages = tex.pages[first:]
     body = W.c_int("W2SuggestedGameVersion", W.TOMB_ENGINE) + W.c_int("W2SoundSystem", W.SOUND_XML)
     body += W.parent("W2Textures", *[W.texture_chunk(p, "oggetti_%d.png" % i) for i, p in enumerate(pages)])
@@ -412,7 +447,7 @@ def main():
     body += W.chunk("W2Moveables", b"".join(movs) + b"\x00")
     body += W.parent("W2Statics")
     body += W.parent("W2Metadata", W.parent("W2Timestamp", raw=b"".join(W.leb(v) for v in (2026, 10, 31, 9, 0, 0))),
-                     W.c_str("W2UserNotes", "Coda di Volpe - oggetti, chiave e serratura del ripostiglio, porta di casa"))
+                     W.c_str("W2UserNotes", "Coda di Volpe - oggetti, chiave e serratura del ripostiglio, porta di casa, scala (ponti TEN)"))
     body += b"\x00"
     import zlib
     data = zlib.compress(body, 9)

@@ -69,10 +69,11 @@ def read_rooms(path):
 
         def objs(c3, s3):
             r.leb()
-            if c3 == b"TeMovTen2":
-                pos = r.f(3); rot = r.f(3); r.leb(); t = r.u32(); r.i16(); r.raw(3); r.f(3); r.ustr()
+            if c3 in (b"TeMovTen2", b"TeMovTn3"):
+                pos = r.f(3); rot = r.f(3); r.leb(); t = r.u32()
                 objects.append({"room": rm, "type": t, "pos": pos, "rot": rot[0]})
-            elif c3 == b"TeStaTen2":
+                r.raw(s3 - (r.s.tell() - start[0]))
+            elif c3 in (b"TeStaTen2", b"TeStaTn3"):
                 pos = r.f(3); rot = r.f(4); r.leb(); t = r.u32()
                 statics.append({"room": rm, "type": t, "pos": pos, "rot": rot[0], "scale": rot[3]})
                 r.raw(s3 - (r.s.tell() - start[0]))
@@ -110,6 +111,7 @@ def read_rooms(path):
         return True
     r.chunks(top, "file")
     read_rooms.statics = statics
+    read_rooms.objects = objects
     return rooms, objects
 
 
@@ -195,6 +197,18 @@ def add_statics(rooms, statics, keep, pos, uv, tix, out_dir):
             for a, b, c in [(0, 1, 2)] + ([(0, 2, 3)] if len(ps) == 4 else []):
                 tris.append(([ps[a], ps[b], ps[c]], [px[a], px[b], px[c]], page))
         lib[sid] = tris
+    # the stair bridges (TEN moveables in CdV_Oggetti) drawn with the decoration's marble and plaster
+    from decor import scala
+    for mid, mesh in ((1340, scala.landing("tn_marmo", "ca_intonaco", thick=0.2, hw=0.99)),
+                      (1342, scala.flight_bridge("tn_marmo", "ca_intonaco"))):
+        tris = []
+        for idx, px, page, blend, dbl in mesh.f:
+            ps = [np.array(mesh.v[i], float) for i in idx]
+            for a, b, c in [(0, 1, 2)] + ([(0, 2, 3)] if len(ps) == 4 else []):
+                tris.append(([ps[a], ps[b], ps[c]], [px[a], px[b], px[c]], page))
+        lib[("mov", mid)] = tris
+    statics = list(statics) + [dict(o, type=("mov", o["type"]), scale=1.0) for o in getattr(read_rooms, "objects", [])
+                               if o["type"] in (1340, 1342)]
     for st in statics:
         if st["type"] not in lib or (keep and not any(st["room"]["name"].startswith(p) for p in keep)):
             continue

@@ -32,6 +32,7 @@ BIGMEDI, SMALLMEDI, FLARE_ITEM = 978, 979, 983
 LARA_START_POS, AI_FOLLOW = 1048, 1044
 FISH_EMITTER, FIREFLY_EMITTER, BATS_EMITTER, RATS_EMITTER = 114, 1089, 132, 133
 EARTHQUAKE = 1024
+BRIDGE_FLAT, BRIDGE_TILT1, BRIDGE_TILT2 = 1340, 1341, 1342
 
 OBJ_NAMES = {v: k for k, v in list(globals().items()) if k.isupper() and isinstance(v, int)}
 
@@ -225,9 +226,10 @@ class Kit:
                     if s.wall:
                         continue
                     rot = walls.rot_for(room.x + lx, room.z + lz)
-                    if s.tex is None or prj2.F_FLOOR not in s.tex:
+                    hidden = s.invisible or ()
+                    if prj2.F_FLOOR not in hidden and (s.tex is None or prj2.F_FLOOR not in s.tex):
                         walls.set_floor(s, self.atlases, it.floor_tex, rot)
-                    if s.tex is None or prj2.F_CEILING not in s.tex:
+                    if prj2.F_CEILING not in hidden and (s.tex is None or prj2.F_CEILING not in s.tex):
                         walls.set_ceiling(s, self.atlases, it.ceil_tex, rot)
             self.texture_steps(it)
             col = it.wall_col
@@ -249,6 +251,8 @@ class Kit:
                     top = (s.floor[oi[0]], s.floor[oi[1]])
                     bot = (o.floor[pi[0]], o.floor[pi[1]])
                     if top[0] <= bot[0] and top[1] <= bot[1]:
+                        continue
+                    if s.invisible and prj2.F_WALL_QA[d] in s.invisible:
                         continue
                     hs = [(v + room.y) / 512.0 for v in (top[0], top[1], bot[1], bot[0])]
                     ti, c = self.atlases.vertical(it.wall_col, hs)
@@ -289,6 +293,12 @@ class Kit:
             h_abs = up_room.y + int(np.mean(us.floor))
             ls.ceil = [h_abs - lo_room.y] * 4
             us.floor = [h_abs - up_room.y] * 4
+            if opacity == 0:
+                # open portal: the engine draws no face there; keep previews and the editor honest too
+                us.set_invisible(prj2.F_FLOOR)
+                us.set_invisible(prj2.F_FLOOR_TRI2)
+                ls.set_invisible(prj2.F_CEILING)
+                ls.set_invisible(prj2.F_CEILING_TRI2)
         self.level.add_portal(lo_room, (x0 - lo_room.x, z0 - lo_room.z, x1 - lo_room.x, z1 - lo_room.z),
                               prj2.P_CEILING, up_room, opacity=opacity)
         self.level.add_portal(up_room, (x0 - up_room.x, z0 - up_room.z, x1 - up_room.x, z1 - up_room.z),
@@ -468,7 +478,8 @@ def validate(level, names):
                     problems.append("%s %s in a wall (%s)" % (OBJ_NAMES.get(t, t), name, rm.name))
                     continue
                 if t in (BAT, FLAME_EMITTER, FLAME_EMITTER2, FLAME_EMITTER3, FIREFLY_EMITTER, FISH_EMITTER,
-                         SHARK, LAGOON_WITCH, CROW, WRAITH1, WRAITH2, WRAITH3) or rm.room_type == 3:
+                         SHARK, LAGOON_WITCH, CROW, WRAITH1, WRAITH2, WRAITH3,
+                         BRIDGE_FLAT, BRIDGE_TILT1, BRIDGE_TILT2) or rm.room_type == 3:
                     continue
                 if abs(pos[1] - fl) > 300:
                     problems.append("%s %s floats/buried: y %d floor %d (%s)" % (OBJ_NAMES.get(t, t), name, pos[1], fl, rm.name))

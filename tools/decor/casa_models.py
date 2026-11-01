@@ -602,3 +602,92 @@ def pergolato():
         box(m, 0.1, 0.1, 3.2, "ca_rovere", x=x, y=2.5)
     fface(m, [V(-2.1, 2.62, -1.6), V(2.1, 2.62, -1.6), V(2.1, 2.62, 1.6), V(-2.1, 2.62, 1.6)], "ca_canne", UP, double=True, blend=1)
     return m, None
+
+
+# ------------------------------------------------------------------------------- v9: the real staircase
+# A U-shaped stair in a well, two flights per storey (see decor/scala.py and content_oliveri.house).
+from decor import scala as SC  # noqa: E402
+
+
+@furniture(246, "SCALA_RAMPA", "Rampa di 6 gradini in marmo su un settore (2 x 2 m, sale 1 m verso +x, y = 0 in cima)", coll=False)
+def scala_rampa():
+    return SC.flight_static("tn_marmo"), None
+
+
+@furniture(247, "SCALA_RINGHIERA", "Ringhiera inclinata di una rampa (2 m, sale 1 m verso +x, base a y = 0 nel mezzo)")
+def scala_ringhiera():
+    m = G.Mesh()
+    SC.railing(m, "tn_ringhiera", "ca_noce", rise=1.0)
+    return m, ((-1.0 * M, -0.5 * M, -0.06 * M), (1.0 * M, 1.5 * M, 0.06 * M))
+
+
+@furniture(248, "SCALA_PANNELLO_RAMPA", "Muretto intonacato sotto una rampa sospesa: da terra al sottorampa (0.5 -> 1.5 m lungo +x)")
+def scala_pannello_rampa():
+    m = G.Mesh()
+    for z, nz in ((-0.05, -1.0), (0.05, 1.0)):
+        fface(m, [V(-1.0, 0.0, z), V(1.0, 0.0, z), V(1.0, 1.5, z), V(-1.0, 0.5, z)], "ca_intonaco", V(0, 0, nz),
+              uv=[(0, 1), (1, 1), (1, 0.25), (0, 0.75)])
+    fface(m, [V(-1.0, 0.5, -0.05), V(1.0, 1.5, -0.05), V(1.0, 1.5, 0.05), V(-1.0, 0.5, 0.05)], "ca_intonaco", V(-0.45, 1, 0))
+    for x, nx in ((-1.0, -1.0), (1.0, 1.0)):
+        top = 0.5 if x < 0 else 1.5
+        fface(m, [V(x, 0.0, -0.05), V(x, 0.0, 0.05), V(x, top, 0.05), V(x, top, -0.05)], "ca_intonaco", V(nx, 0, 0))
+    return m, ((-1.0 * M, 0.0, -0.05 * M), (1.0 * M, 1.5 * M, 0.05 * M))
+
+
+@furniture(249, "SCALA_PANNELLO", "Muretto intonacato sotto il pianerottolo sospeso (2 m x 1.8 m)")
+def scala_pannello():
+    m = G.Mesh()
+    box(m, 2.0, 1.8, 0.1, "ca_intonaco")
+    return m, cb(2.0, 1.8, 0.1)
+
+
+@furniture(250, "CASA_LETTINO", "Letto singolo (cameretta), testiera a -x")
+def lettino():
+    m = G.Mesh()
+    box(m, 2.0, 0.32, 0.95, "ca_rovere", y=0.05)
+    box(m, 1.96, 0.16, 0.9, "ca_lenzuolo", y=0.37, top="ca_coperta")
+    box(m, 0.06, 0.9, 0.95, "ca_rovere", x=-1.0)
+    box(m, 0.4, 0.1, 0.55, "ca_lenzuolo", x=-0.72, y=0.53)
+    return m, cb(2.06, 0.55, 0.95)
+
+
+@furniture(251, "CASA_WC", "Water e lavabo del bagno di servizio, contro il muro a -x")
+def wc():
+    m = G.Mesh()
+    m.merge(G.cylinder(0.2, 0.17, 0.4, "ca_ceramica", n=8, base=(0.05, 0, -0.45)))
+    box(m, 0.18, 0.4, 0.42, "ca_ceramica", x=-0.2, y=0.4, z=-0.45)
+    m.merge(G.cylinder(0.07, 0.07, 0.8, "ca_ceramica", n=6, base=(-0.1, 0, 0.45)))
+    box(m, 0.45, 0.12, 0.55, "ca_ceramica", x=-0.05, y=0.8, z=0.45)
+    rectf(m, V(-0.27, 1.2, 0.7), V(0, 0, -1), UP, 0.5, 0.6, "ca_finestra_notte", V(1, 0, 0), tile=None)
+    return m, cb(0.6, 0.9, 1.4)
+
+
+@furniture(252, "CASA_LAVATRICE", "Lavatrice con oblo', fronte verso +x")
+def lavatrice():
+    m = G.Mesh()
+    box(m, 0.6, 0.85, 0.6, "ca_ceramica")
+    n = 12
+    for k in range(n):
+        a0, a1 = 2 * math.pi * k / n, 2 * math.pi * (k + 1) / n
+        fface(m, [V(0.305, 0.42, 0.0), V(0.305, 0.42 + 0.19 * math.sin(a0), 0.19 * math.cos(a0)),
+                  V(0.305, 0.42 + 0.19 * math.sin(a1), 0.19 * math.cos(a1))], "ca_tv", V(1, 0, 0),
+              uv=[(0.5, 0.5), (0.5 + 0.5 * math.cos(a0), 0.5 + 0.5 * math.sin(a0)), (0.5 + 0.5 * math.cos(a1), 0.5 + 0.5 * math.sin(a1))])
+    box(m, 0.02, 0.08, 0.5, "ca_grondaia", x=0.3, y=0.74)
+    return m, cb(0.6, 0.85, 0.6)
+
+
+@furniture(253, "SCALA_PIANEROTTOLO", "Lastra di marmo del pianerottolo (2 x 2 m), sopra il pavimento della stanza", coll=False)
+def pianerottolo():
+    m = G.Mesh()
+    fface(m, [V(-0.99, 0.008, -0.99), V(0.99, 0.008, -0.99), V(0.99, 0.008, 0.99), V(-0.99, 0.008, 0.99)], "tn_marmo", UP,
+          uv=[(0, 0), (1, 0), (1, 1), (0, 1)])
+    return m, None
+
+
+@furniture(254, "CASA_PORTAFINESTRA", "Portafinestra sul balcone vista da dentro, di notte, con tende", coll=False)
+def portafinestra():
+    m = G.Mesh()
+    rectf(m, V(0.02, 0.35, 0.6), V(0, 0, -1), UP, 1.2, 2.3, "ca_finestra_notte", V(1, 0, 0), tile=None)
+    for z in (-0.95, 0.6):
+        rectf(m, V(0.06, 0.2, z + 0.35), V(0, 0, -1), UP, 0.35, 2.6, "ca_tenda", V(1, 0, 0), tile=None)
+    return m, None

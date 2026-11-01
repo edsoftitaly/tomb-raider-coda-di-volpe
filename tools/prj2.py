@@ -149,6 +149,8 @@ class Sector:
         out += chunk(SEC_CEIL_SUB, leb(len(self.csplits)) + b"".join(leb(h) for sp in self.csplits for h in sp))
         if self.tex:
             for face, (coords, texture, mode) in self.tex.items():
+                if self.invisible and face in self.invisible:
+                    continue
                 us = [c[0] for c in coords]
                 vs = [c[1] for c in coords]
                 body = leb(face) + f32(*[v for c in coords for v in c])
