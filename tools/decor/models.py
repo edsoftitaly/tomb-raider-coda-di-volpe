@@ -534,32 +534,32 @@ def car(body, length, width, height, cabin=(0.45, 0.55, 0.0), van=False):
     return m
 
 
-@model(133, "AUTO_UTILITARIA_ROSSA", "Utilitaria, 3,6 m")
+# v8: replaced by decor/veicoli.py  @model(133, "AUTO_UTILITARIA_ROSSA", "Utilitaria, 3,6 m")
 def auto_a():
     return car("car_red", 3.6, 1.65, 1.5, cabin=(0.55, 0.5, -0.1)), cbox(1.65, 1.5, 3.6)
 
 
-@model(134, "AUTO_UTILITARIA_BIANCA", "Utilitaria bianca, 3,6 m")
+# v8: replaced by decor/veicoli.py  @model(134, "AUTO_UTILITARIA_BIANCA", "Utilitaria bianca, 3,6 m")
 def auto_b():
     return car("car_white", 3.6, 1.65, 1.5, cabin=(0.55, 0.5, -0.1)), cbox(1.65, 1.5, 3.6)
 
 
-@model(135, "AUTO_BERLINA_GRIGIA", "Berlina, 4,5 m")
+# v8: replaced by decor/veicoli.py  @model(135, "AUTO_BERLINA_GRIGIA", "Berlina, 4,5 m")
 def auto_c():
     return car("car_silver", 4.5, 1.8, 1.45, cabin=(0.5, 0.5, -0.15)), cbox(1.8, 1.45, 4.5)
 
 
-@model(136, "AUTO_SUV_BLU", "SUV compatto, 4,3 m")
+# v8: replaced by decor/veicoli.py  @model(136, "AUTO_SUV_BLU", "SUV compatto, 4,3 m")
 def auto_d():
     return car("car_blue", 4.3, 1.8, 1.65, cabin=(0.55, 0.5, -0.2)), cbox(1.8, 1.65, 4.3)
 
 
-@model(137, "FURGONE_BIANCO", "Furgone, 5 m")
+# v8: replaced by decor/veicoli.py  @model(137, "FURGONE_BIANCO", "Furgone, 5 m")
 def furgone():
     return car("car_white", 5.0, 1.95, 2.3, van=True), cbox(1.95, 2.3, 5.0)
 
 
-@model(138, "CAMPER", "Camper mansardato, 6,5 m")
+# v8: replaced by decor/veicoli.py  @model(138, "CAMPER", "Camper mansardato, 6,5 m")
 def camper():
     m = G.Mesh()
     m.merge(G.box(2.2, 2.6, 4.8, "camper", center=(0, 0.45, -0.75)))
@@ -572,12 +572,12 @@ def camper():
     return m, cbox(2.2, 3.1, 6.5)
 
 
-@model(139, "SCOOTER_ROSSO", "Scooter 125, 1,9 m")
+# v8: replaced by decor/veicoli.py  @model(139, "SCOOTER_ROSSO", "Scooter 125, 1,9 m")
 def scooter_a():
     return scooter("scooter_red"), cbox(0.7, 1.1, 1.9)
 
 
-@model(140, "SCOOTER_CREMA", "Scooter crema")
+# v8: replaced by decor/veicoli.py  @model(140, "SCOOTER_CREMA", "Scooter crema")
 def scooter_b():
     return scooter("scooter_cream"), cbox(0.7, 1.1, 1.9)
 
@@ -670,6 +670,36 @@ def ombrellone():
     m.merge(G.cylinder(0.025, 0.025, 2.3, "chair_alu", n=4))
     m.merge(G.disc(1.1, "umbrella_beach", center=(0, 2.1, 0), n=8, cone=0.35))
     return m, None
+
+
+# v8 (01/11/2026): the vehicles are lofted bodies with painted projections, see decor/veicoli.py
+VEICOLI = [
+    (133, "AUTO_UTILITARIA_ROSSA", "panda141_rossa", "Fiat Panda prima serie (141), rossa, 3,41 m"),
+    (134, "AUTO_UTILITARIA_BIANCA", "panda_bianca", "Fiat Panda terza serie, bianca, 3,65 m"),
+    (135, "AUTO_BERLINA_GRIGIA", "punto_grigia", "Fiat Grande Punto 5 porte, grigio metallizzato, 4,03 m"),
+    (136, "AUTO_SUV_BLU", "ypsilon_blu", "Lancia Ypsilon 5 porte, blu, 3,84 m"),
+    (137, "FURGONE_BIANCO", "daily_bianco", "Iveco Daily furgone, bianco, 5,48 m"),
+    (138, "CAMPER", "camper", "Camper profilato su Fiat Ducato, 6,99 m"),
+    (139, "SCOOTER_ROSSO", "vespa_rossa", "Vespa Primavera 125, rossa, sul cavalletto"),
+    (140, "SCOOTER_CREMA", "vespa_crema", "Vespa Primavera 125, crema, sul cavalletto"),
+    (146, "AUTO_500_AZZURRA", "cinquecento_azzurra", "Fiat 500 (2007), azzurra, 3,55 m"),
+    (147, "APE_PIAGGIO", "ape", "Piaggio Ape 50 con cassone, 2,46 m"),
+]
+
+
+def _veicolo(key):
+    def fn():
+        from decor import veicoli
+        mesh = veicoli.model_mesh(key)
+        lo, hi = mesh.bbox()
+        if key.startswith("vespa"):
+            return mesh, None
+        return mesh, ((lo[0], 0.0, lo[2]), (hi[0], hi[1], hi[2]))
+    return fn
+
+
+for _sid, _name, _key, _note in VEICOLI:
+    MODELS.append((_sid, _name, _veicolo(_key), _note))
 
 
 def build_all():

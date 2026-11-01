@@ -279,6 +279,9 @@ def build():
     pk.new_page()
     from decor import casa_tex
     casa_tex.build(pk)
+    pk.new_page()
+    from decor import veicoli
+    veicoli.build_tex(pk)
     return pages, REG
 
 

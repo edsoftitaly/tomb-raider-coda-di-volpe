@@ -32,19 +32,21 @@ Coda di Volpe - decorazioni
 130 MOTOSCAFO: Motoscafo cabinato, 7 m
 131 BARCA_VELA: Barca a vela da 8 m all'ormeggio, albero 11 m
 132 BARCHETTA_SPIAGGIA: Barchetta a remi tirata in secca, 4 m (base = sabbia)
-133 AUTO_UTILITARIA_ROSSA: Utilitaria, 3,6 m
-134 AUTO_UTILITARIA_BIANCA: Utilitaria bianca, 3,6 m
-135 AUTO_BERLINA_GRIGIA: Berlina, 4,5 m
-136 AUTO_SUV_BLU: SUV compatto, 4,3 m
-137 FURGONE_BIANCO: Furgone, 5 m
-138 CAMPER: Camper mansardato, 6,5 m
-139 SCOOTER_ROSSO: Scooter 125, 1,9 m
-140 SCOOTER_CREMA: Scooter crema
 141 BICICLETTA: Bicicletta da citta' appoggiata al cavalletto
 142 DEHORS_TAVOLO: Tavolino con quattro sedie (dehors di bar e ristoranti)
 143 DEHORS_OMBRELLONE: Tavolino, due sedie e ombrellone verde
 144 DEHORS_FIORIERA: Fioriera divisoria in legno con piante, 1,6 m
 145 OMBRELLONE_SPIAGGIA: Ombrellone da spiaggia a strisce blu
+133 AUTO_UTILITARIA_ROSSA: Fiat Panda prima serie (141), rossa, 3,41 m
+134 AUTO_UTILITARIA_BIANCA: Fiat Panda terza serie, bianca, 3,65 m
+135 AUTO_BERLINA_GRIGIA: Fiat Grande Punto 5 porte, grigio metallizzato, 4,03 m
+136 AUTO_SUV_BLU: Lancia Ypsilon 5 porte, blu, 3,84 m
+137 FURGONE_BIANCO: Iveco Daily furgone, bianco, 5,48 m
+138 CAMPER: Camper profilato su Fiat Ducato, 6,99 m
+139 SCOOTER_ROSSO: Vespa Primavera 125, rossa, sul cavalletto
+140 SCOOTER_CREMA: Vespa Primavera 125, crema, sul cavalletto
+146 AUTO_500_AZZURRA: Fiat 500 (2007), azzurra, 3,55 m
+147 APE_PIAGGIO: Piaggio Ape 50 con cassone, 2,46 m
 150 SANTUARIO_FACCIATA: Facciata e torre campanaria in conci rosa: portale bronzeo, trifora, cella, Madonna in mosaico
 151 SANTUARIO_FIANCO_NORD: Fianco nord della navata, sul ciglio della rupe
 152 SANTUARIO_FIANCO_SUD: Fianco sud della navata, sulla terrazza
