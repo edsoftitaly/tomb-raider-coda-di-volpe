@@ -412,8 +412,27 @@ def cable(seed=53):
     return from_img(Image.new("RGB", (16, 16), (18, 18, 20)))
 
 
+def argano_front(seed=54):
+    """Front of the shutter winch box: galvanised door, yellow-black edge, hex socket, label."""
+    im = Image.new("RGB", (96, 128), (168, 172, 176))
+    d = ImageDraw.Draw(im)
+    for k in range(0, 96 + 128, 12):          # hazard border
+        d.line([(k, 0), (k - 128, 128)], fill=(30, 30, 30), width=5)
+    d.rectangle([0, 0, 95, 127], outline=(220, 180, 30), width=7)
+    d.rectangle([10, 10, 85, 117], fill=(176, 180, 184), outline=(110, 112, 116), width=2)
+    d.rectangle([22, 16, 74, 34], fill=(236, 234, 226))
+    d.text((48, 25), "ARGANO", fill=(20, 20, 20), font=_font(11), anchor="mm")
+    d.ellipse([33, 48, 63, 78], fill=(40, 40, 42))
+    d.regular_polygon((48, 63, 9), 6, fill=(150, 150, 150))
+    d.text((48, 98), "MANOVELLA", fill=(30, 30, 30), font=_font(9), anchor="mm")
+    a = np.asarray(im).astype(float) * (1 + np.random.default_rng(seed).normal(0, 0.03, (128, 96)))[..., None]
+    return from_img(Image.fromarray(np.clip(a, 0, 255).astype(np.uint8)))
+
+
 def build(pk):
     put = pk.put
+    put("ca_argano", argano_front())
+    put("ca_argano_lato", from_img(Image.new("RGB", (16, 16), (150, 154, 158))))
     put("ca_intonaco", plaster())
     put("ca_zoccolo", base_band())
     put("ca_finestra", window_shutters())

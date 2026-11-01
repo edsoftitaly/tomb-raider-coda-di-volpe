@@ -114,5 +114,5 @@ Coda di Volpe - decorazioni
 242 TARGA_VIA: Targa in marmo Via Gaspare Amodeo (0.75 x 0.3 m) sul muro, verso +z
 243 CAVI_AEREI: Due cavi elettrici sospesi attraverso la via, 14 m lungo z, a 6.5 m
 244 CANCELLO: Anta di cancello in ferro (2 x 2.4 m), cardine nell'origine, lungo +x
-245 ARGANO: Cassetta dell'argano della saracinesca, con innesto per la manovella (verso +z)
+245 ARGANO: Argano manuale della saracinesca: cassetta zincata a muro, innesto per la manovella e tubo verso il rullo (verso +z, base a terra)
 233 PERGOLATO: Pergolato in legno con stuoia di canne, 4 x 3 m

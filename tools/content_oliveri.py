@@ -534,11 +534,8 @@ def build(ctx):
     # The hatch: a wooden lid hinged on its east edge, lying on the roof over the hole. Lara pushes it
     # open climbing the ladder (Lua zone near the top), then climbs out west onto the roof over the bathroom.
     k.prop("BOTOLA_LEGNO", hx + 1.0, hz + 0.5, rot=0.0, h=c["ROOF"], room=roof_room, lua_name="botola_legno")
-    # The box-room door: TEN door (collision, opened by the lock) + a hinged static leaf for the look
-    # (the door moveable's own mesh does not show in this setup).
-    dx_, dz_ = cell(c, *DOOR)
-    k.prop("CASA_ANTA", dx_ + 0.02, dz_, rot=0.0, h=R["CORRIDOIO"].floor_h, room=R["CORRIDOIO"].room,
-           lua_name="anta_ripostiglio")
+    # The box-room door: TEN door, opened by the lock. v8.1: no separate static leaf any more (Ed removed the
+    # CASA_ANTA statics from the house; the door's own mesh shows since the packer fix).
     door = put(K.DOOR_TYPE1, "CORRIDOIO", *DOOR, rot=0.0, name="porta_ripostiglio")
     lock = put(K.KEY_HOLE1, "CORRIDOIO", *LOCK, rot=180.0, name="serratura_ripostiglio")
     del door, lock
@@ -558,7 +555,7 @@ def build(ctx):
     lua.add('CDV.Loop(function() CDV.KeyPrompt("serratura_ripostiglio", ID.KEY_ITEM1, "use_chiave_ripostiglio") end)')
     lua.use("chiave_ripostiglio", "ID.KEY_ITEM1", at("CORRIDOIO", *LOCK), r=900, dy=600, near="serratura_ripostiglio",
             text="La serratura scatta: il ripostiglio e' aperto.",
-            fn='CDV.InsertKey("serratura_ripostiglio", "porta_ripostiglio", "anta_ripostiglio")')
+            fn='CDV.InsertKey("serratura_ripostiglio", "porta_ripostiglio")')
     lua.zone("ripostiglio_chiuso", at("CORRIDOIO", *LOCK), r=900, dy=700, once=False, secs=4,
              need='not CDV.Has(ID.KEY_ITEM1) and not CDV.Done("use_chiave_ripostiglio")',
              text="Il ripostiglio e' chiuso a chiave. Uno dei ladri ha la chiave.")
@@ -576,15 +573,27 @@ def build(ctx):
     gz = PASSAGE_Z[1] + 1                       # pavement sector in front of the archway
     k.prop("CANCELLO", PASSAGE_X + 0.02, gz, rot=0.0, h=G_, lua_name="cancello_cortile")
     k.place(K.DOOR_TYPE1, PASSAGE_X, gz, rot=0.0, name="blocco_cancello", h=G_)
-    k.prop("ARGANO", PASSAGE_X - 0.5, gz, rot=180.0, h=G_)
+    # v8.1: the winch box faces the pavement (+z; at 180 degrees it sat inside the wall and could not be seen),
+    # it is lit by its own wall lamp, and Action in front of it opens the inventory on the crank.
+    k.prop("ARGANO", PASSAGE_X - 0.5, gz, rot=0.0, h=G_)
+    k.prop("LAMPIONE_MURO", PASSAGE_X - 0.15, gz, rot=0.0, h=G_)
     k.prop("LAMPIONE_MURO", PASSAGE_X + 0.5, PASSAGE_Z[0], rot=0.0, h=G_)
+    ra = k.room_at(PASSAGE_X - 1, gz)
+    ctx.level.add_light(ra, 0, ((PASSAGE_X - 0.5 - ra.x) * 1024, G_ + 1500 - ra.y, (gz + 0.6 - ra.z) * 1024),
+                        color=(1.0, 0.85, 0.62), intensity=0.6, inner=0.6, outer=3.0)
     put(K.PUZZLE_ITEM[9], "LAB", 4, 2)
-    lua.use("argano", "ID.PUZZLE_ITEM9", k.lua_pos(PASSAGE_X - 1, gz, G_), r=1300, dy=900,
+    wx, wy, wz = k.lua_pos(PASSAGE_X - 1, gz, G_, dz=0.25)
+    lua.use("argano", "ID.PUZZLE_ITEM9", (wx, wy, wz), r=1300, dy=900,
             text="La manovella entra nell'argano. Qualche giro, e il cancello del cortile si apre.",
             fn='CDV.Enable("blocco_cancello")\nCDV.Swing("cancello_cortile", "y", 90, 50)')
-    lua.zone("cancello_chiuso", k.lua_pos(PASSAGE_X, gz, G_), r=1300, dy=900, once=False, secs=5,
-             need='not CDV.Done("use_argano")',
-             text="Il cancello del cortile e' chiuso. L'argano accanto e' senza manovella: ce n'era una in casa, nel laboratorio.")
+    lua.add('CDV.Loop(function() CDV.KeyPromptAt(%d, %d, %d, 1100, ID.PUZZLE_ITEM9, "use_argano") end)' % (wx, wy, wz))
+    lua.zone("cancello_chiuso", k.lua_pos(PASSAGE_X, gz, G_), r=1300, dy=900, once=False, secs=6,
+             need='not CDV.Done("use_argano") and not CDV.Has(ID.PUZZLE_ITEM9)',
+             text="Il cancello del cortile e' chiuso. L'argano e' sul muro accanto, sotto la lampada, ma senza manovella non gira: "
+                  "ce n'era una in casa, nel laboratorio.")
+    lua.zone("cancello_manovella", k.lua_pos(PASSAGE_X, gz, G_), r=1300, dy=900, once=False, secs=5,
+             need='not CDV.Done("use_argano") and CDV.Has(ID.PUZZLE_ITEM9)',
+             text="L'argano del cancello e' sul muro accanto, sotto la lampada. Ho la manovella: davanti all'argano, Azione.")
     lua.zone("cortile", k.lua_pos(PASSAGE_X, PASSAGE_Z[0], G_), r=2500, dy=1500, fn='CDV.Enable("palo")',
              text="Eccolo, il palo della banda. Ha qualcosa che mi serve.")
     yx, yz = (YARD[0] + YARD[1]) // 2, YARD[2] + 1

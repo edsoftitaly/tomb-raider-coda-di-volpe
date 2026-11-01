@@ -24,7 +24,6 @@ def run():
     t.H.tick(50)
     check("porta_ripostiglio" in t.last("enable"), "the key opens the box-room door")
     t.H.tick(45)
-    check("anta_ripostiglio" in t.last("swing"), "the door leaf swings open")
     check(t.H.count(t.item("KEY_ITEM1")) == 0, "key consumed")
     t.H.give(t.item("PUZZLE_ITEM9"))
     t.at((43520, -1280, 16896))

@@ -151,6 +151,15 @@ function CDV.KeyPrompt(lockName, item, doneId)
     end
 end
 
+-- Same as KeyPrompt for a static device (no moveable to read): Action within r of the point opens the
+-- inventory on the item, when Lara has it.
+function CDV.KeyPromptAt(x, y, z, r, item, doneId)
+    if doneId and CDV.Done(doneId) then return end
+    if not TEN.Input.IsKeyHit(TEN.Input.ActionID.ACTION) then return end
+    if not CDV.Near(x, y, z, r, 700) then return end
+    if CDV.Has(item) then TEN.Inventory.SetFocusedItem(item) end
+end
+
 function CDV.Has(item)
     return TEN.Inventory.GetItemCount(item) > 0
 end
