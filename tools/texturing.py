@@ -128,12 +128,12 @@ def building_styles(buildings, casa_id=None):
 def wall_order(tl_tr_br_bl):
     """Texture corners (TL, TR, BR, BL of the image) -> the order Tomb Editor stores for a wall quad.
 
-    v7.2 fix, seen in game (01/11/2026): passing TL, TR, BR, BL turned every facade 90 degrees clockwise
-    (doors lying on their side, the plinth as a vertical strip). The editor's wall vertices start at the
-    top right corner seen from the open side.
+    v7.2 fix, measured in Tomb Editor with a numbered ruler texture (01/11/2026): passing TL, TR, BR, BL
+    turned every facade by 90 degrees (doors lying on their side, the plinth as a vertical strip).
+    The editor wants the list starting from the bottom left corner of the image.
     """
     tl, tr, br, bl = tl_tr_br_bl
-    return [tr, br, bl, tl]
+    return [bl, tl, tr, br]
 
 
 class Texturer:
