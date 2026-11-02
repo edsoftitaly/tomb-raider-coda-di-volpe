@@ -476,6 +476,38 @@ class LuaLevel:
             items.append("text = %s" % lua_str(text))
         self.add("CDV.Secret({ %s })" % ", ".join(items))
 
+    def sequence(self, sid, points, r, step_text, bad_text, done_text, fn, dy=900):
+        """Order puzzle: Lara steps on the points (lua positions) in the given order. A wrong point resets the
+        count (to 1 if it is the first point). Pure Lua, no engine mechanic: done when Flag(sid .. "_done")."""
+        pts = ", ".join("{%d, %d, %d}" % (p[0], p[1], p[2]) for p in points)
+        self.add('''CDV.Loop(function()
+    if CDV.Flag(%(s)s .. "_done") then return end
+    local pts = { %(pts)s }
+    local at = 0
+    for i, p in ipairs(pts) do
+        if CDV.Near(p[1], p[2], p[3], %(r)d, %(dy)d) then at = i end
+    end
+    if at == (CDV.Flag(%(s)s .. "_on") or 0) then return end
+    CDV.Flag(%(s)s .. "_on", at)
+    if at == 0 then return end
+    local n = CDV.Flag(%(s)s .. "_n") or 0
+    if at == n + 1 then
+        n = n + 1
+        CDV.Flag(%(s)s .. "_n", n)
+        if n == #pts then
+            CDV.Flag(%(s)s .. "_done", true)
+            CDV.Say(%(done)s, 7)
+            %(fn)s
+        else
+            CDV.Say(string.format(%(step)s, n, #pts), 3)
+        end
+    else
+        CDV.Flag(%(s)s .. "_n", at == 1 and 1 or 0)
+        CDV.Say(%(bad)s, 5)
+    end
+end)''' % dict(s=lua_str(sid), pts=pts, r=r, dy=dy, done=lua_str(done_text), step=lua_str(step_text),
+                 bad=lua_str(bad_text), fn=fn.strip().replace("\n", "\n            ")))
+
     def start(self, code):
         self.add("CDV.Start = function()\n    %s\nend" % code.strip().replace("\n", "\n    "))
 

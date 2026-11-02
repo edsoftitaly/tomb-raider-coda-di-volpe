@@ -1,74 +1,77 @@
-"""Livello 2 - Il Lungomare (alba).
+"""Livello 2 - Il Lungomare (alba). v9: zona compatta disegnata a mano (livello.py).
 
-Stazione Oliveri-Tindari -> la moto della banda -> Via Stazione -> lungomare (Corso Cristoforo Colombo)
--> posto di blocco al Lido Baiadera -> cani alla Ruota -> Marinello (Piro Piro Bar) -> fine.
+Nord: il lungomare e i palazzi; il cancello del molo si apre solo se il "palo" fa il segnale giusto
+(lampione del molo -> vaso con la palma -> panchina). Centro: lo stabilimento; il finto bagnino ha la
+Chiave della terrazza, che apre il cancello del Lido Baiadera. Sud: il lido, il capo della banda, il gozzo.
 """
 import kit as K
+import livello as L
 
-START = (240, 86)
-BIKE = (242, 90)
+FRAME = L.frame(38.1300, 15.0548)
 
 
-DECOR = dict(lungomare_road="Corso Cristoforo Colombo", boats=35)
+def paint(P):
+    P.pool(2, 7, 2, 59, 3.0)                                     # the sea along the west side
+    P.ground(13, 19, 2, 59, 2.0, "lastricato")                    # the promenade
+    P.ground(20, 23, 2, 59, 2.0, "asfalto")                       # Corso Cristoforo Colombo
+    P.ground(24, 25, 2, 59, 2.0, "marciapiede")
+    P.rock(3, 4, 33, 34, 0.25)                                    # a rock in the sea (secret)
+    # north: houses on the corso
+    P.block("casa_n1", 27, 36, 48, 57, 9.5)
+    P.block("casa_n2", 40, 50, 48, 57, 12.5)
+    P.block("casa_n3", 54, 59, 47, 57, 6.6)
+    # middle: the bathing establishment and a block of flats
+    P.block("stabilimento", 27, 35, 28, 35, 4.0)
+    P.block("palazzine", 40, 59, 28, 36, 9.5)
+    # south: the lido's cabins and the hotel
+    P.block("cabine", 27, 29, 6, 14, 2.5)
+    P.block("albergo", 45, 59, 4, 14, 9.5)
+    P.ground(26, 44, 2, 16, 2.0, "lastricato")
+
+
+SPEC = dict(
+    paint=paint, mat="marciapiede", gate1=16, gate2=17, walls="block",
+    start=(17, 56), north_zone=(17, 50),
+    start_text="Alba sul lungomare di Oliveri. Il palo della banda e' scappato verso il Lido Baiadera.",
+    seq=[("LAMPIONE_LUNGOMARE", 14, 47, 0.0), ("VASO_BIANCO_PALMA", 22, 55, 0.0), ("PANCHINA", 14, 57, 90.0)],
+    seq_hint="Il cancello del lungomare e' chiuso dall'altra parte. Sul pilastro, un biglietto della banda: "
+             "\"Il palo passa dal lampione del molo, poi dalla palma, poi si siede sulla panchina. Solo allora gli apriamo.\"",
+    seq_step="Il segnale... (%d di %d)",
+    seq_bad="Ordine sbagliato: dall'altra parte nessuno si muove. Si ricomincia dal lampione del molo.",
+    seq_done="Il segnale giusto! Dall'altra parte qualcuno apre il cancello... e non sono amici.",
+    centro_enemies=[(K.BADDY1, 22, 33), (K.BADDY1, 36, 25)], centro_text="Il finto bagnino e il suo compare!",
+    item=2, device="ARGANO",
+    device_text="La Chiave della terrazza gira nella centralina: il cancello del Lido Baiadera si apre.",
+    gate2_hint="Il cancello del Lido Baiadera e' chiuso: la centralina vuole la Chiave della terrazza. Il finto bagnino ce l'aveva in tasca.",
+    south_enemies=[(K.DOBERMAN, 36, 10), (K.DOBERMAN, 38, 6)], boss=(40, 9),
+    south_text="Il lido! Il capo della banda sta caricando il gozzo.",
+    exit=(10, 8), end_text="Il gozzo e' mio. Verso Marinello, lungo la costa.",
+    end_no="Prima devo fermare il capo della banda: e' qui nel lido.",
+    pickups=[(K.SMALLMEDI, 24, 52), (K.UZI_ITEM, 25, 38), (K.UZI_AMMO, 23, 26), (K.BIGMEDI, 33, 18), (K.UZI_AMMO, 42, 4)],
+    secrets={3: (3, 33, 0.25, "Sullo scoglio in mezzo al mare: una Stella dei Dioscuri!"),
+             4: (58, 38, None, "Nel vicolo dietro le palazzine: una Stella dei Dioscuri!")},
+    props=[("OMBRELLONE_SPIAGGIA", 10.5, 12.5, 0.0), ("OMBRELLONE_SPIAGGIA", 10.5, 18.5, 0.0), ("OMBRELLONE_SPIAGGIA", 9.5, 26.5, 0.0),
+           ("GOZZO", 4.5, 8.5, 0.0), ("BARCHETTA_SPIAGGIA", 10.5, 36.5, 0.0), ("LAMPIONE_LUNGOMARE", 14.2, 24.5, 0.0),
+           ("LAMPIONE_LUNGOMARE", 14.2, 34.5, 0.0), ("LAMPIONE_LUNGOMARE", 14.2, 14.5, 0.0), ("AUTO_UTILITARIA_ROSSA", 21.5, 50.5, 0.0),
+           ("SCOOTER_ROSSO", 25.0, 45.0, 0.0), ("DEHORS_OMBRELLONE", 38.5, 20.0, 0.0), ("DEHORS_TAVOLO", 37.5, 18.5, 0.0)],
+    notes=["", "LIVELLO 2 - IL LUNGOMARE",
+           "1. Il cancello del lungomare si apre col segnale del palo: lampione del molo, vaso con la palma, panchina (in quest'ordine).",
+           "2. Allo stabilimento il finto bagnino lascia la Chiave della terrazza: si usa sulla centralina accanto al cancello del lido.",
+           "3. Nel lido due cani e il capo della banda. Morto il capo, il livello finisce al gozzo sulla spiaggia.",
+           "   Segreto 4: lo scoglio in mezzo al mare (a nuoto). Segreto 5: il vicolo in fondo dietro le palazzine."],
+)
+
+
+def extra(ctx):
+    ctx.lua.drop("chiave_terrazza", "centro0", "ID.PUZZLE_ITEM2", "Il finto bagnino aveva la Chiave della terrazza.")
+
+
+SPEC["extra"] = extra
+
+
+def prepare(world):
+    L.paint_base(world, SPEC)
 
 
 def build(ctx):
-    ctx.decor_block = []
-    k, lua = ctx.kit, ctx.lua
-    sx, sz = k.spot(*START)
-    k.place(K.LARA, sx, sz, rot=0.0, name="lara_start")
-    k.place(K.LARA_START_POS, sx, sz, ocb=1)
-    bx, bz = k.spot(*BIKE)
-    k.place(K.MOTORBIKE, bx, bz, rot=315.0, name="moto")
-    lua.start('''CDV.Say("Alba alla stazione di Oliveri-Tindari. La moto della banda e' ancora qui: verso Marinello!", 7)''')
-
-    # Uzi and ammo at the Lido Baiadera, guarded by two gunmen.
-    lido = (264, 187)
-    for i, (dx, dz) in enumerate(((-4, -3), (3, 4))):
-        k.place(K.BADDY1, *k.spot(lido[0] + dx, lido[1] + dz), name="blocco%d" % i)
-    k.place(K.UZI_ITEM, *k.spot(lido[0] + 6, lido[1] - 2))
-    k.place(K.UZI_AMMO, *k.spot(lido[0] + 7, lido[1]))
-    k.place(K.BIGMEDI, *k.spot(lido[0] - 6, lido[1] + 6))
-    lua.zone("blocco", k.lua_pos(lido[0], lido[1], ctx.ground(*k.spot(lido[0], lido[1] - 15))), r=26000, dy=8000,
-             fn='CDV.Enable("blocco0")\nCDV.Enable("blocco1")', text="Posto di blocco al Lido Baiadera!")
-
-    # Dogs at La Ruota.
-    ruota = (213, 220)
-    for i, (dx, dz) in enumerate(((2, -3), (-3, 2))):
-        k.place(K.DOBERMAN, *k.spot(ruota[0] + dx, ruota[1] + dz), name="cane_ruota%d" % i)
-    lua.zone("ruota", k.lua_pos(ruota[0], ruota[1], ctx.ground(*k.spot(*ruota))), r=18000, dy=8000,
-             fn='CDV.Enable("cane_ruota0")\nCDV.Enable("cane_ruota1")')
-    k.place(K.SHOTGUN_AMMO1, *k.spot(ruota[0] + 5, ruota[1] + 5))
-
-    # Between the Ruota and Marinello (about 250 m): two men on the road by the camp site.
-    for i, (x, z) in enumerate(((204, 280), (196, 292))):
-        k.place(K.BADDY1, *k.spot(x, z), rot=180.0, name="strada%d" % i)
-    lua.zone("strada", k.lua_pos(*k.spot(206, 262), ctx.ground(206, 262)), r=14000, dy=8000,
-             fn='CDV.Enable("strada0")\nCDV.Enable("strada1")')
-    k.place(K.UZI_AMMO, *k.spot(200, 286))
-
-    # Last guard before Marinello.
-    k.place(K.BADDY2, *k.spot(185, 345), name="guardia_marinello")
-    lua.zone("marinello_guardia", k.lua_pos(185, 345, ctx.ground(*k.spot(185, 345))), r=16000, dy=8000,
-             fn='CDV.Enable("guardia_marinello")')
-
-    # Secrets: on the beach rocks and behind the camp site.
-    s1 = k.spot(300, 140)
-    lua.secret(3, k.lua_pos(*s1, ctx.ground(*s1)), r=900)
-    k.place(K.FLARE_ITEM, *s1)
-    s2 = k.spot(130, 330)
-    lua.secret(4, k.lua_pos(*s2, ctx.ground(*s2)), r=900)
-    k.place(K.SMALLMEDI, *s2)
-
-    end = k.spot(174, 372)
-    lua.zone("fine", k.lua_pos(*end, ctx.ground(*end)), r=3000, dy=4000,
-             text="Marinello. Il Casello FS e' poco piu' avanti, ai piedi della rupe.", fn="CDV.End(3, 1)")
-    ctx.notes += [
-        "",
-        "LIVELLO 2 - IL LUNGOMARE",
-        "1. Davanti alla stazione c'e' la moto: si sale e si prende Via Stazione verso il mare, poi il lungomare a nord.",
-        "2. Posto di blocco al Lido Baiadera: due uomini con le Uzi; Uzi, munizioni e medikit grande vicino al lido.",
-        "3. Alla Ruota due dobermann. Vicino al campeggio due uomini sulla strada, prima di Marinello un'ultima guardia.",
-        "   Segreto 4: sugli scogli della spiaggia, a sud del lido. Segreto 5: dietro il campeggio Villaggio Marinello, verso la collina.",
-        "4. Il livello finisce davanti al Piro Piro Bar.",
-    ]
+    L.build(ctx, SPEC, 3)

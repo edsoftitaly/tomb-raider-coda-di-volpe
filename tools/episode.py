@@ -32,11 +32,11 @@ LEVELS = {
     # Small zones in a frame aligned with the main street (World(frame=...)): pivot lat, lon, angle, (u0, v0, u1, v1) m.
     "Oliveri":   {"title": "Oliveri - Via Amodeo", "box": "frame",
                   "frame": (38.124132, 15.059829, -33.85, (-40.0, -40.0, 124.0, 40.0))},
-    "Lungomare": {"title": "Il Lungomare", "box": (38.1272, 15.0508, 38.1340, 15.0590)},
-    "Marinello": {"title": "Marinello", "box": (38.1336, 15.0482, 38.1404, 15.0566)},
-    "Laghetti":  {"title": "I Laghetti", "box": (38.1388, 15.0474, 38.1456, 15.0562)},
-    "Tindari":   {"title": "Tindari", "box": (38.1378, 15.0412, 38.1446, 15.0496)},
-    "Sommersa":  {"title": "La Citta' Sommersa", "box": None},
+    "Lungomare": {"title": "Il Lungomare", "box": "frame", "frame": (38.1300, 15.0548, 0.0, (0.0, 0.0, 118.0, 118.0))},
+    "Marinello": {"title": "Marinello", "box": "frame", "frame": (38.1370, 15.0520, 0.0, (0.0, 0.0, 118.0, 118.0))},
+    "Laghetti":  {"title": "I Laghetti", "box": "frame", "frame": (38.1420, 15.0515, 0.0, (0.0, 0.0, 118.0, 118.0))},
+    "Tindari":   {"title": "Tindari", "box": "frame", "frame": (38.1412, 15.0454, 0.0, (0.0, 0.0, 118.0, 118.0))},
+    "Sommersa":  {"title": "La Citta' Sommersa", "box": "frame", "frame": (38.1430, 15.0440, 0.0, (0.0, 0.0, 118.0, 118.0))},
     "Titolo":    {"title": "Coda di Volpe", "box": (38.1378, 15.0412, 38.1446, 15.0496), "ten": "title.ten"},
 }
 ORDER = ["Oliveri", "Lungomare", "Marinello", "Laghetti", "Tindari", "Sommersa"]
@@ -315,8 +315,9 @@ def build(key):
     else:
         ctx = build_terrain_level(key, content)
         content.build(ctx)
-        import shots
-        shots.place_level(ctx, key)
+        if key == "Oliveri":      # the trailer shots of the v6 levels point at the old map coordinates
+            import shots
+            shots.place_level(ctx, key)
         import decorate
         decorate.decorate(ctx, **getattr(content, "DECOR", {}))
     ctx.lua.video = VIDEOS.get(key)
