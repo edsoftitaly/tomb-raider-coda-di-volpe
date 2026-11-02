@@ -37,9 +37,10 @@ LEVELS = {
     "Laghetti":  {"title": "I Laghetti", "box": "frame", "frame": (38.1420, 15.0515, 0.0, (0.0, 0.0, 118.0, 118.0))},
     "Tindari":   {"title": "Tindari", "box": "frame", "frame": (38.1412, 15.0454, 0.0, (0.0, 0.0, 118.0, 118.0))},
     "Sommersa":  {"title": "La Citta' Sommersa", "box": "frame", "frame": (38.1430, 15.0440, 0.0, (0.0, 0.0, 118.0, 118.0))},
+    "Collaudo":  {"title": "Collaudo (test)", "box": None},
     "Titolo":    {"title": "Coda di Volpe", "box": (38.1378, 15.0412, 38.1446, 15.0496), "ten": "title.ten"},
 }
-ORDER = ["Oliveri", "Lungomare", "Marinello", "Laghetti", "Tindari", "Sommersa"]
+ORDER = ["Oliveri", "Lungomare", "Marinello", "Laghetti", "Tindari", "Sommersa", "Collaudo"]
 INDEX = {k: i + 1 for i, k in enumerate(ORDER)}   # Gameflow: 0 = title
 
 # Full-screen videos (Engine\FMV\<name>.mp4) played when a level starts; missing files are skipped by the engine.
@@ -50,6 +51,9 @@ WADS = ["TombEngine.wad2"] + ["CodaDiVolpe\\%s.wad2" % w for w in (
     "CdV_Oggetti", "TR4_Baddy1", "TR4_Baddy2", "TR2_Doberman", "TR1_Rat", "TR4_Bat",
     "TEN_Wraith", "TR5_Lagoon_Witch", "TR2_Shark", "TR4_Skeleton", "TR4_Doors", "TR5_Floor_Trapdoor",
     "TR4_Lever_Switch", "TR4_Rolling_Ball", "TR1_Teeth_Spikes", "TEN_Fish_Emitter", "TEN_Firefly",
+    # v10: TEN Resources (GPL, github.com/TombEngine/Resources)
+    "TEN_Pushable_Object_Climbable", "TR4_Raising_Blocks", "TEN_Pole", "TR4_rope", "TEN_Search_Drawers",
+    "TEN_Search_Cabinet", "TEN_Wall_Lever_Switch", "TEN_Small_Wall_Switch", "TR3_Fusebox_Switch",
     "CdV_Decorazioni")]
 
 # Puzzle items: slot -> (Strings key, Italian name). Same slots in every level (inventory carries over).
@@ -67,8 +71,10 @@ ITEMS = {
 # Keys (KEY_ITEM n, opened with the native keyholes KEY_HOLE n).
 KEYS = {1: ("cdv_chiave_ripostiglio", "Chiave del ripostiglio")}
 # Inventory look of the objects of CdV_Oggetti.wad2 (build_objects.py): (y offset, scale, x rotation).
-INV_LOOK = {i: (0, 0.5, 0) for i in range(1, 10)}
-INV_LOOK[9] = (0, 0.8, -60)   # the object models in Ed's project (CdV_Oggetti_A/B)
+# The models are 0.1-0.4 m (100-200 units) and modelled lying flat, so they are scaled up and the flat ones
+# tilted towards the ring camera (as the keys).
+INV_LOOK = {1: (0, 1.6, -70), 2: (0, 2.0, -70), 3: (0, 1.6, -70), 4: (0, 2.0, -70), 5: (0, 1.8, -30),
+            6: (0, 2.6, -70), 7: (0, 1.8, -70), 8: (0, 1.8, -70), 9: (0, 2.2, -70)}
 
 
 class Ctx:
@@ -258,6 +264,7 @@ LEVEL_FLOW = {
     "Laghetti": {"track": "108", "fog": None, "far": 128},
     "Tindari": {"track": "108", "fog": None, "far": 160},
     "Sommersa": {"track": "108", "fog": (20, 60, 70, 6, 24), "far": 40},
+    "Collaudo": {"track": "108", "fog": None, "far": 40},
 }
 
 

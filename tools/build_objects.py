@@ -378,12 +378,10 @@ def _patch_vec(payload, key, vec, occurrence=0):
 
 
 def anim_for(mesh, ani):
+    """Keyframe box = the mesh box, written in Tomb Editor's convention (see anim_box): before v10 the Y was
+    not swapped, the box came out upside down and TEN culled the pickups: they were invisible in game."""
     lo, hi = mesh.bbox()
-    ani = _patch_vec(ani, b"W2KfOffs", (0.0, 0.0, 0.0))
-    ani = _patch_vec(ani, b"W2BBMin", tuple(lo))
-    ani = _patch_vec(ani, b"W2BBMax", tuple(hi))
-    ani = _patch_vec(ani, b"W2KfA", (0.0, 0.0, 0.0))
-    return ani
+    return anim_box(lo, hi, ani)
 
 
 def anim_box(lo, hi, ani):

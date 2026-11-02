@@ -40,6 +40,7 @@ local objs = {}
 local function newMov(name)
     local m = { name = name, active = false, valid = true, hp = 10, state = 1 }
     function m:GetState() return self.state end
+    function m:SetItemFlags(v, i) self.flags = self.flags or {}; self.flags[i] = v; log("itemflags", self.name .. "[" .. i .. "]=" .. v) end
     function m:Enable() self.active = true; log("enable", self.name) end
     function m:SetStatus(st) self.status = st; log("status", self.name .. "=" .. tostring(st)) end
     function m:Disable() self.active = false; log("disable", self.name) end
@@ -87,6 +88,7 @@ LevelFuncs = {}
 local pos = { x = 0, y = 0, z = 0 }
 Lara = newMov("Lara")
 function Lara:GetPosition() return { x = pos.x, y = pos.y, z = pos.z } end
+function Lara:GetAnim() return 103 end
 local H = {}
 function H.move(x, y, z) pos.x, pos.y, pos.z = x, y, z end
 function H.use(i) used = i; LevelFuncs.OnUseItem(); used = nil end

@@ -72,6 +72,36 @@ function CDV.Pulled(name)
     return m:GetState() ~= s0
 end
 
+-- Two levers to be pulled within `frames` of each other (TEN levers toggle, so every pull is an event:
+-- a late player simply pulls one again). Solved once; fn runs then.
+function CDV.TwinLevers(id, a, b, frames, msgFirst, msgLate, fn)
+    CDV.Loop(function()
+        if CDV.Flag(id .. "_ok") then return end
+        local now = (CDV.Flag(id .. "_t") or 0) + 1
+        CDV.Flag(id .. "_t", now)
+        for _, n in ipairs({a, b}) do
+            local m = CDV.M(n)
+            if m ~= nil and m:GetValid() then
+                local s = m:GetState()
+                local k = id .. "_s_" .. n
+                if CDV.Flag(k) == nil then CDV.Flag(k, s) end
+                if s ~= CDV.Flag(k) then
+                    CDV.Flag(k, s)
+                    local other = (n == a) and b or a
+                    local to = CDV.Flag(id .. "_e_" .. other)
+                    if to ~= nil and now - to <= frames then
+                        CDV.Flag(id .. "_ok", true)
+                        fn()
+                        return
+                    end
+                    CDV.Flag(id .. "_e_" .. n, now)
+                    if to ~= nil then CDV.Say(msgLate, 5) else CDV.Say(msgFirst, 4) end
+                end
+            end
+        end
+    end)
+end
+
 function CDV.Enable(name)
     local m = CDV.M(name)
     if m ~= nil and m:GetValid() then m:Enable() end
@@ -365,10 +395,24 @@ local function TestHud()
             else testInfo = testInfo .. " ?" .. name end
         end
     end
+    if t.hold and testFrame >= t.hold[1] and testFrame <= t.hold[2] then   -- {from, to}: Action held by script
+        TEN.Input.KeyPush(TEN.Input.ActionID.ACTION)
+    end
+    for _, k in ipairs(t.keys or {}) do     -- { "SPRINT", from, to }: any action held by script, for repeatable tests
+        if testFrame >= k[2] and testFrame <= k[3] then TEN.Input.KeyPush(TEN.Input.ActionID[k[1]]) end
+    end
+    for _, j in ipairs(t.jumps or {}) do   -- { frame, x, y, z, "ROOM", yaw }: timed teleports for repeatable tests
+        if testFrame == j[1] then
+            Lara:SetPosition(TEN.Vec3(j[2], j[3], j[4]), false)
+            local room = TEN.Objects.GetRoomByName(j[5])
+            if room ~= nil then Lara:SetRoomNumber(room:GetRoomNumber()) end
+            if j[6] then Lara:SetRotation(TEN.Rotation(0, j[6], 0)) end
+        end
+    end
     if not t.hud then return end
     local p = Lara:GetPosition()
     local r = Lara:GetRotation()
-    local txt = string.format("x %d  y %d  z %d  yaw %d  room %d  sx %d sz %d%s", p.x, p.y, p.z, math.floor(r.y), Lara:GetRoomNumber(), math.floor(p.x / 1024), math.floor(p.z / 1024), testInfo)
+    local txt = string.format("x %d  y %d  z %d  yaw %d  room %d  sx %d sz %d  f %d a %d s %d%s", p.x, p.y, p.z, math.floor(r.y), Lara:GetRoomNumber(), math.floor(p.x / 1024), math.floor(p.z / 1024), testFrame, Lara:GetAnim(), Lara:GetState(), testInfo)
     if t.watch then
         local m = CDV.M(t.watch)
         if m ~= nil and m:GetValid() then
@@ -509,7 +553,9 @@ end)''' % dict(s=lua_str(sid), pts=pts, r=r, dy=dy, done=lua_str(done_text), ste
                  bad=lua_str(bad_text), fn=fn.strip().replace("\n", "\n            ")))
 
     def start(self, code):
-        self.add("CDV.Start = function()\n    %s\nend" % code.strip().replace("\n", "\n    "))
+        """Code run at level start; several calls add up (in order)."""
+        self.add("CDV.StartList = CDV.StartList or {}\nCDV.StartList[#CDV.StartList + 1] = function()\n    %s\nend\n"
+                 "CDV.Start = function() for _, f in ipairs(CDV.StartList) do f() end end" % code.strip().replace("\n", "\n    "))
 
     def loop(self, code):
         self.add("CDV.Loop(function()\n    %s\nend)" % code.strip().replace("\n", "\n    "))
