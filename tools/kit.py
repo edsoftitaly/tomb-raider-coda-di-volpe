@@ -157,7 +157,7 @@ class Kit:
         """A decoration static (CdV_Decorazioni) placed by content: clues, cover, set dressing."""
         from decorate import S as DECOR_IDS
         if name not in DECOR_IDS:
-            from decor import santuario_models, santuario_interno_models, casa_models, marinello_models  # noqa: F401  (registers the sanctuary and house pieces)
+            from decor import santuario_models, santuario_interno_models, casa_models, marinello_models, mito_models  # noqa: F401  (registers the sanctuary and house pieces)
             from decor.models import MODELS
             DECOR_IDS = dict(DECOR_IDS, **{n: sid for sid, n, _, _ in MODELS})
         room = room or self.room_at(wx, wz)
@@ -253,19 +253,30 @@ class Kit:
                 s = room.sectors[lx][lz]
                 if s.wall:
                     continue
+                # A step taller than 2 m is cut into 2 m faces with extra floor splits (a face holds 256 px at most).
+                lows = [min(room.sectors[lx + dx][lz + dz].floor) for _, (_, _, (dx, dz)) in DIRS.items()
+                        if not room.sectors[lx + dx][lz + dz].wall and 0 < lx + dx < room.nx - 1 and 0 < lz + dz < room.nz - 1]
+                flat = len(set(s.floor)) == 1
+                if lows and flat and s.floor[0] - min(lows) > 1024:
+                    s.fsplits = [[s.floor[0] - 1024 * i] * 4 for i in range(1, 9) if s.floor[0] - 1024 * i > min(lows)]
                 for d, (oi, pi, (dx, dz)) in DIRS.items():
                     o = room.sectors[lx + dx][lz + dz]
                     if o.wall or lx + dx in (0, room.nx - 1) or lz + dz in (0, room.nz - 1):
                         continue
-                    top = (s.floor[oi[0]], s.floor[oi[1]])
-                    bot = (o.floor[pi[0]], o.floor[pi[1]])
-                    if top[0] <= bot[0] and top[1] <= bot[1]:
-                        continue
-                    if s.invisible and prj2.F_WALL_QA[d] in s.invisible:
-                        continue
-                    hs = [(v + room.y) / 512.0 for v in (top[0], top[1], bot[1], bot[0])]
-                    ti, c = self.atlases.vertical(it.wall_col, hs)
-                    s.set_tex(prj2.F_WALL_QA[d], c, ti)
+                    nb = (o.floor[pi[0]], o.floor[pi[1]])
+                    tops = [(s.floor[oi[0]], s.floor[oi[1]])] + [(sp[oi[0]], sp[oi[1]]) for sp in (s.fsplits or [])]
+                    for i, top in enumerate(tops):
+                        bot = nb
+                        if i + 1 < len(tops) and tops[i + 1][0] >= nb[0] and tops[i + 1][1] >= nb[1]:
+                            bot = tops[i + 1]
+                        if top[0] <= bot[0] and top[1] <= bot[1]:
+                            continue
+                        face = prj2.f_wall_floor(d, i)
+                        if s.invisible and face in s.invisible:
+                            continue
+                        hs = [(v + room.y) / 512.0 for v in (top[0], top[1], bot[1], bot[0])]
+                        ti, c = self.atlases.vertical(getattr(it, "step_col", None) or it.wall_col, hs)
+                        s.set_tex(face, c, ti)
                 # Ceiling steps: the lower ceiling owns the face up to the neighbour's ceiling.
                 for d, (oi, pi, (dx, dz)) in DIRS.items():
                     o = room.sectors[lx + dx][lz + dz]

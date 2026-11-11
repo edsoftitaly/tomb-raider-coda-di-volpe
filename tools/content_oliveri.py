@@ -651,8 +651,11 @@ def build(ctx):
              text="La cabina armadio e' chiusa a chiave: da li' si sale sul tetto. Uno dei ladri ha la chiave.")
     lua.zone("botola", at("RIPOSTIGLIO", *HATCH, dh=1100), r=600, dy=500, fn='CDV.Swing("botola_legno", "z", 75, 30)',
              text="Una spinta e la botola si apre.")
-    lua.zone("tetto", k.lua_pos(hx - 1, hz, c["ROOF"]), r=1400, dy=300,
-             text="Sulla terrazza. Sul davanti, verso la via, si scende lungo il pluviale.")
+    # GDD v3: the house is the prologue. From the roof Lara sees the boat of the tombaroli leave for Marinello: cut.
+    lua.zone("tetto", k.lua_pos(hx - 1, hz, c["ROOF"]), r=1400, dy=300, secs=10,
+             fn='CDV.After(300, function() CDV.End(0, 1) end)',
+             text="Dal tetto si vede il mare. Una barca senza luci lascia la riva e punta sulla lingua di sabbia di Marinello, "
+                  "sotto il santuario di Tindari. Hanno il diario. Li seguo.")
 
     # Via Amodeo: the look-out and two dogs; the thief runs off towards Via Stesicoro.
     zf = c["z0"] - 1

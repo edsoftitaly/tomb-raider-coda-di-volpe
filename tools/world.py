@@ -514,6 +514,19 @@ def build_rooms(world, level, atlases, texer):
                     hide_edges(rm, sides)
                 else:
                     walls.texture_walls(rm, atlases, lambda r, wx, wz, d: (rock, None), portal_sides=sides)
+    # Inverted flips: the base state is the dry one, the flipmap floods the tile (the content keeps placing
+    # objects in the base rooms, so only the geometry, the room type and the portals change sides).
+    for key in getattr(world, "flip_inverted", ()):
+        for group in (terrain, water):
+            rm = group.get(key)
+            alt = getattr(rm, "alt", None) if rm is not None else None
+            if alt is None:
+                continue
+            for attr in ("sectors", "room_type", "ambient", "objects", "meta", "tags"):
+                a, b = getattr(rm, attr), getattr(alt, attr)
+                setattr(rm, attr, b)
+                setattr(alt, attr, a)
+            alt.name = rm.name + "_PIENO"
     return terrain, water
 
 

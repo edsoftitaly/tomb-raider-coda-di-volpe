@@ -30,19 +30,19 @@ OUT = os.path.join(ROOT, "build", "levels")
 # Level boxes: (lat_min, lon_min, lat_max, lon_max). All under 800 m per side.
 LEVELS = {
     # Small zones in a frame aligned with the main street (World(frame=...)): pivot lat, lon, angle, (u0, v0, u1, v1) m.
-    "Oliveri":   {"title": "Oliveri - Via Amodeo", "box": "frame",
+    "Oliveri":   {"title": "Prologo - Via Amodeo", "box": "frame",
                   "frame": (38.124132, 15.059829, -33.85, (-40.0, -40.0, 124.0, 40.0))},
     "Lungomare": {"title": "Il Lungomare", "box": "frame", "frame": (38.1300, 15.0548, 0.0, (0.0, 0.0, 118.0, 118.0))},
     "Marinello": {"title": "La maga dei laghetti", "box": "frame", "frame": (38.1420, 15.0515, 0.0, (0.0, 0.0, 236.0, 236.0))},
     "MarinelloB": {"title": "La maga dei laghetti (riserva, senza flipmap)", "box": "frame",
                    "frame": (38.1420, 15.0515, 0.0, (0.0, 0.0, 236.0, 236.0))},
     "Laghetti":  {"title": "I Laghetti", "box": "frame", "frame": (38.1420, 15.0515, 0.0, (0.0, 0.0, 118.0, 118.0))},
-    "Tindari":   {"title": "Tindari", "box": "frame", "frame": (38.1412, 15.0454, 0.0, (0.0, 0.0, 118.0, 118.0))},
-    "Sommersa":  {"title": "La Citta' Sommersa", "box": "frame", "frame": (38.1430, 15.0440, 0.0, (0.0, 0.0, 118.0, 118.0))},
+    "Tindari":   {"title": "Tindari", "box": "frame", "frame": (38.1412, 15.0454, 0.0, (0.0, 0.0, 176.0, 176.0))},
+    "Sommersa":  {"title": "La meta' perduta", "box": None},
     "Collaudo":  {"title": "Collaudo (test)", "box": None},
     "Titolo":    {"title": "Coda di Volpe", "box": (38.1378, 15.0412, 38.1446, 15.0496), "ten": "title.ten"},
 }
-ORDER = ["Oliveri", "Lungomare", "Marinello", "Laghetti", "Tindari", "Sommersa", "Collaudo", "MarinelloB"]
+ORDER = ["Oliveri", "Marinello", "Tindari", "Sommersa", "Collaudo", "MarinelloB"]      # GDD v3: prologue + 3 levels
 INDEX = {k: i + 1 for i, k in enumerate(ORDER)}   # Gameflow: 0 = title
 
 # Full-screen videos (Engine\FMV\<name>.mp4) played when a level starts; missing files are skipped by the engine.
@@ -118,7 +118,7 @@ def make_level():
     return level
 
 
-ATLAS_NAMES = ["coda_atlas"] + ["coda_atlas%d" % i for i in range(2, 17)]
+ATLAS_NAMES = ["coda_atlas"] + ["coda_atlas%d" % i for i in range(2, 19)]
 
 
 def macro_tiles(atlas_list):
@@ -222,7 +222,7 @@ local CDV_LOGO = nil          -- es. "FMV\\\\cdv_logo.mp4": video all'avvio del 
 
 Flow.SetIntroImagePath("Screens\\\\intro.jpg")
 if CDV_LOGO then Flow.SetIntroVideoPath(CDV_LOGO) end
-Flow.SetTotalSecretCount(12)
+Flow.SetTotalSecretCount(10)
 Flow.EnablePointFilter(false)
 Flow.EnableLoadSave(true)
 Flow.EnableFlyCheat(not CDV_RELEASE)

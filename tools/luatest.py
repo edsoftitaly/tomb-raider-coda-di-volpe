@@ -68,7 +68,8 @@ TEN.Objects.GetStaticByName = function(n) local st = { r = { x = 0, y = 0, z = 0
     function st:SetRotation(r) self.r = r; log("swing", n) end
     return st end
 TEN.Rotation = TEN.Rotation or function(x, y, z) return { x = x, y = y, z = z } end
-TEN.Input = TEN.Input or { ActionID = { ACTION = 1 }, IsKeyHit = function() return false end }
+local keyhit = false
+TEN.Input = { ActionID = { ACTION = 1 }, IsKeyHit = function() return keyhit end }
 TEN.Inventory.SetFocusedItem = function(i) log("focus", tostring(i)) end
 TEN.Objects.MoveableStatus = { INACTIVE = "INACTIVE", ACTIVE = "ACTIVE", DEACTIVATED = "DEACTIVATED", INVISIBLE = "INVISIBLE" }
 TEN.Objects.GetMoveableByName = function(name)
@@ -90,7 +91,9 @@ local pos = { x = 0, y = 0, z = 0 }
 Lara = newMov("Lara")
 function Lara:GetPosition() return { x = pos.x, y = pos.y, z = pos.z } end
 function Lara:GetAnim() return 103 end
+Lara.state = 2
 local H = {}
+function H.press() keyhit = true; LevelFuncs.OnLoop(); keyhit = false end
 function H.move(x, y, z) pos.x, pos.y, pos.z = x, y, z end
 function H.use(i) used = i; LevelFuncs.OnUseItem(); used = nil end
 function H.tick(k) for _ = 1, (k or 1) do LevelFuncs.OnLoop() end end

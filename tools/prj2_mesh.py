@@ -44,14 +44,14 @@ def read_rooms(path):
                     sec["split"] = bool(r.leb() & 1)
                     sec["floor"] = [r.leb() for _ in range(4)]
                 elif c4 == b"\x08":
-                    r.leb()
-                    [r.leb() for _ in range(4)]
+                    sec["csplit"] = bool(r.leb() & 1)
+                    sec["ceil"] = [r.leb() for _ in range(4)]
                 elif c4 == b"\x09":
                     n = r.leb()
                     sec["fsplits"] = [[r.leb() for _ in range(4)] for _ in range(n)]
                 elif c4 == b"\x0a":
-                    for _ in range(4 * r.leb()):
-                        r.leb()
+                    n = r.leb()
+                    sec["csplits"] = [[r.leb() for _ in range(4)] for _ in range(n)]
                 elif c4 == b"\x12":
                     face = r.leb()
                     tc = r.f(8)
@@ -171,13 +171,62 @@ def build_mesh(rooms, prefixes):
                 A = lambda c, h: ((rx + x + c[0]) * 2.0, (ry + h) / 512.0, (rz + z + c[1]) * 2.0)  # noqa: E731
                 tl, tr, br, bl = A(ox, top[0]), A(oz, top[1]), A(oz, bot[1]), A(ox, bot[0])
                 t = s["tex"][face]
+                t = [t[1], t[2], t[3], t[0]]          # stored from the bottom left corner (texturing.wall_order)
                 cur[0] = s.get("ti", {}).get(face, 0)
                 tri([tl, tr, br], [t[0], t[1], t[2]])
                 tri([tl, br, bl], [t[0], t[2], t[3]])
+            # Ceilings, middle and ceiling-part wall faces (enclosed rooms).
+            c = s.get("ceil")
+            if c is None:
+                continue
+            Pc = [((rx + x + dx) * 2.0, (ry + c[k]) / 512.0, (rz + z + dz) * 2.0) for k, (dx, dz) in enumerate(CORNER_XZ)]
+            if 27 in s["tex"] and not s["wall"]:
+                t = s["tex"][27]
+                cur[0] = s.get("ti", {}).get(27, 0)
+                quad = c[1] - c[2] == c[0] - c[3] and c[1] - c[0] == c[2] - c[3]
+                if quad:
+                    tri([Pc[0], Pc[1], Pc[2]], [t[0], t[1], t[2]])
+                    tri([Pc[0], Pc[2], Pc[3]], [t[0], t[2], t[3]])
+                elif s.get("csplit"):
+                    tri([Pc[1], Pc[2], Pc[3]], t[:3])
+                    tri([Pc[3], Pc[0], Pc[1]], s["tex"].get(28, t)[:3])
+                else:
+                    tri([Pc[0], Pc[1], Pc[2]], t[:3])
+                    tri([Pc[2], Pc[3], Pc[0]], s["tex"].get(28, t)[:3])
+            for qa_face in range(4):
+                oi, pi, (dx, dz) = DIRS[qa_face]
+                o = rm["sectors"].get((x + dx, z + dz))
+                if o is None or o.get("ceil") is None:
+                    continue
+                nbf = (o["floor"][pi[0]], o["floor"][pi[1]])
+                nbc = (o["ceil"][pi[0]], o["ceil"][pi[1]])
+                ox, oz = CORNER_XZ[oi[0]], CORNER_XZ[oi[1]]
+                A = lambda cc, h: ((rx + x + cc[0]) * 2.0, (ry + h) / 512.0, (rz + z + cc[1]) * 2.0)  # noqa: E731
+
+                def wallq(face, top, bot):
+                    if face not in s["tex"]:
+                        return
+                    t = s["tex"][face]
+                    t = [t[1], t[2], t[3], t[0]]
+                    cur[0] = s.get("ti", {}).get(face, 0)
+                    tl, tr, br, bl = A(ox, top[0]), A(oz, top[1]), A(oz, bot[1]), A(ox, bot[0])
+                    tri([tl, tr, br], [t[0], t[1], t[2]])
+                    tri([tl, br, bl], [t[0], t[2], t[3]])
+                if s["wall"]:
+                    lo = (max(f[oi[0]], nbf[0]), max(f[oi[1]], nbf[1]))
+                    hi = (min(c[oi[0]], nbc[0]), min(c[oi[1]], nbc[1]))
+                    wallq(10 + qa_face, hi, lo)
+                bots = [(c[oi[0]], c[oi[1]])] + [(sp[oi[0]], sp[oi[1]]) for sp in s.get("csplits", [])]
+                for k, bot in enumerate(bots):
+                    top = nbc
+                    if k + 1 < len(bots) and bots[k + 1][0] <= nbc[0] and bots[k + 1][1] <= nbc[1]:
+                        top = bots[k + 1]
+                    face = 15 + qa_face if k == 0 else 20 + qa_face if k == 1 else 34 + (k - 2) * 10 + qa_face
+                    wallq(face, top, bot)
     return pos, uv, tix
 
 
-NATLAS = 16
+NATLAS = 18
 
 
 def add_statics(rooms, statics, keep, pos, uv, tix, out_dir):
@@ -187,7 +236,7 @@ def add_statics(rooms, statics, keep, pos, uv, tix, out_dir):
     from decor import tex
     tex.build()
     from decor import models
-    from decor import santuario_models, santuario_interno_models, casa_models, marinello_models  # noqa: F401
+    from decor import santuario_models, santuario_interno_models, casa_models, marinello_models, mito_models  # noqa: F401
     tex.save(out_dir)
     lib = {}
     for sid, name, mesh, coll, note in models.build_all():

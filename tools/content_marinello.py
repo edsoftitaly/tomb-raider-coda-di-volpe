@@ -12,10 +12,12 @@ Only mechanics proven in Livello 0 (pickups, plinth pickup, kick door, pushable 
 twin levers, item on a device, climbable wall, drawers, swimming) plus the flipmap of the lake.
 """
 import math
+import sys
 
 import numpy as np
 from scipy import ndimage
 
+import content_marinello2 as M2
 import kit as K
 import zona as Z
 from kit import CLICK
@@ -26,7 +28,7 @@ G = 1.0                          # ground of the tonnara (m): 2 clicks
 LAKE = (44.0, 46.0, 11.0, 8.0)   # centre x, z, radii
 FLIP = 1
 SEA_Z, SEA_X = 67.0, 75.0        # coast lines (sectors), wobbling
-CLIFF_Z, CLIFF_X = 24.0, 13.0
+CLIFF_Z, CLIFF_X = 24.0, 6.5
 PASS = (27, 28, 45, 46)          # the west pass: x0, x1, z0, z1
 
 
@@ -86,6 +88,7 @@ def prepare(world):
     rm = np.where(rockmass > 0, 1.5 + 2.6 * np.clip(rockmass, 0, 4) + 2.0 * rough, 0)
     H = np.where((rockmass > 0) & ~in_pass, np.maximum(H, 7.0 + np.floor(rm / 4.5) * 4.5), H)
     H = np.where(in_pass, 1.0, H)
+    H, r2 = M2.sculpt(H, cx, cz)                              # the hollow of the Lago Verde, west of the pass
     world.H_sculpt = H
 
     q = lambda v: np.round(v * 512 / 64).astype(int) * 64
@@ -95,21 +98,25 @@ def prepare(world):
     cs = (c[:-1, :-1] + c[1:, 1:]) / 2
     ss = (s[:-1, :-1] + s[1:, 1:]) / 2
     rs = np.hypot((np.arange(nx)[:, None] + 0.5 - lx) / rx, (np.arange(nz)[None, :] + 0.5 - lz) / rz)
-    rk = (c < 0) | ((rockmass > 0) & ~in_pass)                 # per corner
+    rk = ((c < 0) | ((rockmass > 0) & ~in_pass)) & (r2 >= 1.02)      # per corner
     rock = rk[:-1, :-1] | rk[1:, :-1] | rk[:-1, 1:] | rk[1:, 1:]   # a sector with any rock corner is rock: no half steps
     flat = (np.round(fl.max(axis=2) / CLICK) * CLICK).astype(int)
     fl = np.where(rock[:, :, None], flat[:, :, None], fl)
     water = (mean < -0.15 * 512) & ~rock
     lake = water & (rs < 1.05)
+    r2s = np.hypot((np.arange(nx)[:, None] + 0.5 - M2.VERDE[0]) / M2.VERDE[2], (np.arange(nz)[None, :] + 0.5 - M2.VERDE[1]) / M2.VERDE[3])
+    verde = water & (r2s < 1.3)
     dry_bed = lake & NOFLIP
     water &= ~dry_bed
     lake &= ~dry_bed
     world.water[:, :] = water
-    world.lagoon[:, :] = lake
+    world.lagoon[:, :] = lake | verde
+    world.verde = verde.copy()
     world.depth[:, :] = np.where(water, np.maximum(-mean / 512.0, 0.3), 0.0)
     fl = np.where(water[:, :, None], 0, np.where(dry_bed[:, :, None], fl, np.maximum(fl, 64)))
     world.floor[:, :, :] = fl
     world.floor_terrain[:, :, :] = fl
+    assert not (water & ~verde)[1:31, 31:61].any(), "only the Lago Verde in its tile"
     assert not (water & ~lake)[30:62, 30:62].any(), "the sea must stay out of the lake tile"
     assert not lake[:32].any() and not lake[60:].any() and not lake[:, :32].any() and not lake[:, 60:].any()
 
@@ -121,6 +128,7 @@ def prepare(world):
     mat[(ss > 8) & (spots > 0.55) & (rs > 1.5)] = "m_macchia"
     mat[(cs < 4) & (cs >= 0)] = "m_macchia"
     mat[(rs < 1.42) & ~water] = "m_terra"
+    mat[(r2s < 1.3) & ~water] = "m_terra"
     mat[dry_bed] = "m_fango"
     mat[rock] = "m_roccia"
     mat[rock & (spots > 0.6)] = "m_erba"
@@ -142,7 +150,8 @@ def prepare(world):
 
     # ruins
     cols = {}
-    for name, R in RUINS.items():
+    M2.carve(world, _land, _wall, cols, NOFLIP)
+    for name, R in list(RUINS.items()) + [("casello", M2.HUT)]:
         x0, z0, x1, z1 = R["rect"]
         bid = len(world.buildings)
         world.buildings.append({"id": name, "tags": {"building": "ruins"}, "sectors": 0, "ground_m": G, "base_m": G, "roof_m": G + R["h"]})
@@ -169,7 +178,8 @@ def prepare(world):
             _wall(world, cols, bid, x, z, G + 9.0, "pietra", window=(x == 71 or z == 39))
     world.facade_cols = cols
     world.rock_prefix = "rupe_faccia"
-    world.flip = {} if NOFLIP else {(1, 1): FLIP}
+    world.flip = {} if NOFLIP else {(1, 1): FLIP, (0, 1): M2.FLIP2}
+    world.flip_inverted = set() if NOFLIP else {(0, 1)}       # the Lago Verde starts dry and is flooded
     world.bed_mat = "m_fondale"
     world.dry_mat = "m_fango"
     world.ambient = (0.5, 0.51, 0.55)
@@ -348,14 +358,11 @@ end)''')
     lua.add('CDV.Loop(function() CDV.KeyPromptAt(%d, %d, %d, 1300, ID.PUZZLE_ITEM6, "use_lucchetto") end)' % gp)
     lua.zone("cancello_senza", gp, r=1500, dy=1200, once=False, secs=7, need='not CDV.Done("use_lucchetto") and not CDV.Has(ID.PUZZLE_ITEM6)',
              text="Il passo verso il canneto e il Lago Verde. Sul chiavistello c'e' un incavo rotondo, con il tonno della tonnara.")
-    lua.zone("fine", pos(20, 46), r=1700, dy=2500, fn="CDV.End(0, 1)", need='CDV.Done("use_lucchetto")',
-             text="Oltre il canneto, il Lago Verde. E lassu', nella rupe, la grotta di Donna Villa. (Fine della prima parte.)")
-
     # --- the cave of Donna Villa: seen from below, out of reach
     zc = next(z for z in range(34, 10, -1) if gh(44, z) > 5 * 512)          # the first row of the cliff
     k.prop("SCALA_CORDA", 44.5, zc + 1.06, rot=0.0, h=g + Z.u(12.0))
     lua.zone("grotta_vista", pos(44, 30), r=2600, dy=3000, secs=8,
-             text="In alto nella rupe, una bocca scura: la grotta di Donna Villa. La scala di corda e' spezzata.")
+             text="In alto nella rupe, una bocca scura: la grotta di Donna Villa. La scala di corda e' spezzata: ci sara' un'altra via.")
 
     # --- secrets
     k.climb(71, 41, "-z")                       # the north face of the lookout is climbable
@@ -365,6 +372,8 @@ end)''')
     sh = k.floor_at(sw, 79, 53)
     k.prop("ANFORA", 79.5, 53.5, rot=120.0, h=sh, room=sw)
     lua.secret(2, k.lua_pos(79, 53, sh), r=1000, text="Sul fondo, sotto il pontile: una Stella dei Dioscuri!", give="ID.BIGMEDI_ITEM")
+
+    M2.build(ctx, sys.modules[__name__])
 
     # --- nature: reeds round the lake and at the pass, boulders at the foot of the cliff, scrub, pines
     scatter(ctx, rng)
@@ -424,8 +433,8 @@ def scatter(ctx, rng):
             z = lz + math.sin(a) * rz * rr + rng.uniform(-0.3, 0.3)
             put("CANNE_FITTE" if rng.random() < 0.5 else "CANNE", x, z, scale=float(rng.uniform(0.85, 1.2)))
     for _ in range(60):
-        x, z = rng.uniform(15, 26), rng.uniform(36, 58)
-        if abs(z - 46) > 1.6:
+        x, z = rng.uniform(17, 26), rng.uniform(30, 66)
+        if abs(z - 46) > 1.6 and not (14 <= x <= 22 and 56 <= z <= 66) and not (18 <= x <= 22 and 33 <= z <= 41):
             put("CANNE_FITTE", x, z, scale=float(rng.uniform(0.9, 1.3)))
     # boulders: foot of the cliff, the shore, in the shallows
     H = w.floor.mean(axis=2)
