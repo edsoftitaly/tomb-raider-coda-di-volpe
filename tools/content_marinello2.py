@@ -388,7 +388,7 @@ end)''' % (x0, x1, z0, z1))
     k.place(K.SMALLMEDI, 21, 38, room=g5.room)
     light(ctx, g5, 19.5, 33.0, 1200, (1.0, 0.8, 0.55), 0.5, 1.0, 4.0)
     light(ctx, g5, 19.5, 46.5, 1500, (1.0, 0.95, 0.82), 1.6, 2.0, 9.0)
-    lua.zone("uscita", k.lua_pos(19, 45, F4), r=1200, dy=1500, need='CDV.Flag("maga_morta")', fn="CDV.End(0, 1)",
+    lua.zone("uscita", k.lua_pos(19, 45, F4), r=1200, dy=1500, need='CDV.Flag("maga_morta")', fn="CDV.End(3, 1)",
              text="Luce. La galleria sbuca in alto sulla rupe, sul sentiero Coda di Volpe. Sopra, le mura di Tindari.")
     for i, rm in enumerate((g1, g2, g3, g4, g5)):
         rm.room.no_path = False

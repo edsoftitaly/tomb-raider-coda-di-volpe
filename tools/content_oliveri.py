@@ -653,7 +653,7 @@ def build(ctx):
              text="Una spinta e la botola si apre.")
     # GDD v3: the house is the prologue. From the roof Lara sees the boat of the tombaroli leave for Marinello: cut.
     lua.zone("tetto", k.lua_pos(hx - 1, hz, c["ROOF"]), r=1400, dy=300, secs=10,
-             fn='CDV.After(300, function() CDV.End(0, 1) end)',
+             fn='CDV.After(300, function() CDV.End(2, 1) end)',
              text="Dal tetto si vede il mare. Una barca senza luci lascia la riva e punta sulla lingua di sabbia di Marinello, "
                   "sotto il santuario di Tindari. Hanno il diario. Li seguo.")
 

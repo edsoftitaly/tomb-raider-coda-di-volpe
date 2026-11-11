@@ -48,6 +48,7 @@ local function newMov(name)
     function m:GetActive() return self.active end
     function m:GetValid() return self.valid end
     function m:GetHP() return self.hp end
+    function m:SetHP(v) self.hp = v; if v <= 0 then self.valid = false end end
     function m:SetPosition(p) log("teleport", self.name) end
     function m:SetRoomNumber() end
     function m:SetRotation() end

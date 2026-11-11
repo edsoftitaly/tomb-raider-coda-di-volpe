@@ -32,9 +32,10 @@ HOUSE = (20, 44, 32, 58)
 MOSAIC_X, MOSAIC_Z = range(23, 30), range(51, 57)
 SAFE = {51: {26}, 52: {26, 27, 28}, 53: {28}, 54: {24, 25, 26, 27, 28}, 55: {24}, 56: {24, 25, 26}}
 BASILICA = (38, 46, 50, 54)
-UPIT = [(40, 49), (40, 50), (40, 51)]
-CPIT = [(65, 42), (66, 42), (67, 42)]
+UPIT = [(x, z) for x in (40, 41, 42) for z in (49, 50, 51)]     # the stair hole: three steps under the open sky
+CPIT = [(x, z) for x in (65, 66, 67) for z in (42, 43, 44)]
 CHURCH = (63, 47, 69, 57)
+NEXT = 6                         # Gameflow index of La meta' perduta (episode.ORDER)
 BLOCKS = {"a": (54, 29), "b": (52, 30), "c": (56, 31)}
 
 
@@ -287,34 +288,36 @@ end)''' % (MOSAIC_X[0], MOSAIC_X[-1], MOSAIC_Z[0], MOSAIC_Z[-1], -tp, safe))
         for z in (BASILICA[1], BASILICA[3]):
             k.prop("RUDERE_ARCO", x + 0.5, z + 0.5, rot=0.0, h=tp)
     FU = tp - 22 * CLICK
-    rows = ["............"] * 3
+    # A stair hole, not a pit: the top step is 1 click under the ground, so Lara stands in the upper room there and
+    # simply steps out; the lower steps (4 clicks each) are open cells of the lower room, still under the hole.
+    rows = ["............."] * 3
     u = M2.cave(k, "U_CRIPTOPORTICO", rows, 40, 49, FU, 20 * CLICK, wall="t_opera", floor="t_lastre", ceil="t_volta",
                 amb=(0.34, 0.31, 0.28), rough=0)
-    rel = {40: 18, 41: 14, 42: 10, 43: 8, 44: 8, 45: 8, 46: 4, 49: 8, 50: 8, 51: 8}
+    rel = {40: 21, 41: 17, 42: 13, 43: 9, 44: 8, 45: 8, 46: 8, 47: 4, 50: 8, 51: 8, 52: 8}
     for x, cl in rel.items():
         for z in (49, 50, 51):
             u.sector(x, z).floor = [cl * CLICK] * 4
     k.link_vertical(u, ctx.terrain_room_at(*UPIT[0]), UPIT)
-    k.place(K.ROPE, 47, 50, room=u.room, h=FU + 20 * CLICK - 64, name="fune_cripto")
+    k.place(K.ROPE, 48, 50, room=u.room, h=FU + 20 * CLICK - 64, name="fune_cripto")
     lua.start('CDV.Enable("fune_cripto")')
-    k.prop("ARGANO", 50.5, 50.5, rot=90.0, h=FU + 8 * CLICK, room=u.room)
-    winch(ctx, "argano3", k.lua_pos(50, 50, FU + 8 * CLICK), "blocco_c",
+    k.prop("ARGANO", 51.5, 50.5, rot=90.0, h=FU + 8 * CLICK, room=u.room)
+    winch(ctx, "argano3", k.lua_pos(51, 50, FU + 8 * CLICK), "blocco_c",
           "L'argano gira. Sopra la tua testa la pietra trema: nel teatro e' salito l'ultimo blocco.",
           "Il terzo argano. (Azione: girarlo.)")
     M2.light(ctx, u, 44.5, 50.5, 14 * CLICK, (1.0, 0.8, 0.55), 0.7, 1.0, 5.0)
-    M2.light(ctx, u, 50.5, 50.5, 14 * CLICK, (1.0, 0.8, 0.55), 0.7, 1.0, 5.0)
-    k.prop("BRACIERE", 43.5, 51.5, h=FU + 8 * CLICK, room=u.room)
-    k.prop("BRACIERE", 51.5, 49.5, h=FU + 8 * CLICK, room=u.room)
-    k.place(K.BAT, 47, 49, room=u.room, h=FU + 15 * CLICK, name="pip_u1")
-    k.place(K.BAT, 48, 51, room=u.room, h=FU + 15 * CLICK, name="pip_u2")
-    k.place(K.SHOTGUN_AMMO1, 51, 51, room=u.room, h=FU + 8 * CLICK)
-    lua.zone("basilica", pos(44, 50), r=1800, dy=1200, secs=8,
+    M2.light(ctx, u, 51.5, 50.5, 14 * CLICK, (1.0, 0.8, 0.55), 0.7, 1.0, 5.0)
+    k.prop("BRACIERE", 44.5, 51.5, h=FU + 8 * CLICK, room=u.room)
+    k.prop("BRACIERE", 52.5, 49.5, h=FU + 8 * CLICK, room=u.room)
+    k.place(K.BAT, 48, 49, room=u.room, h=FU + 15 * CLICK, name="pip_u1")
+    k.place(K.BAT, 49, 51, room=u.room, h=FU + 15 * CLICK, name="pip_u2")
+    k.place(K.SHOTGUN_AMMO1, 52, 51, room=u.room, h=FU + 8 * CLICK)
+    lua.zone("basilica", pos(45, 50), r=1800, dy=1200, secs=8,
              text="La basilica: restano i pilastri e gli archi. Nel pavimento, una scala scende nel buio.")
-    lua.zone("cripto", k.lua_pos(44, 50, FU + 8 * CLICK), r=1300, dy=700, secs=9, fn='CDV.Enable("pip_u1")\nCDV.Enable("pip_u2")',
+    lua.zone("cripto", k.lua_pos(45, 50, FU + 8 * CLICK), r=1300, dy=700, secs=9, fn='CDV.Enable("pip_u1")\nCDV.Enable("pip_u2")',
              text="Il criptoportico. Il pavimento e' crollato per tre campate; dalla volta pende una fune. Di la', un argano. "
                   "(Salta sulla fune, dondola con Scatto, lasciati con Salto.)")
-    lua.secret(2, k.lua_pos(48, 49, FU), r=900, text="Tra le macerie sotto la fune: una Stella dei Dioscuri!", give="ID.SHOTGUN_AMMO1_ITEM")
-    k.prop("MACERIE", 47.6, 49.6, h=FU, room=u.room, scale=0.6)
+    lua.secret(2, k.lua_pos(49, 49, FU), r=900, text="Tra le macerie sotto la fune: una Stella dei Dioscuri!", give="ID.SHOTGUN_AMMO1_ITEM")
+    k.prop("MACERIE", 49.5, 49.5, h=FU, room=u.room, scale=0.5)
 
     # --- the terrace: the sanctuary, the belvedere, the crypt
     Pl(K.BADDY2, 66, 38, rot=180.0, h=tt, name="t7")
@@ -339,8 +342,8 @@ end)''' % (MOSAIC_X[0], MOSAIC_X[-1], MOSAIC_Z[0], MOSAIC_Z[-1], -tp, safe))
     cr = M2.cave(k, "C_CRIPTA", plan, 62, 42, FC, 10 * CLICK, wall="t_marmo", floor="t_marmo_scuro", ceil="t_volta",
                  amb=(0.3, 0.29, 0.33), rough=0)
     for x in (65, 66, 67):
-        cr.sector(x, 42).floor = [8 * CLICK] * 4
-        cr.sector(x, 43).floor = [4 * CLICK] * 4
+        for z, cl in ((42, 11), (43, 7), (44, 3)):
+            cr.sector(x, z).floor = [cl * CLICK] * 4
     k.link_vertical(cr, ctx.terrain_room_at(*CPIT[0]), CPIT)
     import walls
     stars = {"castore": (64, 50), "polluce": (68, 46)}
@@ -352,7 +355,7 @@ end)''' % (MOSAIC_X[0], MOSAIC_X[-1], MOSAIC_Z[0], MOSAIC_Z[-1], -tp, safe))
     for i, (x, z) in enumerate(((63, 51), (69, 51), (63, 45))):
         k.place(K.BAT, x, z, room=cr.room, h=FC + 7 * CLICK, name="pip_k%d" % i)
     for name, x, z, rot in (("STATUA_DIOSCURO", 62.5, 48.5, 90), ("STATUA_DIOSCURO", 70.5, 48.5, 270), ("SARCOFAGO", 63.0, 52.4, 0),
-                            ("SARCOFAGO", 69.2, 52.4, 0), ("BRACIERE", 64.5, 44.5, 0), ("BRACIERE", 68.5, 44.5, 0)):
+                            ("SARCOFAGO", 69.2, 52.4, 0), ("BRACIERE", 63.5, 45.5, 0), ("BRACIERE", 69.5, 45.5, 0)):
         k.prop(name, x, z, rot=float(rot), h=FC, room=cr.room)
     M2.light(ctx, cr, 66.5, 48.5, 8 * CLICK, (0.7, 0.75, 1.0), 0.8, 1.5, 6.0)
     M2.light(ctx, cr, 66.5, 44.5, 6 * CLICK, (1.0, 0.8, 0.55), 0.6, 1.0, 4.0)
@@ -374,13 +377,13 @@ end)''' % (MOSAIC_X[0], MOSAIC_X[-1], MOSAIC_Z[0], MOSAIC_Z[-1], -tp, safe))
         CDV.Say("Un gemello e' al suo posto. Manca l'altro.", 4)
     end
 end)''' % (stars["castore"] + stars["polluce"]))
-    lua.zone("cripta", k.lua_pos(66, 45, FC), r=1400, dy=700, secs=10, fn='CDV.Enable("pip_k0")\nCDV.Enable("pip_k1")\nCDV.Enable("pip_k2")',
+    lua.zone("cripta", k.lua_pos(66, 46, FC), r=1400, dy=700, secs=10, fn='CDV.Enable("pip_k0")\nCDV.Enable("pip_k1")\nCDV.Enable("pip_k2")',
              text="La cripta. Due blocchi di marmo con i berretti dei gemelli, fuori posto. Nel pavimento, due stelle: una a ovest, una a est.")
     wl = M2.cave(k, "C_POZZO", ["...", "...", "..."], 65, 53, FC, 10 * CLICK, wall="c_cisterna", floor="g_bagnato", ceil="t_volta",
                  amb=(0.2, 0.26, 0.28), rough=0)
     k.link_wall(cr, wl, span=(66, 66))
     M2.light(ctx, wl, 66.5, 54.5, 3 * CLICK, (0.4, 0.8, 0.9), 0.9, 1.0, 4.0)
-    lua.zone("pozzo", k.lua_pos(66, 54, FC), r=900, dy=900, need='CDV.Flag("stelle_ok")', fn="CDV.End(0, 1)",
+    lua.zone("pozzo", k.lua_pos(66, 54, FC), r=900, dy=900, need='CDV.Flag("stelle_ok")', fn="CDV.End(%d, 1)" % NEXT,
              text="Il pozzo scende nelle cisterne, e piu' giu' ancora: fino alle grotte marine sotto il capo. Turi e' passato di qui.")
     for rm in (u, cr, wl):
         rm.room.no_path = False
