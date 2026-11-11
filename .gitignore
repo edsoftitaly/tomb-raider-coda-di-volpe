@@ -7,3 +7,6 @@ tools/render/node_modules/
 build/**/*.prj2
 build/levels/
 build/Oliveri/
+# Delivery packages: rebuilt from tools/, too big for git
+build/pacchetto_*/
+build/*.zip
