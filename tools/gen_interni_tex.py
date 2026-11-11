@@ -14,6 +14,7 @@ def tile(a, r, f, k, name, img, fs):
     x0, y0 = (k % 8) * 256, (k // 8) * 256
     a[y0:y0 + 256, x0:x0 + 256] = img[:256, :256]
     r["tiles"][name] = [x0, y0, x0 + 256, y0 + 256]
+    r["macro"][name] = [x0, y0, 256]          # usable on terrain too (one tile per sector)
     f[y0 // 64:y0 // 64 + 4, x0 // 64:x0 // 64 + 4] = FS[fs]
 
 

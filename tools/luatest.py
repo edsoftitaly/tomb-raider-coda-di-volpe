@@ -92,7 +92,11 @@ Lara = newMov("Lara")
 function Lara:GetPosition() return { x = pos.x, y = pos.y, z = pos.z } end
 function Lara:GetAnim() return 103 end
 Lara.state = 2
+Lara.hp = 1000
+function Lara:GetHP() return self.hp end
+function Lara:SetHP(v) self.hp = v end
 local H = {}
+function H.hp() return Lara.hp end
 function H.press() keyhit = true; LevelFuncs.OnLoop(); keyhit = false end
 function H.move(x, y, z) pos.x, pos.y, pos.z = x, y, z end
 function H.use(i) used = i; LevelFuncs.OnUseItem(); used = nil end

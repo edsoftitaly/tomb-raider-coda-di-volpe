@@ -135,7 +135,7 @@ def extra_columns(atlas_list):
         if i == 0:
             continue
         for name, (x0, y0, x1, y1) in a.get("columns", {}).items():
-            if name.startswith(("roccia_faccia", "rupe_faccia", "fac_")):
+            if name.startswith(("roccia_faccia", "rupe_faccia", "fac_", "t_", "g_", "c_")):
                 out[name] = (i, x0, x1)
     return out
 
@@ -267,8 +267,8 @@ LEVEL_FLOW = {
     # the top of the cliff melt into it and the map has no visible end.
     "Marinello": {"track": "108", "fog": (178, 180, 188, 9, 27), "far": 32, "sky": (178, 180, 188), "stars": 0},
     "Laghetti": {"track": "108", "fog": None, "far": 128},
-    "Tindari": {"track": "108", "fog": None, "far": 160},
-    "Sommersa": {"track": "108", "fog": (20, 60, 70, 6, 24), "far": 40},
+    "Tindari": {"track": "108", "fog": (214, 170, 132, 14, 40), "far": 44, "sky": (214, 170, 132), "stars": 0},
+    "Sommersa": {"track": "108", "fog": (8, 30, 38, 8, 30), "far": 40, "sky": (8, 30, 38), "stars": 0},
     "Collaudo": {"track": "108", "fog": None, "far": 40},
     "MarinelloB": {"track": "108", "fog": (178, 180, 188, 9, 27), "far": 32, "sky": (178, 180, 188), "stars": 0},
 }
