@@ -117,6 +117,57 @@ def stalactites(k, it, n, seed):
                rot=float(rng.uniform(0, 360)), h=rm.y + min(s.ceil) + 40, room=rm, scale=float(rng.uniform(0.6, 1.1)))
 
 
+def shape(k, it, protect=(), dome=3, talus=1):
+    """Take the box out of a cave: where a corner touches rock the ceiling comes down (a vault) and the floor
+    comes up (the foot of the wall). Run after the links and the objects, before the texturing.
+
+    Left alone: corners at a portal (side or vertical), floors that are not one flat level around the corner
+    (steps, ledges), cells holding a moveable or listed in `protect` (world cells).
+    """
+    rm = it.room
+    nx, nz = rm.nx, rm.nz
+    wall = np.array([[rm.sectors[x][z].wall for z in range(nz)] for x in range(nx)])
+    border = np.zeros((nx, nz), dtype=bool)
+    border[0, :] = border[-1, :] = border[:, 0] = border[:, -1] = True
+    keep = np.zeros((nx, nz), dtype=bool)                 # cells whose geometry must not move
+    keep |= border & ~wall                                # side portals
+    for (wx, wz) in k.links:
+        if 0 <= wx - rm.x < nx and 0 <= wz - rm.z < nz:
+            keep[wx - rm.x, wz - rm.z] = True
+    flat = np.zeros((nx, nz), dtype=bool)                 # cells whose floor must stay level
+    for m in rm.meta:
+        if m and m[0] == "moveable":
+            flat[int(m[2][0] // 1024), int(m[2][2] // 1024)] = True
+    for (wx, wz) in protect:
+        flat[wx - rm.x, wz - rm.z] = True
+    dc = np.zeros((nx + 1, nz + 1), dtype=int)
+    df = np.zeros((nx + 1, nz + 1), dtype=int)
+    for cx in range(1, nx):
+        for cz in range(1, nz):
+            cells = [(cx - 1, cz - 1), (cx, cz - 1), (cx - 1, cz), (cx, cz)]
+            nw = sum(1 for c in cells if wall[c])
+            if nw == 0 or any(keep[c] for c in cells):
+                continue
+            dc[cx, cz] = (dome + (1 if nw >= 2 else 0)) * CLICK
+            opened = [c for c in cells if not wall[c]]
+            levels = set()
+            for (a, b) in opened:
+                levels.update(rm.sectors[a][b].floor)
+            if len(levels) == 1 and not any(flat[c] for c in opened):
+                df[cx, cz] = (talus + (1 if nw >= 3 else 0)) * CLICK
+    for lx in range(1, nx - 1):
+        for lz in range(1, nz - 1):
+            s = rm.sectors[lx][lz]
+            if s.wall or keep[lx, lz]:
+                continue
+            corners = [(lx, lz + 1), (lx + 1, lz + 1), (lx + 1, lz), (lx, lz)]
+            f = [s.floor[i] + df[c] for i, c in enumerate(corners)]
+            c2 = [max(s.ceil[i] - dc[c], f[i] + 5 * CLICK) if dc[c] else s.ceil[i] for i, c in enumerate(corners)]
+            s.floor, s.ceil = f, [min(a, b) for a, b in zip(c2, s.ceil)]
+            s.fsplit = abs(f[1] - f[3]) <= abs(f[0] - f[2])
+            s.csplit = abs(s.ceil[1] - s.ceil[3]) <= abs(s.ceil[0] - s.ceil[2])
+
+
 def light(ctx, it, wx, wz, h, color, intensity=0.8, inner=1.0, outer=5.0):
     rm = it.room
     ctx.level.add_light(rm, 0, ((wx - rm.x) * 1024.0, float(h), (wz - rm.z) * 1024.0), color=color,
@@ -390,6 +441,8 @@ end)''' % (x0, x1, z0, z1))
     light(ctx, g5, 19.5, 46.5, 1500, (1.0, 0.95, 0.82), 1.6, 2.0, 9.0)
     lua.zone("uscita", k.lua_pos(19, 45, F4), r=1200, dy=1500, need='CDV.Flag("maga_morta")', fn="CDV.End(3, 1)",
              text="Luce. La galleria sbuca in alto sulla rupe, sul sentiero Coda di Volpe. Sopra, le mura di Tindari.")
+    altar_cells = [c for c in altars.values()]
     for i, rm in enumerate((g1, g2, g3, g4, g5)):
+        shape(k, rm, protect=altar_cells if rm is g3 else ((20, 25), (19, 25)) if rm is g4 else ())
         rm.room.no_path = False
         stalactites(k, rm, (5, 9, 14, 18, 8)[i], 20 + i)

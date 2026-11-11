@@ -148,16 +148,40 @@ def prepare(world):
                 wall(x, z, P + (7.0 if x % 4 == 0 else 6.0), "t_opera")
             else:
                 floor(x, z, "t_lastre")
-    # the sanctuary: nave, two bell towers on the front, an open porch of three bays between them
+    # the sanctuary, on its own base so that windows and plinths sit on the terrace: a nave with lower aisles, a
+    # gabled front between two bell towers, the porch on two steps, a dome over the crossing and an apse behind
     x0, z0, x1, z1 = CHURCH
+    church = len(world.buildings)
+    world.buildings.append({"id": "santuario", "tags": {"building": "church"}, "sectors": 0, "ground_m": T, "base_m": T, "roof_m": T + 15})
+    xm = (x0 + x1) // 2
+
+    def cwall(x, z, top, col, topmat="m_tegole"):
+        CM._land(world, x, z, T + top, topmat)
+        world.building_id[x, z] = church
+        face(x, z, col)
+
     for x in range(x0, x1 + 1):
         for z in range(z0, z1 + 1):
             tower = z <= z0 + 1 and (x <= x0 + 1 or x >= x1 - 1)
-            if z == z0 and not tower:
-                floor(x, z, "t_marmo_pav", T)                       # the porch
+            aisle = x in (x0, x1)
+            if tower:
+                belfry = (x in (x0, x1)) == (z == z0)                      # two of the four cells stand taller
+                cwall(x, z, 15.0 if belfry else 13.5, "fac_ton_bianco_fin" if z == z0 or aisle else "fac_ton_bianco", "m_tegole")
+            elif z == z0:
+                floor(x, z, "t_marmo_pav", T + 1.0)                         # the porch
+            elif z == z0 + 1:
+                cwall(x, z, 12.5 if x == xm else 11.5, "fac_ton_bianco")    # the gabled front
+            elif z >= z1 - 1:                                               # the apse
+                if abs(x - xm) <= (2 if z == z1 - 1 else 1):
+                    cwall(x, z, 8.0 if z == z1 - 1 else 7.0, "fac_ton_bianco_fin" if z == z1 else "fac_ton_bianco")
+                else:
+                    floor(x, z, "m_erba", T)
+            elif abs(x - xm) <= 1 and z1 - 5 <= z <= z1 - 3:                # the dome
+                cwall(x, z, 15.0 if (x == xm and z == z1 - 4) else 13.5, "fac_ton_bianco_fin" if x != xm or z != z1 - 4 else "fac_ton_bianco", "t_bronzo")
             else:
-                top = 18.0 if tower else (12.0 if abs(x - (x0 + x1) / 2) < 1.6 else 10.0)
-                wall(x, z, T + top, "t_marmo", topmat="m_tegole")
+                cwall(x, z, 7.0 if aisle else 10.5, "fac_ton_bianco_fin" if (z % 2 == 0) else "fac_ton_bianco")
+    for x in range(x0 + 2, x1 - 1):
+        floor(x, z0 - 1, "t_marmo_pav", T + 0.5)                            # the step in front of the porch
     world.facade_cols = cols
     world.rock_prefix = "rupe_faccia"
     world.bed_mat = "m_fondale"
@@ -326,9 +350,12 @@ end)''' % (MOSAIC_X[0], MOSAIC_X[-1], MOSAIC_Z[0], MOSAIC_Z[-1], -tp, safe))
              text="In cima alla scena. Di qui si passa sulla terrazza del santuario.")
     lua.zone("santuario", k.lua_pos(66, 45, tt), r=1500, dy=900, secs=10,
              text="Il santuario della Madonna Nera. Sul portale: NIGRA SUM SED FORMOSA. Davanti, una scala scende nella cripta.")
-    for name, x, z, rot in (("COLONNA", 62.5, 46.4, 0), ("COLONNA", 70.5, 46.4, 0), ("TRANSENNA", 64.5, 41.5, 90), ("FARO_CANTIERE", 68.6, 40.5, 250),
-                            ("CASSA_LEGNO", 70.4, 38.5, 30), ("BRACIERE", 64.5, 46.4, 0), ("BRACIERE", 68.5, 46.4, 0)):
+    for name, x, z, rot in (("TRANSENNA", 63.5, 41.5, 90), ("FARO_CANTIERE", 69.6, 40.5, 250), ("CASSA_LEGNO", 70.4, 38.5, 30),
+                            ("BRACIERE", 63.5, 45.5, 0), ("BRACIERE", 69.5, 45.5, 0)):
         k.prop(name, x, z, rot=float(rot), h=tt)
+    for x in (65.02, 66.0, 67.0, 67.98):                 # the four columns of the porch
+        k.prop("COLONNA", x, CHURCH[1] + 0.25, rot=0.0, h=tt + Z.u(1.0), scale=0.9)
+    Pl(K.DOOR_TYPE1, 66, CHURCH[1], rot=180.0, h=tt + Z.u(1.0), name="portale_santuario")      # the portal: it stays shut
     Pl(K.SMALLMEDI, 70, 39, h=tt)
     bz = max(z for z in range(58, 70) if w.tindari["terrace"][71, z])
     lua.zone("belvedere", k.lua_pos(70, bz - 1, tt), r=1700, dy=900, secs=11,

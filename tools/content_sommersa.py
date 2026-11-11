@@ -57,7 +57,7 @@ def build_standalone(ctx):
     k.link_wall(tun, a1w, span=(14, 15))
 
     ring = "...#########..."
-    u = M2.cave(k, "U_GALLERIA", [ring] * 3 + ["..............."] * 5 + [ring] * 3, 22, 10, 0, 2816, wall="t_marmo", floor="t_marmo_pav",
+    u = M2.cave(k, "U_GALLERIA", [ring] * 3 + ["..............."] * 5 + [ring] * 3, 22, 10, 0, 11 * CLICK, wall="t_marmo", floor="t_marmo_pav",
                 ceil="t_volta", amb=(0.36, 0.36, 0.4), rough=0)
     k.link_wall(a1, u, span=(14, 16))
     solid = "###############"
@@ -73,6 +73,18 @@ def build_standalone(ctx):
     e = M2.cave(k, "E_FUGA", e_rows, 37, 12, 0, 17 * CLICK, wall="t_opera", floor="t_lastre", ceil="g_soffitto", amb=(0.34, 0.33, 0.32), rough=0)
     k.link_wall(u, e, span=(15, 15))
     L.add_portal = real_add
+    M2.shape(k, a0, protect=[(3, 15), (3, 13), (9, 17), (2, 13)])
+    # the temple: a higher nave over the cella, the mosaic of the twins on its floor
+    for (wx, wz) in VOID:
+        u.sector(wx, wz).ceil = [15 * CLICK] * 4
+    for wx in range(26, 33):
+        for wz in (14, 15, 16):
+            name = "t_stella" if (wx, wz) == (29, 15) else "t_mos_castore" if wx < 29 and wz == 15 else "t_mos_polluce" if wx > 29 and wz == 15 else "t_mos_vuoto"
+            walls.set_floor(h.sector(wx, wz), k.atlases, name, 0)
+    for wz in (14, 15, 16):
+        walls.set_floor(u.sector(23, wz), k.atlases, "t_mos_vuoto", 0)
+        walls.set_floor(u.sector(35, wz), k.atlases, "t_mos_vuoto", 0)
+    walls.set_floor(u.sector(23, 18), k.atlases, "t_stella", 0)
     k.finish_interiors()
 
     # ---------------------------------------------------------------- the flooded twins of gallery and cella
@@ -137,11 +149,12 @@ def build_standalone(ctx):
     for name, x, z, rot in (("STATUA_DIOSCURO", 22.5, 10.5, 45), ("STATUA_DIOSCURO", 36.5, 20.5, 225), ("BRACIERE", 22.5, 17.5, 0),
                             ("BRACIERE", 24.5, 20.5, 0), ("BRACIERE", 34.5, 10.5, 0), ("BRACIERE", 36.5, 12.5, 0), ("COLONNA_ROTTA", 24.5, 10.5, 0),
                             ("MACERIE", 35.5, 20.4, 0),
-                            ("COLONNA", 24.5, 12.5, 0), ("COLONNA", 24.5, 18.5, 0), ("COLONNA", 34.5, 12.5, 0), ("COLONNA", 34.5, 18.5, 0)):
+                            ("COLONNA", 24.5, 12.5, 0), ("COLONNA", 24.5, 18.5, 0), ("COLONNA", 34.5, 12.5, 0), ("COLONNA", 34.5, 18.5, 0),
+                            ("COLONNA", 22.5, 12.5, 0), ("COLONNA", 36.5, 18.5, 0), ("COLONNA", 22.5, 13.4, 0), ("COLONNA", 22.5, 17.6, 0)):
         k.prop(name, x, z, rot=float(rot), h=0, room=ur)
     light2(u, 23.5, 18.5, 1700, (1.0, 0.85, 0.55), 0.9, 1.0, 5.0)
     light2(u, 35.5, 15.5, 1700, (1.0, 0.85, 0.55), 0.8, 1.0, 5.0)
-    light2(u, 29.5, 15.5, 2300, (0.55, 0.7, 1.0), 0.8, 2.0, 8.0)
+    light2(u, 29.5, 15.5, 3300, (0.55, 0.7, 1.0), 0.9, 2.0, 9.0)
     light2(h, 29.5, 15.5, 2600, (0.5, 0.75, 0.9), 0.7, 2.0, 8.0)
     light2(h, 35.5, 15.5, 1500, (1.0, 0.8, 0.45), 0.9, 1.0, 4.0)
     k.place(K.LEVER_SWITCH, LEVER[0], LEVER[1], room=ur, rot=0.0, name="leva_valve")
@@ -156,8 +169,13 @@ def build_standalone(ctx):
     k.place(K.SHOTGUN_AMMO1, 35, 17, room=hr, h=DEEP)
     k.place(K.BIGMEDI, 36, 13, room=hr, h=DEEP)
     lua.secret(3, k.lua_pos(36, 13, DEEP), r=800, text="Il tesoro dei Dioscuri, dietro Turi: l'ultima Stella!", give="ID.BIGMEDI_ITEM")
-    for name, x, z, rot in (("SARCOFAGO", 29.5, 17.4, 0), ("ANFORA", 26.5, 16.5, 30), ("ANFORA", 32.5, 13.5, 100), ("STATUA_DIOSCURO", 29.5, 13.5, 180),
-                            ("MACERIE", 31.5, 16.5, 0), ("ANFORA", 35.5, 13.5, 0), ("ANFORA", 36.4, 17.4, 60)):
+    # the colonnade of the cella: six columns 13 m tall, from the floor of the cella to the vault over the gallery
+    for x, z in ((26.5, 17.55), (29.5, 17.55), (32.5, 17.55), (30.5, 13.45), (32.5, 13.45)):
+        k.prop("COLONNA_TEMPIO", x, z, rot=0.0, h=DEEP, room=hr)
+    for x, z, rot in ((25.5, 16.5, 90), (33.4, 16.5, 270), (33.4, 13.6, 270)):
+        k.prop("STATUA_DIOSCURO", x, z, rot=float(rot), h=DEEP, room=hr, scale=1.3)
+    for name, x, z, rot in (("SARCOFAGO", 29.5, 16.6, 0), ("ANFORA", 26.5, 16.5, 30), ("ANFORA", 32.5, 13.5, 100), ("STATUA_DIOSCURO", 29.5, 13.5, 180),
+                            ("MACERIE", 31.5, 14.5, 0), ("ANFORA", 35.5, 13.5, 0), ("ANFORA", 36.4, 17.4, 60)):
         k.prop(name, x, z, rot=float(rot), h=DEEP, room=hr)
     lua.zone("tempio", k.lua_pos(23, 15, 0), r=1300, dy=600, secs=10, fn='CDV.Enable("g1")\nCDV.Enable("g2")',
              text="Il tempio. Una galleria intorno alla cella, otto metri piu' in basso: una scala scende, e la' sotto ci sono gli uomini di Turi. "

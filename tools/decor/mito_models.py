@@ -179,3 +179,15 @@ def ruota_chiusa():
         a = math.pi / 2 * k
         m.merge(G.tube([(0, 0.75, -0.5), (math.cos(a) * 0.4, 0.75 + math.sin(a) * 0.4, -0.5)], [0.02, 0.02], "m_iron", n=4))
     return m, cbox(0.9, 1.2, 0.6)
+
+
+@model(239, "COLONNA_TEMPIO", "Colonna del tempio dei Dioscuri, 13 m, marmo: dal fondo della cella alla volta")
+def colonna_tempio():
+    m = G.box(1.5, 0.3, 1.5, "m_marble")
+    k = 8
+    for i in range(k):
+        a, b = i / k, (i + 1) / k
+        m.merge(G.cylinder(0.62 - 0.12 * a, 0.62 - 0.12 * b, 12.0 / k, "m_marble", n=12, base=(0, 0.3 + 12.0 * a, 0), top_cap=(i == k - 1)))
+    m.merge(G.cylinder(0.5, 0.78, 0.3, "m_marble", n=12, base=(0, 12.3, 0)))
+    m.merge(G.box(1.6, 0.4, 1.6, "m_marble", center=(0, 12.6, 0)))
+    return m, cbox(1.3, 13.0, 1.3)

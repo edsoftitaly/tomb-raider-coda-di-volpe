@@ -164,3 +164,4 @@ Coda di Volpe - decorazioni
 236 MACERIE: Mucchio di macerie e blocchi caduti
 237 GRADINATA: Sedile di pietra del teatro, 2 m
 238 RUOTA_CHIUSA: Casello della chiusa: gabbiotto di ferro con il volante della paratoia
+239 COLONNA_TEMPIO: Colonna del tempio dei Dioscuri, 13 m, marmo: dal fondo della cella alla volta
