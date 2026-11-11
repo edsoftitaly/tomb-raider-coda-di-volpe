@@ -34,6 +34,7 @@ TEN.View.GetCameraType = function() return 0 end
 TEN.View.PlayFlyby = function(n) CDV_LOG_FLYBY = n end
 TEN.View.PlayVideo = function(name) CDV_LOG_VIDEO = name end
 TEN.Flow.EndLevel = function(i, p) log("end", tostring(i) .. ":" .. tostring(p)) end
+TEN.Flow.FlipMap = function(g) log("flip", tostring(g)) end
 TEN.Flow.AddSecret = function(i) log("secret", tostring(i)) end
 TEN.Sound.PlaySound = function() end
 local objs = {}
@@ -97,6 +98,7 @@ function H.kill(name) objs[name].hp = 0; objs[name].valid = false end
 function H.setActive(name, v) objs[name].active = v end
 function H.active(name) return objs[name].active end
 function H.pull(name) objs[name].state = 1 - objs[name].state end
+function H.put(name, x, y, z) names[name] = { x = x, y = y, z = z } end
 function H.count(i) return inv[i] or 0 end
 function H.give(i) inv[i] = (inv[i] or 0) + 1 end
 return H

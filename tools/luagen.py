@@ -552,6 +552,32 @@ class LuaLevel:
 end)''' % dict(s=lua_str(sid), pts=pts, r=r, dy=dy, done=lua_str(done_text), step=lua_str(step_text),
                  bad=lua_str(bad_text), fn=fn.strip().replace("\n", "\n            ")))
 
+    def kick_door(self, name):
+        """A kick door on a DOOR_TYPE1, as TEN's pushpull_kick_door.cpp does it for KICK_DOOR1 (no wad has that
+        door; proven in Livello 0, station B): Lara idle, facing the door within 30 degrees and within 600 units
+        of the kick spot, Action -> she is put 917 units in front of the door, plays LA_DOOR_OPEN_KICK (315),
+        the door opens when the foot hits it."""
+        self.add('''CDV.Loop(function()
+    if CDV.Flag("kick_%(n)s") then return end
+    if not TEN.Input.IsKeyHit(TEN.Input.ActionID.ACTION) then return end
+    if Lara:GetState() ~= 2 then return end
+    local d = CDV.M("%(n)s")
+    if d == nil or not d:GetValid() then return end
+    local q = d:GetPosition()
+    local face = (d:GetRotation().y + 180) %% 360
+    local a = math.rad(face)
+    local sx, sz = q.x - 917 * math.sin(a), q.z - 917 * math.cos(a)
+    local p = Lara:GetPosition()
+    if math.abs(p.y - q.y) > 200 or (p.x - sx) ^ 2 + (p.z - sz) ^ 2 > 600 ^ 2 then return end
+    local dy = math.abs(((Lara:GetRotation().y - face) + 540) %% 360 - 180)
+    if dy > 30 then return end
+    CDV.Flag("kick_%(n)s", true)
+    Lara:SetPosition(TEN.Vec3(math.floor(sx), q.y, math.floor(sz)), false)
+    Lara:SetRotation(TEN.Rotation(0, face, 0))
+    Lara:SetAnim(315)
+    CDV.After(22, function() CDV.Enable("%(n)s") end)
+end)''' % {"n": name})
+
     def start(self, code):
         """Code run at level start; several calls add up (in order)."""
         self.add("CDV.StartList = CDV.StartList or {}\nCDV.StartList[#CDV.StartList + 1] = function()\n    %s\nend\n"

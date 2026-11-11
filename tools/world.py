@@ -6,6 +6,7 @@ Terrain tiles are rooms of (N+2) x (N+2) sectors with stride N; tile (i, j) has 
 Tiles are kept only where they touch the playable zones. Sea and lagoons are water rooms under
 the terrain rooms, joined by floor/ceiling portals.
 """
+import copy
 import math
 import os
 import xml.etree.ElementTree as ET
@@ -367,7 +368,7 @@ def build_rooms(world, level, atlases, texer):
         room = prj2.Room("T_%02d_%02d" % (i, j), n, n, x=sx0, y=y, z=sz0)
         room.outside = True
         room.horizon = True
-        room.ambient = (0.62, 0.6, 0.58)
+        room.ambient = getattr(world, "ambient", (0.62, 0.6, 0.58))
         room.tags = ["esterno"]
         room.no_path = True  # enemies get pathfinding only where content modules enable it
         for lx in range(n):
@@ -379,6 +380,23 @@ def build_rooms(world, level, atlases, texer):
                 s.fsplit = abs(int(f[1]) - int(f[3])) <= abs(int(f[0]) - int(f[2]))
         texer.apply_room(room, sx0, sz0)
         terrain[i, j] = level.add_room(room)
+        sun = getattr(world, "sun", None)
+        if sun:     # one sun per terrain room: slopes and walls get shaded by their facing
+            level.add_light(room, 4, (n * 512, ceil - 512, n * 512), color=sun["color"], intensity=sun["intensity"],
+                            rot_y=sun["rot_y"], rot_x=sun["rot_x"])
+        flip = getattr(world, "flip", {}).get((i, j))
+        if flip is not None:
+            # Alternate (flipped) terrain room: the same ground with no water surface (the lake is drained).
+            alt = copy.deepcopy(room)
+            alt.name = room.name + "_ASCIUTTO"
+            alt.index = None
+            alt.objects = []
+            level.add_room(alt)
+            if sun:
+                level.add_light(alt, 4, (n * 512, ceil - 512, n * 512), color=sun["color"], intensity=sun["intensity"],
+                                rot_y=sun["rot_y"], rot_x=sun["rot_x"])
+            room.alternate = (flip, alt)
+            room.alt = alt
 
         wsub = world.water[sx0:sx0 + n, sz0:sz0 + n]
         if wsub[1:n - 1, 1:n - 1].any():
@@ -406,12 +424,36 @@ def build_rooms(world, level, atlases, texer):
                         s.fsplit = abs(s.floor[1] - s.floor[3]) <= abs(s.floor[0] - s.floor[2])
                         if 0 < lx < n - 1 and 0 < lz < n - 1:
                             depth = world.depth[sx0 + lx, sz0 + lz]
-                            name = "posidonia" if (world.lagoon[sx0 + lx, sz0 + lz] or depth > 6) else "sabbia_fondo"
-                            walls.set_floor(s, atlases, name, walls.rot_for(sx0 + lx, sz0 + lz))
+                            bed = getattr(world, "bed_mat", None)
+                            if bed:
+                                for face, coords, ti in texer.floor_coords(sx0 + lx, sz0 + lz, s.floor, s.fsplit, name=bed):
+                                    s.set_tex(face, coords, ti)
+                            else:
+                                name = "posidonia" if (world.lagoon[sx0 + lx, sz0 + lz] or depth > 6) else "sabbia_fondo"
+                                walls.set_floor(s, atlases, name, walls.rot_for(sx0 + lx, sz0 + lz))
                     else:
                         s.wall = True
                         s.floor = [top - prj2.CLICK] * 4
             water[i, j] = level.add_room(wr)
+            walt = None
+            if flip is not None:
+                # Alternate water room: an ordinary room (air), the bed turns to cracked mud.
+                walt = copy.deepcopy(wr)
+                walt.name = wr.name + "_ASCIUTTO"
+                walt.index = None
+                walt.objects = []
+                walt.room_type = 0
+                walt.ambient = getattr(world, "dry_ambient", (0.5, 0.48, 0.44))
+                level.add_room(walt)
+                wr.alternate = (flip, walt)
+                wr.alt = walt
+                dry = getattr(world, "dry_mat", "m_fango")
+                for lx in range(1, n - 1):
+                    for lz in range(1, n - 1):
+                        if wsub[lx, lz]:
+                            s = walt.sectors[lx][lz]
+                            for face, coords, ti in texer.floor_coords(sx0 + lx, sz0 + lz, s.floor, s.fsplit, name=dry):
+                                s.set_tex(face, coords, ti)
             # Surface portals on interior water sectors.
             inner = wsub.copy()
             inner[0, :] = inner[-1, :] = False
@@ -420,6 +462,9 @@ def build_rooms(world, level, atlases, texer):
                 # Traversable faces = visible water surface (TRLE "opacity 2"), additive water texture.
                 level.add_portal(room, (x0, z0, x1, z1), prj2.P_FLOOR, wr, opacity=2)
                 level.add_portal(wr, (x0, z0, x1, z1), prj2.P_CEILING, room, opacity=2)
+                if walt is not None:
+                    level.add_portal(room.alt, (x0, z0, x1, z1), prj2.P_FLOOR, wr, opacity=0)
+                    level.add_portal(walt, (x0, z0, x1, z1), prj2.P_CEILING, room, opacity=0)
             for lx in range(1, n - 1):
                 for lz in range(1, n - 1):
                     if inner[lx, lz]:
@@ -427,6 +472,13 @@ def build_rooms(world, level, atlases, texer):
                         rot = walls.rot_for(sx0 + lx, sz0 + lz)
                         walls.set_floor(room.sectors[lx][lz], atlases, name, rot, blend=2)
                         walls.set_ceiling(wr.sectors[lx][lz], atlases, name, rot, blend=2)
+                        if walt is not None:
+                            for rm in (room.alt, walt):
+                                sec = rm.sectors[lx][lz]
+                                for face in ((prj2.F_FLOOR, prj2.F_FLOOR_TRI2) if rm is room.alt else (prj2.F_CEILING, prj2.F_CEILING_TRI2)):
+                                    if sec.tex and face in sec.tex:
+                                        del sec.tex[face]
+                                    sec.set_invisible(face)
 
     # Horizontal portals and edges.
     for group in (terrain, water):
@@ -446,10 +498,22 @@ def build_rooms(world, level, atlases, texer):
                 else:
                     level.add_portal(room, (1, 0, n - 2, 0), prj2.P_WALL_NZ, other)
             room.portal_sides = sides
-            if group is terrain:
-                hide_edges(room, sides)
-            else:
-                walls.texture_walls(room, atlases, lambda r, wx, wz, d: ("roccia_mare", None), portal_sides=sides)
+            alt = getattr(room, "alt", None)
+            if alt is not None:
+                for d in sides:
+                    other = group[i + {"+x": 1, "-x": -1}.get(d, 0), j + {"+z": 1, "-z": -1}.get(d, 0)]
+                    area, pd = {"+x": ((n - 1, 1, n - 1, n - 2), prj2.P_WALL_PX), "-x": ((0, 1, 0, n - 2), prj2.P_WALL_NX),
+                                "+z": ((1, n - 1, n - 2, n - 1), prj2.P_WALL_PZ), "-z": ((1, 0, n - 2, 0), prj2.P_WALL_NZ)}[d]
+                    level.add_portal(alt, area, pd, other)
+                alt.portal_sides = sides
+            rock = getattr(world, "bed_wall", "roccia_mare")
+            for rm in (room, alt):
+                if rm is None:
+                    continue
+                if group is terrain:
+                    hide_edges(rm, sides)
+                else:
+                    walls.texture_walls(rm, atlases, lambda r, wx, wz, d: (rock, None), portal_sides=sides)
     return terrain, water
 
 

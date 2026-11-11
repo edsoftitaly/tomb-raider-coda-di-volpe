@@ -150,8 +150,8 @@ class Texturer:
         self.size = atlas["size"]
 
     # Floors -----------------------------------------------------------------
-    def floor_coords(self, wi, wj, f, split):
-        name = self.mat[wi, wj]
+    def floor_coords(self, wi, wj, f, split, name=None):
+        name = name or self.mat[wi, wj]
         if name in self.macro:
             ti, x0, y0, size = self.macro[name]
             n = size // 256
@@ -191,9 +191,10 @@ class Texturer:
         if fc and (wi, wj, d) in fc:
             return fc[(wi, wj, d)], self.bases[b] if b >= 0 else None
         if b < 0:
-            if "roccia_faccia_0" in self.columns:
+            prefix = getattr(self, "rock_prefix", "roccia_faccia")
+            if prefix + "_0" in self.columns:
                 along = wi if d in ("+z", "-z") else wj   # position along the wall: continuous rock face
-                return "roccia_faccia_%d" % (along % 8), None
+                return "%s_%d" % (prefix, along % 8), None
             return "roccia_parete", None
         style = self.styles[b]
         if style == "castello":

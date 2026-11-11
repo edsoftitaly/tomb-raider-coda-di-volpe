@@ -157,7 +157,7 @@ class Kit:
         """A decoration static (CdV_Decorazioni) placed by content: clues, cover, set dressing."""
         from decorate import S as DECOR_IDS
         if name not in DECOR_IDS:
-            from decor import santuario_models, santuario_interno_models, casa_models  # noqa: F401  (registers the sanctuary and house pieces)
+            from decor import santuario_models, santuario_interno_models, casa_models, marinello_models  # noqa: F401  (registers the sanctuary and house pieces)
             from decor.models import MODELS
             DECOR_IDS = dict(DECOR_IDS, **{n: sid for sid, n, _, _ in MODELS})
         room = room or self.room_at(wx, wz)

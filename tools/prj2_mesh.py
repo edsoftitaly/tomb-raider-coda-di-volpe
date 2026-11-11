@@ -177,7 +177,7 @@ def build_mesh(rooms, prefixes):
     return pos, uv, tix
 
 
-NATLAS = 12
+NATLAS = 16
 
 
 def add_statics(rooms, statics, keep, pos, uv, tix, out_dir):
@@ -187,7 +187,7 @@ def add_statics(rooms, statics, keep, pos, uv, tix, out_dir):
     from decor import tex
     tex.build()
     from decor import models
-    from decor import santuario_models, santuario_interno_models, casa_models  # noqa: F401
+    from decor import santuario_models, santuario_interno_models, casa_models, marinello_models  # noqa: F401
     tex.save(out_dir)
     lib = {}
     for sid, name, mesh, coll, note in models.build_all():

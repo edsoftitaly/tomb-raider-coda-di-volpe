@@ -33,14 +33,16 @@ LEVELS = {
     "Oliveri":   {"title": "Oliveri - Via Amodeo", "box": "frame",
                   "frame": (38.124132, 15.059829, -33.85, (-40.0, -40.0, 124.0, 40.0))},
     "Lungomare": {"title": "Il Lungomare", "box": "frame", "frame": (38.1300, 15.0548, 0.0, (0.0, 0.0, 118.0, 118.0))},
-    "Marinello": {"title": "Marinello", "box": "frame", "frame": (38.1370, 15.0520, 0.0, (0.0, 0.0, 118.0, 118.0))},
+    "Marinello": {"title": "La maga dei laghetti", "box": "frame", "frame": (38.1420, 15.0515, 0.0, (0.0, 0.0, 236.0, 236.0))},
+    "MarinelloB": {"title": "La maga dei laghetti (riserva, senza flipmap)", "box": "frame",
+                   "frame": (38.1420, 15.0515, 0.0, (0.0, 0.0, 236.0, 236.0))},
     "Laghetti":  {"title": "I Laghetti", "box": "frame", "frame": (38.1420, 15.0515, 0.0, (0.0, 0.0, 118.0, 118.0))},
     "Tindari":   {"title": "Tindari", "box": "frame", "frame": (38.1412, 15.0454, 0.0, (0.0, 0.0, 118.0, 118.0))},
     "Sommersa":  {"title": "La Citta' Sommersa", "box": "frame", "frame": (38.1430, 15.0440, 0.0, (0.0, 0.0, 118.0, 118.0))},
     "Collaudo":  {"title": "Collaudo (test)", "box": None},
     "Titolo":    {"title": "Coda di Volpe", "box": (38.1378, 15.0412, 38.1446, 15.0496), "ten": "title.ten"},
 }
-ORDER = ["Oliveri", "Lungomare", "Marinello", "Laghetti", "Tindari", "Sommersa", "Collaudo"]
+ORDER = ["Oliveri", "Lungomare", "Marinello", "Laghetti", "Tindari", "Sommersa", "Collaudo", "MarinelloB"]
 INDEX = {k: i + 1 for i, k in enumerate(ORDER)}   # Gameflow: 0 = title
 
 # Full-screen videos (Engine\FMV\<name>.mp4) played when a level starts; missing files are skipped by the engine.
@@ -116,7 +118,7 @@ def make_level():
     return level
 
 
-ATLAS_NAMES = ["coda_atlas"] + ["coda_atlas%d" % i for i in range(2, 13)]
+ATLAS_NAMES = ["coda_atlas"] + ["coda_atlas%d" % i for i in range(2, 17)]
 
 
 def macro_tiles(atlas_list):
@@ -133,7 +135,7 @@ def extra_columns(atlas_list):
         if i == 0:
             continue
         for name, (x0, y0, x1, y1) in a.get("columns", {}).items():
-            if name.startswith("roccia_faccia") or name.startswith("fac_"):
+            if name.startswith(("roccia_faccia", "rupe_faccia", "fac_")):
                 out[name] = (i, x0, x1)
     return out
 
@@ -179,6 +181,7 @@ def build_terrain_level(key, content):
                                [b["base_m"] for b in world.buildings], macro=macro_tiles(atlas_list), columns=extra_columns(atlas_list))
 
     texer.facade_cols = getattr(world, "facade_cols", {})
+    texer.rock_prefix = getattr(world, "rock_prefix", "roccia_faccia")
     level = make_level()
     level.use_tombide_ten(LEVELS[key].get("ten", key + ".ten"), wads=WADS)
     setup_textures(level, atlas_list)
@@ -260,11 +263,14 @@ LEVEL_FLOW = {
     # into the night sky and the edge of the map is never seen.
     "Oliveri": {"track": "108", "fog": (16, 20, 36, 16, 36), "far": 40, "sky": (16, 20, 36), "stars": 2500},
     "Lungomare": {"track": "108", "fog": None, "far": 128},
-    "Marinello": {"track": "108", "fog": None, "far": 128},
+    # Dawn mist over the sandbar: fog of the colour of the sky layer, full before the draw distance, so the sea and
+    # the top of the cliff melt into it and the map has no visible end.
+    "Marinello": {"track": "108", "fog": (178, 180, 188, 9, 27), "far": 32, "sky": (178, 180, 188), "stars": 0},
     "Laghetti": {"track": "108", "fog": None, "far": 128},
     "Tindari": {"track": "108", "fog": None, "far": 160},
     "Sommersa": {"track": "108", "fog": (20, 60, 70, 6, 24), "far": 40},
     "Collaudo": {"track": "108", "fog": None, "far": 40},
+    "MarinelloB": {"track": "108", "fog": (178, 180, 188, 9, 27), "far": 32, "sky": (178, 180, 188), "stars": 0},
 }
 
 

@@ -282,6 +282,9 @@ def build():
     pk.new_page()
     from decor import veicoli
     veicoli.build_tex(pk)
+    pk.new_page()
+    from decor import marinello_tex
+    marinello_tex.build(pk)
     return pages, REG
 
 
