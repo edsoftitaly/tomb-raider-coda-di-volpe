@@ -455,12 +455,18 @@ end)''' % gp)
              fn='CDV.Enable("topo0")\nCDV.Enable("topo1")\nCDV.Enable("topo2")')
     lua.add('''CDV.Wheel("ruota_terme", function() return not CDV.Flag("terme_acqua") end, function()
     CDV.Flag("terme_acqua", true)
-    CDV.Sfx(105)
+    CDV.Sfx(238)
     pcall(function() TEN.Effects.MakeEarthquake(22) end)
     pcall(function() TEN.View.FadeOut(1.0) end)
     CDV.After(38, function()
         TEN.Flow.FlipMap(%d)
+        -- Lara was standing on the bottom of a room that is now water: on the floor she stayed stuck (Ed, 12/11 22:27).
+        -- Lifted into mid water, the engine takes her as fallen in and she swims.
+        local lp = Lara:GetPosition()
+        Lara:SetPosition(TEN.Vec3(lp.x, lp.y - 720, lp.z), false)
+        CDV.Sfx(238)
         CDV.Cue("terme_acqua")
+        CDV.Say("L'acqua sale nel pozzetto: su, verso la loggia.", 5)
         pcall(function() TEN.View.FadeIn(0.8) end)
     end)
 end)
@@ -560,6 +566,8 @@ end)''')
                      ("ANFORA", 59.5, 22.5, 0), ("ANFORA", 60.4, 26.4, 60)])
     lua.zone("tempio", k.lua_pos(47, 24, 0), r=1300, dy=600, secs=8, fn='CDV.Enable("g1")\nCDV.Enable("g2")',
              text="Il tempio dei Dioscuri. La cella è otto metri più in basso, e là sotto ci sono gli uomini di Turi.")
+    lua.zone("altare", k.lua_pos(ALTAR[0], ALTAR[1] - 1, 0), r=1000, dy=500, secs=7, need='not CDV.Flag("acqua")',
+             text="L'altare degli Astri: due incavi a stella, e canali di pietra che scendono verso il mare. Azione per posare l'Astro di Castore.")
     ap = k.lua_pos(ALTAR[0], ALTAR[1] - 1, 0)
     lua.add('''local function Drown(name)
     local m = CDV.M(name)
@@ -601,12 +609,16 @@ CDV.Loop(function()
     if on and not CDV.Has(ID.PUZZLE_ITEM7) then return end
     altarBusy = true
     CDV.InsertItem(function()
-        CDV.Sfx(on and 105 or 114)
+        CDV.Sfx(238)
         pcall(function() TEN.Effects.MakeEarthquake(on and 20 or 8) end)
         pcall(function() TEN.View.FadeOut(1.4) end)
         CDV.After(35, function()
             SetWater(on)
             pcall(function() TEN.View.FadeIn(1.0) end)
+            if on and not CDV.Flag("detto_acqua") then
+                CDV.Flag("detto_acqua", true)
+                CDV.Say("Il mare riempie la cella. Finché l'Astro resta sull'altare, l'acqua resta.", 6)
+            end
             altarBusy = false
         end)
     end, function()
@@ -619,6 +631,7 @@ CDV.Loop(function()
     if not CDV.Flag("leva_valve") and CDV.Used("leva_valve") then
         CDV.Flag("leva_valve", true)
         CDV.Sfx(114)
+        CDV.Say("Laggiù si sbloccano le valve di bronzo. Ma con tutta quell'acqua addosso non si apriranno mai.", 7)
     end
     -- Turi wakes when Lara reaches the chamber on foot
     if CDV.Flag("valve_aperte") and not CDV.Flag("turi_sveglio") and not CDV.Flag("acqua") and CDV.Near(%d, %d, %d, 1500, 700) then
