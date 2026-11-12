@@ -68,6 +68,7 @@ local function newMov(name)
     function m:SetState() end
     function m:SetAir(v) log("air", tostring(v)) end
     function m:GetTargetState() return self.state end
+    function m:GetItemFlags() return 0 end
     function m:GetAnim() return 0 end
     function m:GetFrame() return 0 end
     function m:GetStatus() return self.status end

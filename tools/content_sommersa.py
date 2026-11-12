@@ -39,9 +39,26 @@ LATTICE = {9: "..P.B.P..", 8: "..B.B.B..", 7: "P.P.B.P.P", 6: "B...B...B", 5: "P
 
 HELPERS = '''-- A model that is shown only once Lara has put the thing there (with her "use" animation).
 function CDV.Put(name)
-    Lara:SetAnim(131)          -- LA_USE_KEY with state 42, as at the seal of Marinello
-    Lara:SetState(42)
-    CDV.After(45, function() CDV.ShowModel(name, true) end)
+    CDV.InsertItem(nil, function() CDV.ShowModel(name, true) end)
+end
+-- Lara puts something in its place: the "insert" animation (LA_USE_PUZZLE, 134), then fn when her hand comes away;
+-- mid() runs half way (the thing showing up). The engine jumps to the animation written in her item flag 0 at the
+-- last frame: it is kept at zero. If this ever crashes, CDV.USE_PUZZLE_ANIM = false goes back to the key animation.
+CDV.USE_PUZZLE_ANIM = true
+function CDV.InsertItem(fn, mid)
+    local anim = CDV.USE_PUZZLE_ANIM and 134 or 131
+    pcall(function() Lara:SetItemFlags(0, 0) end)
+    Lara:SetAnim(anim)
+    Lara:SetState(CDV.USE_PUZZLE_ANIM and 43 or 42)
+    local n = 0
+    local function wait()
+        n = n + 1
+        pcall(function() Lara:SetItemFlags(0, 0) end)
+        if n == 40 and mid then mid() end
+        if n < 240 and (n < 45 or Lara:GetAnim() == anim) then CDV.After(1, wait); return end
+        if fn then fn() end
+    end
+    CDV.After(1, wait)
 end
 function CDV.Flyby(seq)
     CDV.Log("FLYBY " .. seq)
@@ -585,19 +602,18 @@ CDV.Loop(function()
     local on = not CDV.Flag("acqua")
     if on and not CDV.Has(ID.PUZZLE_ITEM7) then return end
     altarBusy = true
-    Lara:SetAnim(131)          -- LA_USE_KEY with state 42, as at the seal of Marinello
-    Lara:SetState(42)
-    CDV.After(45, function()
-        if on then CDV.Take(ID.PUZZLE_ITEM7) else CDV.Give(ID.PUZZLE_ITEM7, 1) end
-        CDV.ShowModel("astro_c_posto", on)
+    CDV.InsertItem(function()
         CDV.Sfx(on and 105 or 114)
         pcall(function() TEN.Effects.MakeEarthquake(on and 20 or 8) end)
         pcall(function() TEN.View.FadeOut(1.4) end)
-    end)
-    CDV.After(80, function()
-        SetWater(on)
-        pcall(function() TEN.View.FadeIn(1.0) end)
-        altarBusy = false
+        CDV.After(35, function()
+            SetWater(on)
+            pcall(function() TEN.View.FadeIn(1.0) end)
+            altarBusy = false
+        end)
+    end, function()
+        if on then CDV.Take(ID.PUZZLE_ITEM7) else CDV.Give(ID.PUZZLE_ITEM7, 1) end
+        CDV.ShowModel("astro_c_posto", on)
     end)
 end)
 CDV.Loop(function()
