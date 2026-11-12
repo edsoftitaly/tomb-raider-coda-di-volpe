@@ -39,6 +39,7 @@ LEVELS = {
     "Laghetti":  {"title": "I Laghetti", "box": "frame", "frame": (38.1420, 15.0515, 0.0, (0.0, 0.0, 118.0, 118.0))},
     "Tindari":   {"title": "Tindari", "box": "frame", "frame": (38.1412, 15.0454, 0.0, (0.0, 0.0, 176.0, 176.0))},
     "Sommersa":  {"title": "La meta' perduta", "box": None},
+    "TindariInterno": {"title": "Tindari - interno del santuario (stanza da innestare)", "box": None},
     "Collaudo":  {"title": "Collaudo (test)", "box": None},
     "Titolo":    {"title": "Coda di Volpe", "box": (38.1378, 15.0412, 38.1446, 15.0496), "ten": "title.ten"},
 }
