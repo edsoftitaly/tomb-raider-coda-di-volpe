@@ -12,6 +12,7 @@ down the drainpipe on the street front (climbable wall) -> Via Amodeo (dogs, the
 the thief runs to the junction with Via Stesicoro: level end.
 """
 import math
+import os
 
 import numpy as np
 
@@ -447,9 +448,16 @@ WINDOWS = {0: [(0, "S"), (1, "S"), (3, "S"), (6, "S"), (7, "S")],
 
 def house_dressing(ctx, R):
     k, c = ctx.kit, ctx.world.casa
-    for name, x, z, rot, rn in FURNITURE:
+    # Belle Epoque furniture (CdV_Arredi.wad2, tools/build_arredi.py) stands in for the hand-made pieces: each one
+    # was re-posed inside its mesh to share origin, facing and footprint with the model it replaces.
+    import json
+    import decorate
+    arredi = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "assets", "wads", "CdV_Arredi.json")))
+    decorate.S.update(arredi)
+    extra = [("AR_LAMPADA", 0.5, 9.4, 0.0, "SOGGIORNO"), ("AR_LAMPADA", 0.5, 9.5, 0.0, "CAMERA"), ("AR_POLTRONCINA", 11.2, 8.5, 0.0, "CAMERETTA1")]
+    for name, x, z, rot, rn in FURNITURE + extra:
         it = R[rn]
-        k.prop(name, c["x0"] + x / 2.0, c["z0"] + z / 2.0, rot=rot, h=it.floor_h, room=it.room)
+        k.prop("AR_" + name if "AR_" + name in arredi else name, c["x0"] + x / 2.0, c["z0"] + z / 2.0, rot=rot, h=it.floor_h, room=it.room)
     ctx.lua.kicks = []
     for a, b, ca, cb_, kind in DOORS:
         if not kind or (isinstance(kind, int) and not isinstance(kind, bool)):

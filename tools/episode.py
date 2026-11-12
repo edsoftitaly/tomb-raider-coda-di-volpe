@@ -50,7 +50,7 @@ VIDEOS = {"Oliveri": "cdv_intro", "Lungomare": "cdv_02_lungomare", "Marinello": 
           "Laghetti": "cdv_04_laghetti", "Tindari": "cdv_05_tindari", "Sommersa": "cdv_06_sommersa"}
 
 WADS = ["TombEngine.wad2"] + ["CodaDiVolpe\\%s.wad2" % w for w in (
-    "CdV_Oggetti", "CdV_Porte", "TR4_Baddy1", "TR4_Baddy2", "TR2_Doberman", "TR1_Rat", "TR4_Bat",
+    "CdV_Oggetti", "CdV_Porte", "CdV_Arredi", "TR4_Baddy1", "TR4_Baddy2", "TR2_Doberman", "TR1_Rat", "TR4_Bat",
     "TEN_Wraith", "TR5_Lagoon_Witch", "TR2_Shark", "TR4_Skeleton", "TR4_Doors", "TR5_Floor_Trapdoor",
     "TR4_Lever_Switch", "TR4_Rolling_Ball", "TR1_Teeth_Spikes", "TEN_Fish_Emitter", "TEN_Firefly",
     # v10: TEN Resources (GPL, github.com/TombEngine/Resources)
