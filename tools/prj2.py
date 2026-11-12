@@ -153,7 +153,8 @@ class Sector:
                     continue
                 us = [c[0] for c in coords]
                 vs = [c[1] for c in coords]
-                body = leb(face) + f32(*[v for c in coords for v in c])
+                quad = list(coords) + [coords[-1]] * (4 - len(coords))        # Tomb Editor always reads four
+                body = leb(face) + f32(*[v for c in quad for v in c])
                 body += f32(min(us), min(vs), max(us), max(vs)) + leb(mode) + leb(texture)
                 out += chunk(TEX_LEVEL2, body)
         if self.invisible:

@@ -15,7 +15,7 @@ TEN = { Objects = {}, Inventory = {}, Strings = {}, Util = {}, View = {}, Flow =
 local ids = {}
 local n = 1
 for _, k in ipairs({"PUZZLE_ITEM1","PUZZLE_ITEM2","PUZZLE_ITEM3","PUZZLE_ITEM4","PUZZLE_ITEM5","PUZZLE_ITEM6",
-                    "PUZZLE_ITEM7","PUZZLE_ITEM8","PUZZLE_ITEM9","SMALLMEDI_ITEM","BIGMEDI_ITEM","SHOTGUN_AMMO1_ITEM","UZI_AMMO_ITEM",
+                    "PUZZLE_ITEM7","PUZZLE_ITEM8","PUZZLE_ITEM9","PUZZLE_ITEM10","PUZZLE_ITEM11","SMALLMEDI_ITEM","BIGMEDI_ITEM","SHOTGUN_AMMO1_ITEM","UZI_AMMO_ITEM",
                     "FLARE_INV_ITEM","KEY_ITEM1","KEY_HOLE1","PISTOLS_AMMO_ITEM","REVOLVER_AMMO_ITEM"}) do ids[k] = n; n = n + 1 end
 TEN.Objects.ObjID = ids
 TEN.Vec2 = function(x, y) return { x = x, y = y } end
@@ -37,6 +37,12 @@ TEN.Flow.EndLevel = function(i, p) log("end", tostring(i) .. ":" .. tostring(p))
 TEN.Flow.FlipMap = function(g) log("flip", tostring(g)) end
 TEN.Flow.AddSecret = function(i) log("secret", tostring(i)) end
 TEN.Sound.PlaySound = function() end
+TEN.Objects.HandStatus = { FREE = 0 }
+TEN.Effects = TEN.Effects or {}
+TEN.Effects.MakeEarthquake = function() end
+TEN.Effects.EmitLight = function() end
+TEN.Util.PrintLog = function() end
+TEN.Util.LogLevel = { INFO = 1 }
 local objs = {}
 local function newMov(name)
     local m = { name = name, active = false, valid = true, hp = 10, state = 1 }
@@ -61,6 +67,16 @@ local function newMov(name)
     function m:SetAnim(a) log("anim", tostring(a)) end
     function m:SetState() end
     function m:SetAir(v) log("air", tostring(v)) end
+    function m:GetTargetState() return self.state end
+    function m:GetAnim() return 0 end
+    function m:GetFrame() return 0 end
+    function m:GetStatus() return self.status end
+    function m:GetMeshCount() return 1 end
+    function m:SetMeshVisible(i, on) log("show", self.name .. "=" .. tostring(on)) end
+    function m:ShatterMesh() log("shatter", self.name) end
+    function m:Destroy() self.valid = false end
+    function m:GetHandStatus() return 0 end
+    function m:UndrawWeapon() end
     return m
 end
 for name, _ in pairs(names) do objs[name] = newMov(name) end

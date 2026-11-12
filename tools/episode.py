@@ -324,7 +324,7 @@ def build(key):
     content = importlib.import_module("content_" + key.lower())
     if LEVELS[key]["box"] is None:
         level = make_level()
-        level.use_tombide_ten(key + ".ten", wads=WADS)
+        level.use_tombide_ten(key + ".ten", wads=getattr(content, "WADS_FIRST", []) + WADS)
         atlas_list = load_atlases()
         setup_textures(level, atlas_list)
         ctx = Ctx(key, None, level, walls.Atlases(atlas_list), {}, {})

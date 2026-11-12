@@ -242,7 +242,8 @@ class Kit:
                         walls.set_ceiling(s, self.atlases, it.ceil_tex, rot)
             self.texture_steps(it)
             col = it.wall_col
-            walls.texture_walls(room, self.atlases, lambda r, wx, wz, d: (col, None),
+            over = getattr(it, "wall_cols", {})
+            walls.texture_walls(room, self.atlases, lambda r, wx, wz, d: (over.get((wx, wz), col), None),
                                 portal_sides=it.portal_sides, open_portals_only=True)
 
     def texture_steps(self, it):
@@ -287,7 +288,8 @@ class Kit:
                     if bot[0] >= top[0] and bot[1] >= top[1]:
                         continue
                     hs = [(v + room.y) / 512.0 for v in (top[0], top[1], bot[1], bot[0])]
-                    ti, c = self.atlases.vertical(it.wall_col, hs)
+                    ccol = getattr(it, "wall_cols", {}).get((room.x + lx, room.z + lz), it.wall_col)
+                    ti, c = self.atlases.vertical(ccol, hs)
                     s.set_tex(prj2.F_WALL_WS[d], c, ti)
 
     # ------------------------------------------------------------------ portals
