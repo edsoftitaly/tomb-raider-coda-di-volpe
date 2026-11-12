@@ -450,6 +450,7 @@ def house_dressing(ctx, R):
     for name, x, z, rot, rn in FURNITURE:
         it = R[rn]
         k.prop(name, c["x0"] + x / 2.0, c["z0"] + z / 2.0, rot=rot, h=it.floor_h, room=it.room)
+    ctx.lua.kicks = []
     for a, b, ca, cb_, kind in DOORS:
         if not kind or (isinstance(kind, int) and not isinstance(kind, bool)):
             continue
@@ -459,6 +460,15 @@ def house_dressing(ctx, R):
             model = "CASA_VANO_RIPOSTIGLIO"
         else:
             model = "CASA_PORTA_ALTA" if ia.storey == 2 else "CASA_PORTA"
+        if kind is True:
+            # a real door in every doorway (Trinity's modern doors, DOOR_TYPE5-8): Action in front of it, from
+            # either side. The item stands in room a, its leaf on the edge towards room b.
+            dx, dz = cb_[0] - ca[0], cb_[1] - ca[1]
+            yaw = {(0, 1): 0, (1, 0): 90, (0, -1): 180, (-1, 0): 270}[(dx, dz)]
+            name = "porta_%s_%s" % (a.lower(), b.lower())
+            k.place(854 + len(ctx.lua.kicks) % 4, c["x0"] + ca[0], c["z0"] + ca[1], room=ra, rot=float((yaw + 180) % 360), name=name)
+            ctx.lua.kick_door(name, both=True)
+            ctx.lua.kicks.append(name)
         if ca[0] != cb_[0]:
             xb = max(ra.x, rb.x) + 1
             k.prop(model, xb, c["z0"] + ca[1] + 0.5, rot=0.0, h=ia.floor_h, room=ra)
@@ -541,14 +551,12 @@ def fronts_dressing(ctx):
     for col in range(1, W_COLS):
         k.prop("PARAPETTO", c["x0"] + col + 0.5, c["z0"] + 0.11, rot=0.0, h=R)
     k.prop("PERGOLATO", c["x0"] + 5.0, c["z0"] + 3.2, rot=0.0, h=R)
-    k.prop("SERBATOIO", c["x0"] + 1.6, c["z0"] + 4.2, rot=0.0, h=R)
     k.prop("ANTENNA_TV", c["x0"] + 4.6, c["z0"] + 4.6, rot=0.0, h=R)      # clear of the hatch at (3, 4)
     for f in w.fronts:
         if f["name"] in ("rosa", "arancio", "rosa_s"):
             xs = sorted(f["row"])
             x = xs[len(xs) // 2]
             z = f["row"][x] + (2 if f["side"] == "-z" else -2)
-            k.prop("SERBATOIO", x + 0.5, z + 0.5, rot=90.0, h=f["top"])
             k.prop("ANTENNA_TV", x + 1.5, z + 1.0, rot=0.0, h=f["top"])
     # warm street lights every 14 m on both pavements, and a cold moonlight
     room = k.room_at(c["x0"], c["z0"] - 3)
@@ -651,12 +659,9 @@ def build(ctx):
              text="La cabina armadio e' chiusa a chiave: da li' si sale sul tetto. Uno dei ladri ha la chiave.")
     lua.zone("botola", at("RIPOSTIGLIO", *HATCH, dh=1100), r=600, dy=500, fn='CDV.Swing("botola_legno", "z", 75, 30)',
              text="Una spinta e la botola si apre.")
-    # GDD v3: the house is the prologue. From the roof Lara sees the boat of the tombaroli leave for Marinello: cut.
     lua.zone("tetto", k.lua_pos(hx - 1, hz, c["ROOF"]), r=1400, dy=300, secs=10,
-             fn='CDV.After(330, function() CDV.Say("FINE DEL PROLOGO. Si riparte all alba, sulla lingua di sabbia di Marinello.", 8) end)\n'
-                'CDV.After(600, function() CDV.End(2, 1) end)',
-             text="Dal tetto si vede il mare. Una barca senza luci lascia la riva e punta sulla lingua di sabbia di Marinello, "
-                  "sotto il santuario di Tindari. Hanno il diario. Li seguo.")
+             text="Dal tetto si vede il mare: una barca senza luci lascia la riva verso Marinello. Hanno il diario. "
+                  "Sul davanti, verso la via, si scende lungo il pluviale.")
 
     # Via Amodeo: the look-out and two dogs; the thief runs off towards Via Stesicoro.
     zf = c["z0"] - 1
@@ -710,7 +715,7 @@ def build(ctx):
     ex, ez = (STREETS_Z[0][0] + STREETS_Z[0][1]) // 2, (STREETS_X[0][0] + STREETS_X[0][1]) // 2   # Stesicoro crossing
     lua.zone("fine", k.lua_pos(ex, ez, ctx.ground(ex, ez)), r=2600, dy=4000,
              need='CDV.Dead("palo")', fn="CDV.End(2, 1)",
-             text="Il ladro ha preso Via Stesicoro, verso la piazza e il castello.")
+             text="Il palo e' a terra, ma la barca e' gia' al largo. All'alba, a Marinello.")
     lua.zone("fine_no", k.lua_pos(ex, ez, ctx.ground(ex, ez)), r=2600, dy=4000, once=False, secs=4,
              need='not CDV.Dead("palo")', text="Prima devo prendere il palo della banda: e' nel cortile dietro il cancello.")
     lua.secret(0, at("CANTINA", 7, 4), r=800)

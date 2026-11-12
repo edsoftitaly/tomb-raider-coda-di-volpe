@@ -557,7 +557,7 @@ class LuaLevel:
 end)''' % dict(s=lua_str(sid), pts=pts, r=r, dy=dy, done=lua_str(done_text), step=lua_str(step_text),
                  bad=lua_str(bad_text), fn=fn.strip().replace("\n", "\n            ")))
 
-    def kick_door(self, name):
+    def kick_door(self, name, both=False):
         """A kick door on a DOOR_TYPE1, as TEN's pushpull_kick_door.cpp does it for KICK_DOOR1 (no wad has that
         door; proven in Livello 0, station B): Lara idle, facing the door within 30 degrees and within 600 units
         of the kick spot, Action -> she is put 917 units in front of the door, plays LA_DOOR_OPEN_KICK (315),
@@ -569,19 +569,24 @@ end)''' % dict(s=lua_str(sid), pts=pts, r=r, dy=dy, done=lua_str(done_text), ste
     local d = CDV.M("%(n)s")
     if d == nil or not d:GetValid() then return end
     local q = d:GetPosition()
-    local face = (d:GetRotation().y + 180) %% 360
-    local a = math.rad(face)
-    local sx, sz = q.x - 917 * math.sin(a), q.z - 917 * math.cos(a)
+    local f0 = (d:GetRotation().y + 180) %% 360
+    local a0 = math.rad(f0)
     local p = Lara:GetPosition()
-    if math.abs(p.y - q.y) > 200 or (p.x - sx) ^ 2 + (p.z - sz) ^ 2 > 600 ^ 2 then return end
-    local dy = math.abs(((Lara:GetRotation().y - face) + 540) %% 360 - 180)
-    if dy > 30 then return end
+    local face, sx, sz = nil, 0, 0
+    for i = 1, %(sides)d do                      -- side 2: the far side of the leaf, mirrored
+        local f = (f0 + (i - 1) * 180) %% 360
+        local off = (i == 1) and -917 or 1941
+        local x, z = q.x + off * math.sin(a0), q.z + off * math.cos(a0)
+        local dy = math.abs(((Lara:GetRotation().y - f) + 540) %% 360 - 180)
+        if math.abs(p.y - q.y) <= 200 and (p.x - x) ^ 2 + (p.z - z) ^ 2 <= 600 ^ 2 and dy <= 30 then face, sx, sz = f, x, z end
+    end
+    if face == nil then return end
     CDV.Flag("kick_%(n)s", true)
     Lara:SetPosition(TEN.Vec3(math.floor(sx), q.y, math.floor(sz)), false)
     Lara:SetRotation(TEN.Rotation(0, face, 0))
     Lara:SetAnim(315)
     CDV.After(22, function() CDV.Enable("%(n)s") end)
-end)''' % {"n": name})
+end)''' % {"n": name, "sides": 2 if both else 1})
 
     def start(self, code):
         """Code run at level start; several calls add up (in order)."""

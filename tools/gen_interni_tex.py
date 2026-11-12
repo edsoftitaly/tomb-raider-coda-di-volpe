@@ -183,3 +183,74 @@ def walls():
 if __name__ == "__main__":
     tiles()
     walls()
+
+
+def sanctuary():
+    """Atlas 19: the walls of the sanctuary of Tindari, registered to the ground (128 px per metre, the ground at
+    the bottom of the 16 m column): pale ashlar with pink courses, arched windows, three portals, a rose window."""
+    a, r, f = new()
+    stone = np.tile(grade(src("bricks024", 256), tint=(1.0, 0.95, 0.85), gain=1.0), (8, 1, 1))
+    pink = np.tile(grade(src("bricks024", 256), tint=(1.0, 0.78, 0.7), gain=0.95), (8, 1, 1))
+    base = stone.copy()
+    for m in range(0, 16, 2):                                  # a pink course every 2 m
+        y1 = S - m * 128
+        base[max(y1 - 40, 0):y1] = pink[max(y1 - 40, 0):y1]
+    base[S - 110:S] *= 0.82                                    # the plinth
+
+    def paint(fn):
+        im = Image.fromarray(base.astype(np.uint8))
+        d = ImageDraw.Draw(im)
+        Y = lambda m: S - int(m * 128)                         # noqa: E731
+
+        def arch(x0, x1, y0m, y1m, fill, frame=(150, 118, 96), w=10):
+            rad = (x1 - x0) // 2
+            top = Y(y1m)
+            d.rectangle([x0 - w, top + rad, x1 + w, Y(y0m)], fill=frame)
+            d.pieslice([x0 - w, top - w, x1 + w, top + 2 * rad + w], 180, 360, fill=frame)
+            d.rectangle([x0, top + rad, x1, Y(y0m)], fill=fill)
+            d.pieslice([x0, top, x1, top + 2 * rad], 180, 360, fill=fill)
+        fn(d, Y, arch)
+        return np.asarray(im, float)
+
+    glass, wood, dark = (38, 52, 70), (74, 48, 30), (24, 22, 26)
+
+    def finestra(d, Y, arch):
+        arch(84, 172, 4.4, 7.6, glass)
+        d.line([128, Y(4.4), 128, Y(7.2)], fill=(150, 118, 96), width=5)
+
+    def torre(d, Y, arch):
+        arch(104, 152, 3.6, 6.2, dark, w=7)
+        arch(104, 152, 8.0, 10.4, dark, w=7)
+        arch(60, 196, 11.6, 14.6, dark, w=12)                   # the belfry
+        d.rectangle([60, Y(11.9), 196, Y(11.6)], fill=(150, 118, 96))
+
+    def portale(d, Y, arch):
+        arch(36, 220, 0.0, 5.2, wood, w=14)
+        d.line([128, Y(0), 128, Y(4.2)], fill=(40, 26, 18), width=5)
+        for yy in (1.0, 2.2, 3.4):
+            d.line([44, Y(yy), 212, Y(yy)], fill=(52, 34, 22), width=3)
+        cy = Y(9.0)
+        d.ellipse([128 - 104, cy - 104, 128 + 104, cy + 104], fill=(150, 118, 96))
+        d.ellipse([128 - 88, cy - 88, 128 + 88, cy + 88], fill=glass)
+        for k in range(8):
+            an = np.pi * k / 4
+            d.line([128, cy, 128 + np.cos(an) * 88, cy + np.sin(an) * 88], fill=(190, 160, 110), width=5)
+        d.ellipse([128 - 20, cy - 20, 128 + 20, cy + 20], fill=(200, 160, 70))
+
+    def portalino(d, Y, arch):
+        arch(64, 192, 0.0, 3.6, wood, w=10)
+        d.line([128, Y(0), 128, Y(3.0)], fill=(40, 26, 18), width=4)
+        arch(96, 160, 6.2, 8.4, glass, w=8)
+
+    def tamburo(d, Y, arch):
+        arch(92, 164, 11.2, 13.2, glass, w=8)
+
+    for k, (name, fn) in enumerate((("fac_sant_muro", lambda d, Y, arch: None), ("fac_sant_finestra", finestra), ("fac_sant_torre", torre),
+                                    ("fac_sant_portale", portale), ("fac_sant_portalino", portalino), ("fac_sant_tamburo", tamburo))):
+        a[:, k * 256:(k + 1) * 256] = paint(fn)
+        r["columns"][name] = [k * 256, 0, (k + 1) * 256, S]
+    save(19, a, r, f)
+
+
+if __name__ == "__main__":
+    sanctuary()

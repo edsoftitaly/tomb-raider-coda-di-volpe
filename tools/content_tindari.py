@@ -164,26 +164,25 @@ def prepare(world):
 
     for x in range(x0, x1 + 1):
         for z in range(z0, z1 + 1):
-            tower = z <= z0 + 1 and (x <= x0 + 1 or x >= x1 - 1)
+            tower = z == z0 and x in (x0, x1)
             aisle = x in (x0, x1)
             if tower:
-                belfry = (x in (x0, x1)) == (z == z0)                      # two of the four cells stand taller
-                cwall(x, z, 15.0 if belfry else 13.5, "fac_ton_bianco_fin" if z == z0 or aisle else "fac_ton_bianco", "m_tegole")
-            elif z == z0:
-                floor(x, z, "t_marmo_pav", T + 1.0)                         # the porch
-            elif z == z0 + 1:
-                cwall(x, z, 12.5 if x == xm else 11.5, "fac_ton_bianco")    # the gabled front
+                cwall(x, z, 15.5, "fac_sant_torre", "t_bronzo")
+            elif z == z0:                                                   # the front: three portals, the rose window
+                col = "fac_sant_portale" if x == xm else "fac_sant_portalino" if abs(x - xm) == 2 else "fac_sant_muro"
+                cwall(x, z, 13.5 if x == xm else 12.5 if abs(x - xm) == 1 else 11.5, col)
             elif z >= z1 - 1:                                               # the apse
                 if abs(x - xm) <= (2 if z == z1 - 1 else 1):
-                    cwall(x, z, 8.0 if z == z1 - 1 else 7.0, "fac_ton_bianco_fin" if z == z1 else "fac_ton_bianco")
+                    cwall(x, z, 8.0 if z == z1 - 1 else 7.0, "fac_sant_finestra" if z == z1 else "fac_sant_muro")
                 else:
                     floor(x, z, "m_erba", T)
-            elif abs(x - xm) <= 1 and z1 - 5 <= z <= z1 - 3:                # the dome
-                cwall(x, z, 15.0 if (x == xm and z == z1 - 4) else 13.5, "fac_ton_bianco_fin" if x != xm or z != z1 - 4 else "fac_ton_bianco", "t_bronzo")
+            elif abs(x - xm) <= 1 and z1 - 5 <= z <= z1 - 3:                # the dome on its drum
+                centre = x == xm and z == z1 - 4
+                cwall(x, z, 15.5 if centre else 14.0, "fac_sant_muro" if centre else "fac_sant_tamburo", "t_bronzo")
             else:
-                cwall(x, z, 7.0 if aisle else 10.5, "fac_ton_bianco_fin" if (z % 2 == 0) else "fac_ton_bianco")
-    for x in range(x0 + 2, x1 - 1):
-        floor(x, z0 - 1, "t_marmo_pav", T + 0.5)                            # the step in front of the porch
+                cwall(x, z, 7.5 if aisle else 10.5, "fac_sant_finestra" if (z % 2 == 0) else "fac_sant_muro")
+    for x in range(x0 + 1, x1):
+        floor(x, z0 - 1, "t_marmo_pav", T + 0.5)                            # the step in front of the portals
     world.facade_cols = cols
     world.rock_prefix = "rupe_faccia"
     world.bed_mat = "m_fondale"
@@ -355,17 +354,6 @@ end)''' % (MOSAIC_X[0], MOSAIC_X[-1], MOSAIC_Z[0], MOSAIC_Z[-1], -tp, safe))
     for name, x, z, rot in (("TRANSENNA", 63.5, 41.5, 90), ("FARO_CANTIERE", 69.6, 40.5, 250), ("CASSA_LEGNO", 70.4, 38.5, 30),
                             ("BRACIERE", 63.5, 45.5, 0), ("BRACIERE", 69.5, 45.5, 0)):
         k.prop(name, x, z, rot=float(rot), h=tt)
-    for x in (65.02, 66.0, 67.0, 67.98):                 # the four columns of the porch
-        k.prop("COLONNA", x, CHURCH[1] + 0.25, rot=0.0, h=tt + Z.u(1.0), scale=0.9)
-    Pl(K.DOOR_TYPE1, 66, CHURCH[1], rot=180.0, h=tt + Z.u(1.0), name="portale_santuario")      # the portal: it stays shut
-    Pl(K.SMALLMEDI, 70, 39, h=tt)
-    bz = max(z for z in range(58, 70) if w.tindari["terrace"][71, z])
-    lua.zone("belvedere", k.lua_pos(70, bz - 1, tt), r=1700, dy=900, secs=11,
-             text="Il belvedere. Trecento metri piu' in basso, la lingua di sabbia e i laghetti: il Mergolo vuoto, il Lago Verde pieno. "
-                  "Da quassu' la sabbia disegna due stelle, una a ovest e una a est.")
-    lua.secret(3, k.lua_pos(72, bz, tt), r=900, text="Sull'orlo del belvedere: una Stella dei Dioscuri!", give="ID.BIGMEDI_ITEM")
-    k.prop("COLONNA_ROTTA", 72.5, bz - 0.5, h=tt)
-
     FC = tt - 12 * CLICK
     plan = ["####.####"] + ["........."] * 8 + ["###...###", "###...###"]
     cr = M2.cave(k, "C_CRIPTA", plan, 62, 42, FC, 10 * CLICK, wall="t_marmo", floor="t_marmo_scuro", ceil="t_volta",

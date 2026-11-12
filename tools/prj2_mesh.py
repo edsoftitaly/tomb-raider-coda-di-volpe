@@ -226,7 +226,7 @@ def build_mesh(rooms, prefixes):
     return pos, uv, tix
 
 
-NATLAS = 18
+NATLAS = 19
 
 
 def add_statics(rooms, statics, keep, pos, uv, tix, out_dir):

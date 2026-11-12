@@ -86,7 +86,7 @@ Coda di Volpe - decorazioni
 213 CASA_MOBILE_TV: Mobile basso con televisore
 214 CASA_QUADRO: Quadro: la rupe di Tindari al tramonto
 215 CASA_FINESTRA: Finestra vista da dentro, di notte, con tende
-216 CASA_PORTA: Vano porta (stanze alte 3 m): stipiti a filo dei muri, architrave fino al soffitto, anta aperta
+216 CASA_PORTA: Vano porta (stanze alte 3 m): stipiti a filo dei muri, architrave fino al soffitto, senza anta: la porta vera e' un oggetto
 222 CASA_VANO_RIPOSTIGLIO: Vano della porta del ripostiglio (stanze alte 3,5 m), senza anta: la chiude la porta vera
 221 CASA_PORTA_ALTA: Vano porta (stanze alte 3,5 m)
 217 CASA_PORTONE_INT: Portone di casa visto da dentro, sbarrato

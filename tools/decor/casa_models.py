@@ -324,9 +324,9 @@ def porta_vano(top, leaf=True):
     return m, None
 
 
-@furniture(216, "CASA_PORTA", "Vano porta (stanze alte 3 m): stipiti a filo dei muri, architrave fino al soffitto, anta aperta", coll=False)
+@furniture(216, "CASA_PORTA", "Vano porta (stanze alte 3 m): stipiti a filo dei muri, architrave fino al soffitto, senza anta: la porta vera e' un oggetto", coll=False)
 def porta():
-    return porta_vano(2.98)
+    return porta_vano(2.98, leaf=False)
 
 
 @furniture(222, "CASA_VANO_RIPOSTIGLIO", "Vano della porta del ripostiglio (stanze alte 3,5 m), senza anta: la chiude la porta vera", coll=False)
@@ -336,7 +336,7 @@ def vano_ripostiglio():
 
 @furniture(221, "CASA_PORTA_ALTA", "Vano porta (stanze alte 3,5 m)", coll=False)
 def porta_alta():
-    return porta_vano(3.48)
+    return porta_vano(3.48, leaf=False)
 
 
 @furniture(217, "CASA_PORTONE_INT", "Portone di casa visto da dentro, sbarrato", coll=False)

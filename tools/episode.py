@@ -50,7 +50,7 @@ VIDEOS = {"Oliveri": "cdv_intro", "Lungomare": "cdv_02_lungomare", "Marinello": 
           "Laghetti": "cdv_04_laghetti", "Tindari": "cdv_05_tindari", "Sommersa": "cdv_06_sommersa"}
 
 WADS = ["TombEngine.wad2"] + ["CodaDiVolpe\\%s.wad2" % w for w in (
-    "CdV_Oggetti", "TR4_Baddy1", "TR4_Baddy2", "TR2_Doberman", "TR1_Rat", "TR4_Bat",
+    "CdV_Oggetti", "CdV_Porte", "TR4_Baddy1", "TR4_Baddy2", "TR2_Doberman", "TR1_Rat", "TR4_Bat",
     "TEN_Wraith", "TR5_Lagoon_Witch", "TR2_Shark", "TR4_Skeleton", "TR4_Doors", "TR5_Floor_Trapdoor",
     "TR4_Lever_Switch", "TR4_Rolling_Ball", "TR1_Teeth_Spikes", "TEN_Fish_Emitter", "TEN_Firefly",
     # v10: TEN Resources (GPL, github.com/TombEngine/Resources)
@@ -118,7 +118,7 @@ def make_level():
     return level
 
 
-ATLAS_NAMES = ["coda_atlas"] + ["coda_atlas%d" % i for i in range(2, 19)]
+ATLAS_NAMES = ["coda_atlas"] + ["coda_atlas%d" % i for i in range(2, 20)]
 
 
 def macro_tiles(atlas_list):
@@ -196,6 +196,9 @@ def save(ctx):
     os.makedirs(os.path.join(out, "textures"), exist_ok=True)
     for f in [n + ".png" for n in ATLAS_NAMES]:
         shutil.copy(os.path.join(ROOT, "build", "textures", f), os.path.join(out, "textures", f))
+    import fill
+    ctx.filled = fill.fill_missing(ctx.level)
+    print("  faces without a texture filled from their neighbours: %d" % ctx.filled)
     size = ctx.level.save(os.path.join(out, ctx.key + ".prj2"))
     with open(os.path.join(out, ctx.key + ".lua"), "w", newline="\r\n") as f:
         f.write(ctx.lua.text())
