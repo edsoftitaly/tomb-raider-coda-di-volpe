@@ -1223,6 +1223,41 @@ vehicle("panda141_rossa", **panda141((168, 26, 30), "AL 482 KD", "panda141_rossa
 vehicle("panda_bianca", **panda3((232, 232, 228), "FG 715 RM", "panda_bianca"))
 vehicle("punto_grigia", **punto((150, 154, 158), "EM 203 TP", "punto_grigia"))
 vehicle("ypsilon_blu", **ypsilon((26, 40, 78), "GA 368 BN", "ypsilon_blu"))
+
+
+def carabinieri(key):
+    """Fiat Grande Punto of the Carabinieri: dark blue, red stripe along the flanks, white lettering, blue light bar
+    painted on the roof (12/11/2026, for the road block of the prologue)."""
+    global modern
+    blue, red, white = (10, 18, 46), (196, 22, 30), (236, 236, 236)
+    plain = modern
+
+    def liveried(k, colour, plate_txt, spec, wheels, wheel_w, rim, sidep, frontp, rearp, topp=None, mirror=None, extras=None):
+        def side(cv):
+            cv.rect(-1.95, 0.76, 1.55, 0.83, fill=red)
+            cv.text(-1.05, 0.50, "CARABINIERI", white, 0.17)
+
+        def front(cv):
+            frontp(cv)
+            cv.rect(-0.80, 0.63, 0.80, 0.67, fill=red)
+
+        def rear(cv):
+            rearp(cv)
+            cv.rect(-0.80, 0.80, 0.80, 0.85, fill=red)
+
+        def top(cv):
+            cv.rect(-0.55, -0.45, 0.55, -0.20, fill=(30, 70, 235))
+            cv.rect(-0.12, -0.45, 0.12, -0.20, fill=white)
+        return plain(k, colour, plate_txt, spec, wheels, wheel_w, rim, dict(sidep, post=side), front, rear, topp=top,
+                     mirror=mirror, extras=extras)
+    modern = liveried
+    try:
+        return punto(blue, "CC DH 418", key)
+    finally:
+        modern = plain
+
+
+vehicle("punto_carabinieri", **carabinieri("punto_carabinieri"))
 vehicle("cinquecento_azzurra", **cinquecento((132, 176, 200), "FK 954 ME", "cinquecento_azzurra"))
 vehicle("daily_bianco", **daily((236, 236, 232), "GB 541 ZT", "daily_bianco"))
 vehicle("camper", **camper("camper"))

@@ -47,6 +47,7 @@ Coda di Volpe - decorazioni
 140 SCOOTER_CREMA: Vespa Primavera 125, crema, sul cavalletto
 146 AUTO_500_AZZURRA: Fiat 500 (2007), azzurra, 3,55 m
 147 APE_PIAGGIO: Piaggio Ape 50 con cassone, 2,46 m
+148 AUTO_CARABINIERI: Fiat Grande Punto dei Carabinieri, 4,03 m
 150 SANTUARIO_FACCIATA: Facciata e torre campanaria in conci rosa: portale bronzeo, trifora, cella, Madonna in mosaico
 151 SANTUARIO_FIANCO_NORD: Fianco nord della navata, sul ciglio della rupe
 152 SANTUARIO_FIANCO_SUD: Fianco sud della navata, sulla terrazza

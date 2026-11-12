@@ -686,6 +686,7 @@ VEICOLI = [
     (140, "SCOOTER_CREMA", "vespa_crema", "Vespa Primavera 125, crema, sul cavalletto"),
     (146, "AUTO_500_AZZURRA", "cinquecento_azzurra", "Fiat 500 (2007), azzurra, 3,55 m"),
     (147, "APE_PIAGGIO", "ape", "Piaggio Ape 50 con cassone, 2,46 m"),
+    (148, "AUTO_CARABINIERI", "punto_carabinieri", "Fiat Grande Punto dei Carabinieri, 4,03 m"),
 ]
 
 
