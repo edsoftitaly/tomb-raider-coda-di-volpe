@@ -258,3 +258,25 @@ def map_objects(rooms_payload, fn):
             new.append((c2, p2))
         rooms[k] = (c, head + pack(new))
     return pack(rooms)
+
+
+def add_wad(settings_payload, filename, like=b"CdV_Oggetti.wad2", first=False):
+    """Add a wad of Assets\\Wads\\CodaDiVolpe to the list of the level (once), by copying the entry of another one."""
+    items, _ = chunks(settings_payload)
+    wads, _ = chunks(dict(items)[b"TeWads"])
+    name = filename.encode()
+    if any(name in wp for _, wp in wads):
+        return settings_payload
+    wc, wp = [(wc, wp) for wc, wp in wads if like in wp][0]
+    entry = (wc, pack([(k, v.replace(like, name)) for k, v in chunks(wp)[0]]))
+    wads = [entry] + wads if first else wads + [entry]
+    return pack([(c, pack(wads) if c == b"TeWads" else p) for c, p in items])
+
+
+def mov_type(p):
+    """(offset of the type, type) of a TeMovTn3 / TeMovTen2 payload."""
+    from prj2_check import Reader
+    r = Reader(p)
+    r.leb()
+    o = r.s.tell() + 25
+    return o, struct.unpack("<I", p[o:o + 4])[0]
