@@ -140,6 +140,9 @@ def cb(w, h, d, x=0.0, z=0.0):
     return ((x - w / 2) * M, 0.0, (z - d / 2) * M), ((x + w / 2) * M, h * M, (z + d / 2) * M)
 
 
+from decor.models import cbox  # noqa: E402
+
+
 def furniture(sid, name, note, coll=True):
     def deco(fn):
         def build():
@@ -300,28 +303,24 @@ def finestra():
     return m, None
 
 
-def porta_vano(top, leaf=True):
-    """The doorway is a whole sector (2 x 2 m) between two wall sectors: the jambs sit on the walls'
-    faces (local z = +-1), the passage runs along local x. Above 2.3 m the opening is closed with
-    plaster up to the ceiling, so the frame never floats in the middle of the hole."""
+def porta_vano(top, leaf=False):
+    """The doorway between two rooms is a whole sector (2 m) wide and as tall as the room; the door is 1 m by
+    1.8 m. This piece is the wall above the door, a slab 16 cm thick on the line between the two rooms (local
+    x = 0, the passage runs along local x), with the wooden trim of the opening. The wall at the two sides of
+    the door is CASA_PORTA_LATO, a separate piece because it must stop Lara."""
     m = G.Mesh()
-    for z, nz in ((-0.99, 1.0), (0.99, -1.0)):
-        # jamb lining on the wall face, the whole depth of the passage
-        rectf(m, V(-1.0, 0.0, z), V(1, 0, 0), UP, 2.0, 2.3, "ca_noce", V(0, 0, nz), tile=(2.0, 2.3))
-        box(m, 0.12, 2.3, 0.1, "ca_noce", x=-1.0, z=z + 0.04 * nz)
-        box(m, 0.12, 2.3, 0.1, "ca_noce", x=1.0, z=z + 0.04 * nz)
-    # lintel: plaster from 2.3 m up to the ceiling, wood soffit
-    box(m, 2.0, top - 2.3, 1.98, "ca_intonaco", y=2.3)
-    fface(m, [V(-1.0, 2.3, -0.99), V(1.0, 2.3, -0.99), V(1.0, 2.3, 0.99), V(-1.0, 2.3, 0.99)], "ca_noce", -UP)
-    for x in (-1.0, 1.0):
-        box(m, 0.1, 0.12, 2.0, "ca_noce", x=x, y=2.3)
-    if not leaf:
-        return m, None
-    # door leaf open against the jamb
-    leaf = G.Mesh()
-    rectf(leaf, V(0.0, 0.0, 0.0), V(1, 0, 0), UP, 0.95, 2.25, "ca_porta", V(0, 0, 1), tile=None, double=True)
-    m.merge(leaf.transformed(t=(-0.5 * M, 0, 0.93 * M)))
+    box(m, 0.16, top - 1.8, 1.0, "ca_intonaco", y=1.8)
+    for z in (-0.54, 0.54):
+        box(m, 0.2, 1.8, 0.08, "ca_noce", z=z)
+    box(m, 0.2, 0.08, 1.16, "ca_noce", y=1.8)
     return m, None
+
+
+@furniture(255, "CASA_PORTA_LATO", "Muro a lato di una porta: 50 cm di intonaco, alto 3,5 m, spesso 16 cm (con collisione)")
+def porta_lato():
+    m = G.Mesh()
+    box(m, 0.16, 3.5, 0.5, "ca_intonaco")
+    return m, cbox(0.3, 3.5, 0.5)
 
 
 @furniture(216, "CASA_PORTA", "Vano porta (stanze alte 3 m): stipiti a filo dei muri, architrave fino al soffitto, senza anta: la porta vera e' un oggetto", coll=False)

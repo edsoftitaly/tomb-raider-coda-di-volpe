@@ -470,19 +470,27 @@ def house_dressing(ctx, R):
             model = "CASA_PORTA_ALTA" if ia.storey == 2 else "CASA_PORTA"
         if kind is True:
             # a real door in every doorway (Trinity's modern doors, DOOR_TYPE5-8): Action in front of it, from
-            # either side. The item stands in room a, its leaf on the edge towards room b.
+            # either side. The item stands in room a; a door leaf lies on the edge of its sector opposite to the
+            # heading rot + 180 (measured on the wad: z -527..-457), so rot = the heading a -> b puts it on the line
+            # between the two rooms, inside the 1 m opening of the wall piece.
             dx, dz = cb_[0] - ca[0], cb_[1] - ca[1]
             yaw = {(0, 1): 0, (1, 0): 90, (0, -1): 180, (-1, 0): 270}[(dx, dz)]
             name = "porta_%s_%s" % (a.lower(), b.lower())
-            k.place(854 + len(ctx.lua.kicks) % 4, c["x0"] + ca[0], c["z0"] + ca[1], room=ra, rot=float((yaw + 180) % 360), name=name)
+            k.place(854 + len(ctx.lua.kicks) % 4, c["x0"] + ca[0], c["z0"] + ca[1], room=ra, rot=float(yaw), name=name)
             ctx.lua.kick_door(name, both=True)
             ctx.lua.kicks.append(name)
         if ca[0] != cb_[0]:
             xb = max(ra.x, rb.x) + 1
-            k.prop(model, xb, c["z0"] + ca[1] + 0.5, rot=0.0, h=ia.floor_h, room=ra)
+            zc = c["z0"] + ca[1] + 0.5
+            k.prop(model, xb, zc, rot=0.0, h=ia.floor_h, room=ra)
+            for dz in (-0.375, 0.375):
+                k.prop("CASA_PORTA_LATO", xb, zc + dz, rot=0.0, h=ia.floor_h, room=ra)
         else:
             zb = max(ra.z, rb.z) + 1
-            k.prop(model, c["x0"] + ca[0] + 0.5, zb, rot=90.0, h=ia.floor_h, room=ra)
+            xc = c["x0"] + ca[0] + 0.5
+            k.prop(model, xc, zb, rot=90.0, h=ia.floor_h, room=ra)
+            for dx in (-0.375, 0.375):
+                k.prop("CASA_PORTA_LATO", xc + dx, zb, rot=90.0, h=ia.floor_h, room=ra)
     for name, (f, (c0, c1), (r0, r1), _) in ROOMS.items():
         it = R[name]
         for col, side in WINDOWS[f]:
@@ -642,7 +650,7 @@ def build(ctx):
     k.prop("BOTOLA_LEGNO", hx + 1.0, hz + 0.5, rot=0.0, h=c["ROOF"], room=roof_room, lua_name="botola_legno")
     # The box-room (walk-in wardrobe) door: TEN door in the gallery, at 180 degrees it closes the sector
     # north of it (generic_doors.cpp), i.e. the doorway into RIPOSTIGLIO; the lock is on the wall beside it.
-    put(K.DOOR_TYPE1, "GALLERIA", *DOOR, rot=180.0, name="porta_ripostiglio")
+    put(855, "GALLERIA", *DOOR, rot=0.0, name="porta_ripostiglio")     # same modern door, leaf on the line towards the box room
     put(K.KEY_HOLE1, "GALLERIA", *LOCK, rot=0.0, name="serratura_ripostiglio")
     # Down from the roof: the drainpipe on the street front, at the west end of the house.
     cx = c["x0"]

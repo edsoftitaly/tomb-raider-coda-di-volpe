@@ -42,7 +42,7 @@ LEVELS = {
     "Collaudo":  {"title": "Collaudo (test)", "box": None},
     "Titolo":    {"title": "Coda di Volpe", "box": (38.1378, 15.0412, 38.1446, 15.0496), "ten": "title.ten"},
 }
-ORDER = ["Oliveri", "Marinello", "Tindari", "Collaudo", "MarinelloB", "Sommersa"]      # GDD v3: prologue + 3 levels
+ORDER = ["Oliveri", "Marinello", "Tindari", "Sommersa"]      # GDD v3: prologue + 3 levels
 INDEX = {k: i + 1 for i, k in enumerate(ORDER)}   # Gameflow: 0 = title
 
 # Full-screen videos (Engine\FMV\<name>.mp4) played when a level starts; missing files are skipped by the engine.

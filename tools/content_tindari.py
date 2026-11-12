@@ -35,7 +35,7 @@ BASILICA = (38, 46, 50, 54)
 UPIT = [(x, z) for x in (40, 41, 42) for z in (49, 50, 51)]     # the stair hole: three steps under the open sky
 CPIT = [(x, z) for x in (65, 66, 67) for z in (42, 43, 44)]
 CHURCH = (63, 47, 69, 57)
-NEXT = 6                         # Gameflow index of La meta' perduta (episode.ORDER)
+NEXT = 4                         # Gameflow index of La meta' perduta (episode.ORDER)
 BLOCKS = {"a": (54, 29), "b": (52, 30), "c": (56, 31)}
 
 

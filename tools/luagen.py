@@ -575,7 +575,7 @@ end)''' % dict(s=lua_str(sid), pts=pts, r=r, dy=dy, done=lua_str(done_text), ste
     local face, sx, sz = nil, 0, 0
     for i = 1, %(sides)d do                      -- side 2: the far side of the leaf, mirrored
         local f = (f0 + (i - 1) * 180) %% 360
-        local off = (i == 1) and -917 or 1941
+        local off = (i == 1) and -917 or -107     -- the leaf is 512 before the item, on the kicker's side: 405 from her on both sides
         local x, z = q.x + off * math.sin(a0), q.z + off * math.cos(a0)
         local dy = math.abs(((Lara:GetRotation().y - f) + 540) %% 360 - 180)
         if math.abs(p.y - q.y) <= 200 and (p.x - x) ^ 2 + (p.z - z) ^ 2 <= 600 ^ 2 and dy <= 30 then face, sx, sz = f, x, z end
