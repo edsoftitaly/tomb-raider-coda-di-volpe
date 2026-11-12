@@ -54,7 +54,9 @@ def prepare(world):
     sea = d <= -7
     Hs = np.where(shore, 1.0, Hs)
     Hs = np.where(sea, -np.minimum(0.4 + 0.35 * (-d - 7), 5.0), Hs)
-    terrace = (X > 61) & (Zg > 30) & (d >= 0)
+    # the wall of the terrace must not run along a tile border (x 60|61): the terrace starts at x 62, and only the
+    # bridge from the top of the scene crosses the border, level on both sides
+    terrace = (((X > 62) & (Zg > 30)) | ((X > 61) & (Zg > 30) & (Zg < 33))) & (d >= 0)
     Hs = np.where(terrace, T, Hs)
     # the theatre: orchestra 2 m under the plateau, four low rings, the stage building in three tiers of 4 m
     r = np.hypot(X - ORCH[0], Zg - ORCH[1])
@@ -252,7 +254,7 @@ def build(ctx):
     # --- the theatre and its machine
     for name, (x, z) in BLOCKS.items():
         Pl(K.RAISING_BLOCK1, x, z, name="blocco_" + name)
-    prop("ARGANO", 54.5, 26.5, rot=0.0)
+    prop("ARGANO_TEATRO", 54.5, 26.5, rot=0.0)
     winch(ctx, "argano1", pos(54, 26), "blocco_a",
           "L'argano gira, una fune corre sotto l'orchestra: davanti al palco sale un blocco di pietra.",
           "Un argano di legno, con la fune che sparisce sotto il palco. (Azione: girarlo.)")
@@ -301,7 +303,7 @@ def build(ctx):
 end)''' % (MOSAIC_X[0], MOSAIC_X[-1], MOSAIC_Z[0], MOSAIC_Z[-1], -tp, safe))
     lua.zone("mosaico", pos(26, 50), r=900, dy=900, secs=8,
              text="Un pavimento intero di berretti: scuri e dorati. In fondo alla sala, un argano.")
-    prop("ARGANO", 26.5, 57.5, rot=0.0)
+    prop("ARGANO_TEATRO", 26.5, 57.5, rot=0.0)
     winch(ctx, "argano2", pos(26, 57, dz=0.2), "blocco_b",
           "L'argano gira. Lontano, nel teatro, un secondo blocco sale sul palco.",
           "Il secondo argano della macchina del teatro. (Azione: girarlo.)")
@@ -324,7 +326,7 @@ end)''' % (MOSAIC_X[0], MOSAIC_X[-1], MOSAIC_Z[0], MOSAIC_Z[-1], -tp, safe))
     k.link_vertical(u, ctx.terrain_room_at(*UPIT[0]), UPIT)
     k.place(K.ROPE, 48, 50, room=u.room, h=FU + 20 * CLICK - 64, name="fune_cripto")
     lua.start('CDV.Enable("fune_cripto")')
-    k.prop("ARGANO", 51.5, 50.5, rot=90.0, h=FU + 8 * CLICK, room=u.room)
+    k.prop("ARGANO_TEATRO", 51.5, 50.5, rot=90.0, h=FU + 8 * CLICK, room=u.room)
     winch(ctx, "argano3", k.lua_pos(51, 50, FU + 8 * CLICK), "blocco_c",
           "L'argano gira. Sopra la tua testa la pietra trema: nel teatro e' salito l'ultimo blocco.",
           "Il terzo argano. (Azione: girarlo.)")

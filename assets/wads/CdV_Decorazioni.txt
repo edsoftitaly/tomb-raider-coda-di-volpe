@@ -125,43 +125,43 @@ Coda di Volpe - decorazioni
 252 CASA_LAVATRICE: Lavatrice con oblo', fronte verso +x
 253 SCALA_PIANEROTTOLO: Lastra di marmo del pianerottolo (2 x 2 m), sopra il pavimento della stanza
 254 CASA_PORTAFINESTRA: Portafinestra sul balcone vista da dentro, di notte, con tende
-200 CHIUSA: Chiusa della tonnara: due spalle di pietra, paratoia di ferro, vite e scatola dell'ingranaggio (qui va la manovella)
-201 CASSA_LEGNO: Cassa di legno, 90 cm
-202 BOTTE: Botte da tonnara con i cerchi di ferro
-203 RETI: Mucchio di reti con i galleggianti
-204 ANCORA: Ancora di ferro arrugginita, 2 m, coricata
-205 TENDA: Tenda canadese dei tombaroli, 3 x 2,4 m
-206 FALO: Fuoco da campo: pietre, legni, brace
-207 CANNE: Ciuffo di canne (Arundo), 2,8 m
-208 CANNE_FITTE: Canneto fitto: quattro ciuffi, 3,2 m
-209 SCOGLIO: Masso di roccia, 1,6 m
-210 SCOGLIO_GRANDE: Scoglio grande, 3 m
-211 PALO_ORMEGGIO: Palo d'ormeggio con la cima
-212 TRAVI_CROLLATE: Travi del tetto crollate, 4 m, appoggiate di sbieco
-213 RELITTO: Relitto di barca da tonnara, 5 m, sbandato e mezzo insabbiato
-214 PALIZZATA: Tratto di palizzata di tavole, 2 x 2,4 m
-215 PIASTRA_PIETRA: Lastra di pietra a pressione, 1,6 m
-216 TAVOLACCIO: Tavolo grezzo da lavoro, 1,4 x 0,8 m, alto 80 cm
-217 ANFORA: Anfora romana incrostata
-218 FALDA_TETTO: Falda di tetto in coppi su travi, 4 x 4,4 m: si appoggia in cima ai muri (origine al colmo basso)
-219 SCALA_CORDA: Scala di corda spezzata, 5 m, appesa (origine in alto)
-220 RUDERE_ARCO: Arco di pietra del portale della tonnara, luce 2 m, alto 3,4 m
-221 ALTARE_CONCHIGLIA: Altare di roccia con una grande conchiglia (il canto di Donna Villa)
-222 STALAGMITE: Stalagmite, 1,8 m
-223 STALATTITE: Stalattite, 1,6 m, appesa (origine in alto)
-224 PIEDISTALLO: Piedistallo di marmo, 1 m
-225 COLONNA: Colonna dorica, 5 m, con capitello
-226 COLONNA_ROTTA: Colonna spezzata, 1,7 m
-227 ROCCHIO: Rocchio di colonna caduto
-228 STATUA_DIOSCURO: Statua di un Dioscuro con il berretto a punta e la lancia, 2,7 m con la base
-229 ARGANO: Argano di legno del teatro: tamburo con la fune e quattro stanghe
-230 ALTARE_ASTRI: Altare dei Dioscuri: due incavi rotondi, uno di bronzo e uno d'oro
-231 BRACIERE: Braciere di bronzo su treppiede
-232 SARCOFAGO: Sarcofago di pietra con il coperchio spostato
-233 TRANSENNA: Transenna arancione dei tombaroli, 2 m
-234 IMPALCATURA: Impalcatura di tubi e tavole, 2 x 1 x 3 m
-235 FARO_CANTIERE: Faro da cantiere su treppiede
-236 MACERIE: Mucchio di macerie e blocchi caduti
-237 GRADINATA: Sedile di pietra del teatro, 2 m
-238 RUOTA_CHIUSA: Casello della chiusa: gabbiotto di ferro con il volante della paratoia
-239 COLONNA_TEMPIO: Colonna del tempio dei Dioscuri, 13 m, marmo: dal fondo della cella alla volta
+300 CHIUSA: Chiusa della tonnara: due spalle di pietra, paratoia di ferro, vite e scatola dell'ingranaggio (qui va la manovella)
+301 CASSA_LEGNO: Cassa di legno, 90 cm
+302 BOTTE: Botte da tonnara con i cerchi di ferro
+303 RETI: Mucchio di reti con i galleggianti
+304 ANCORA: Ancora di ferro arrugginita, 2 m, coricata
+305 TENDA: Tenda canadese dei tombaroli, 3 x 2,4 m
+306 FALO: Fuoco da campo: pietre, legni, brace
+307 CANNE: Ciuffo di canne (Arundo), 2,8 m
+308 CANNE_FITTE: Canneto fitto: quattro ciuffi, 3,2 m
+309 SCOGLIO: Masso di roccia, 1,6 m
+310 SCOGLIO_GRANDE: Scoglio grande, 3 m
+311 PALO_ORMEGGIO: Palo d'ormeggio con la cima
+312 TRAVI_CROLLATE: Travi del tetto crollate, 4 m, appoggiate di sbieco
+313 RELITTO: Relitto di barca da tonnara, 5 m, sbandato e mezzo insabbiato
+314 PALIZZATA: Tratto di palizzata di tavole, 2 x 2,4 m
+315 PIASTRA_PIETRA: Lastra di pietra a pressione, 1,6 m
+316 TAVOLACCIO: Tavolo grezzo da lavoro, 1,4 x 0,8 m, alto 80 cm
+317 ANFORA: Anfora romana incrostata
+318 FALDA_TETTO: Falda di tetto in coppi su travi, 4 x 4,4 m: si appoggia in cima ai muri (origine al colmo basso)
+319 SCALA_CORDA: Scala di corda spezzata, 5 m, appesa (origine in alto)
+320 RUDERE_ARCO: Arco di pietra del portale della tonnara, luce 2 m, alto 3,4 m
+321 ALTARE_CONCHIGLIA: Altare di roccia con una grande conchiglia (il canto di Donna Villa)
+322 STALAGMITE: Stalagmite, 1,8 m
+323 STALATTITE: Stalattite, 1,6 m, appesa (origine in alto)
+324 PIEDISTALLO: Piedistallo di marmo, 1 m
+325 COLONNA: Colonna dorica, 5 m, con capitello
+326 COLONNA_ROTTA: Colonna spezzata, 1,7 m
+327 ROCCHIO: Rocchio di colonna caduto
+328 STATUA_DIOSCURO: Statua di un Dioscuro con il berretto a punta e la lancia, 2,7 m con la base
+329 ARGANO_TEATRO: Argano di legno del teatro: tamburo con la fune e quattro stanghe
+330 ALTARE_ASTRI: Altare dei Dioscuri: due incavi rotondi, uno di bronzo e uno d'oro
+331 BRACIERE: Braciere di bronzo su treppiede
+332 SARCOFAGO: Sarcofago di pietra con il coperchio spostato
+333 TRANSENNA: Transenna arancione dei tombaroli, 2 m
+334 IMPALCATURA: Impalcatura di tubi e tavole, 2 x 1 x 3 m
+335 FARO_CANTIERE: Faro da cantiere su treppiede
+336 MACERIE: Mucchio di macerie e blocchi caduti
+337 GRADINATA: Sedile di pietra del teatro, 2 m
+338 RUOTA_CHIUSA: Casello della chiusa: gabbiotto di ferro con il volante della paratoia
+339 COLONNA_TEMPIO: Colonna del tempio dei Dioscuri, 13 m, marmo: dal fondo della cella alla volta

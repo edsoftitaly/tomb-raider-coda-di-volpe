@@ -349,15 +349,18 @@ def grotta(ctx, C):
             local n = (CDV.Flag("canto_n") or 0) + 1
             if a[4] == seq[n] then
                 CDV.Flag("canto_n", n)
+                CDV.Track("cdv_conchiglia_" .. a[4])
                 if n == #seq then
                     CDV.Flag("canto_ok", true)
                     CDV.Enable("porta_canto")
+                    CDV.After(60, function() CDV.Track("cdv_canto_donna_villa") end)
                     CDV.Say("Le cinque note insieme: e' il canto con cui la maga chiamava i marinai. Nella roccia si apre un passaggio.", 8)
                 else
                     CDV.Say("La conchiglia canta. (" .. n .. " di " .. #seq .. ")", 3)
                 end
             else
                 CDV.Flag("canto_n", 0)
+                CDV.Track("cdv_conchiglia_stonata")
                 local e = (CDV.Flag("canto_err") or 0) + 1
                 CDV.Flag("canto_err", e)
                 if e == 1 then CDV.Enable("pip_c0"); CDV.Enable("pip_c1") end
@@ -405,6 +408,7 @@ end)''' % (pts, ", ".join(str(n) for n in SONG)))
         if CDV.Has(ID.PUZZLE_ITEM7) then
             CDV.Flag("maga_sveglia", true)
             CDV.Enable("maga")
+            CDV.Track("cdv_donna_villa_grido")
             CDV.Say("L'Astro e' tuo, e Donna Villa si sveglia. Le armi non le fanno niente: il fuoco muore solo nell'acqua. Tuffati!", 9)
         end
         return

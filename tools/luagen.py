@@ -348,6 +348,11 @@ function CDV.UseItem()
     end
 end
 
+-- Audio: a file Engine\\Audio\\<name>.wav (or .ogg, .mp3). A missing file is not an error for the game.
+function CDV.Track(name)
+    pcall(function() TEN.Sound.PlayAudioTrack(name, TEN.Sound.SoundTrackType.ONESHOT) end)
+end
+
 function CDV.End(levelIndex, startPos)
     TEN.Flow.EndLevel(levelIndex, startPos)
 end

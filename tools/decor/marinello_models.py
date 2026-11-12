@@ -8,7 +8,7 @@ from decor.geom import M
 from decor.models import cbox, hull_mesh, model
 
 
-@model(200, "CHIUSA", "Chiusa della tonnara: due spalle di pietra, paratoia di ferro, vite e scatola dell'ingranaggio (qui va la manovella)")
+@model(300, "CHIUSA", "Chiusa della tonnara: due spalle di pietra, paratoia di ferro, vite e scatola dell'ingranaggio (qui va la manovella)")
 def chiusa():
     m = G.Mesh()
     for x in (-1.15, 1.15):
@@ -21,12 +21,12 @@ def chiusa():
     return m, cbox(2.9, 2.1, 0.9)
 
 
-@model(201, "CASSA_LEGNO", "Cassa di legno, 90 cm")
+@model(301, "CASSA_LEGNO", "Cassa di legno, 90 cm")
 def cassa():
     return G.box(0.9, 0.9, 0.9, "m_wood"), cbox(0.9, 0.9, 0.9)
 
 
-@model(202, "BOTTE", "Botte da tonnara con i cerchi di ferro")
+@model(302, "BOTTE", "Botte da tonnara con i cerchi di ferro")
 def botte():
     m = G.cylinder(0.36, 0.42, 0.5, "m_wood", n=10, top_cap=False)
     m.merge(G.cylinder(0.42, 0.36, 0.5, "m_wood", n=10, base=(0, 0.5, 0), cap="m_wood_dark"))
@@ -35,7 +35,7 @@ def botte():
     return m, cbox(0.85, 1.0, 0.85)
 
 
-@model(203, "RETI", "Mucchio di reti con i galleggianti")
+@model(303, "RETI", "Mucchio di reti con i galleggianti")
 def reti():
     m = G.ellipsoid(0.9, 0.38, 0.65, "m_net", n=8, rings=4, center=(0, 0.1, 0), squash_bottom=0.3)
     m.merge(G.ellipsoid(0.5, 0.3, 0.45, "m_net", n=6, rings=4, center=(0.5, 0.12, 0.35), squash_bottom=0.3))
@@ -44,7 +44,7 @@ def reti():
     return m, None
 
 
-@model(204, "ANCORA", "Ancora di ferro arrugginita, 2 m, coricata")
+@model(304, "ANCORA", "Ancora di ferro arrugginita, 2 m, coricata")
 def ancora():
     m = G.tube([(0, 0.18, -1.0), (0, 0.22, 0.9)], [0.07, 0.06], "m_rust", n=6)
     m.merge(G.tube([(-0.75, 0.5, -0.55), (-0.45, 0.2, -0.95), (0, 0.15, -1.05), (0.45, 0.2, -0.95), (0.75, 0.5, -0.55)],
@@ -53,7 +53,7 @@ def ancora():
     return m, cbox(1.5, 0.5, 2.0)
 
 
-@model(205, "TENDA", "Tenda canadese dei tombaroli, 3 x 2,4 m")
+@model(305, "TENDA", "Tenda canadese dei tombaroli, 3 x 2,4 m")
 def tenda():
     m = G.Mesh()
     L, W, H = 1.5, 1.2, 1.7
@@ -64,7 +64,7 @@ def tenda():
     return m, cbox(2.2, 1.5, 3.0)
 
 
-@model(206, "FALO", "Fuoco da campo: pietre, legni, brace")
+@model(306, "FALO", "Fuoco da campo: pietre, legni, brace")
 def falo():
     m = G.Mesh()
     for k in range(8):
@@ -76,12 +76,12 @@ def falo():
     return m, None
 
 
-@model(207, "CANNE", "Ciuffo di canne (Arundo), 2,8 m")
+@model(307, "CANNE", "Ciuffo di canne (Arundo), 2,8 m")
 def canne():
     return G.cross_cards(2.4, 2.8, "m_reed", 3, rng=np.random.default_rng(71)), None
 
 
-@model(208, "CANNE_FITTE", "Canneto fitto: quattro ciuffi, 3,2 m")
+@model(308, "CANNE_FITTE", "Canneto fitto: quattro ciuffi, 3,2 m")
 def canne_fitte():
     r = np.random.default_rng(72)
     m = G.Mesh()
@@ -106,26 +106,26 @@ def boulder(rx, ry, rz, seed, n=9):
     return m
 
 
-@model(209, "SCOGLIO", "Masso di roccia, 1,6 m")
+@model(309, "SCOGLIO", "Masso di roccia, 1,6 m")
 def scoglio():
     return boulder(0.8, 0.6, 0.65, 81), cbox(1.3, 0.9, 1.1)
 
 
-@model(210, "SCOGLIO_GRANDE", "Scoglio grande, 3 m")
+@model(310, "SCOGLIO_GRANDE", "Scoglio grande, 3 m")
 def scoglio_grande():
     m = boulder(1.5, 1.2, 1.2, 82, n=8)
     m.merge(boulder(0.9, 0.8, 0.8, 83).transformed(t=(1.1 * M, 0, 0.6 * M)))
     return m, cbox(3.0, 1.6, 2.2, cx=0.3)
 
 
-@model(211, "PALO_ORMEGGIO", "Palo d'ormeggio con la cima")
+@model(311, "PALO_ORMEGGIO", "Palo d'ormeggio con la cima")
 def palo():
     m = G.cylinder(0.13, 0.11, 1.4, "m_wood_dark", n=7)
     m.merge(G.cylinder(0.15, 0.15, 0.12, "m_rope", n=7, base=(0, 0.9, 0), top_cap=False))
     return m, cbox(0.3, 1.4, 0.3)
 
 
-@model(212, "TRAVI_CROLLATE", "Travi del tetto crollate, 4 m, appoggiate di sbieco")
+@model(312, "TRAVI_CROLLATE", "Travi del tetto crollate, 4 m, appoggiate di sbieco")
 def travi():
     m = G.tube([(-1.8, 0.1, -0.4), (1.8, 2.3, 0.3)], [0.11, 0.1], "m_wood_dark", n=5)
     m.merge(G.tube([(-1.5, 0.1, 0.8), (1.9, 1.9, 0.9)], [0.1, 0.1], "m_wood_dark", n=5))
@@ -133,7 +133,7 @@ def travi():
     return m, None
 
 
-@model(213, "RELITTO", "Relitto di barca da tonnara, 5 m, sbandato e mezzo insabbiato")
+@model(313, "RELITTO", "Relitto di barca da tonnara, 5 m, sbandato e mezzo insabbiato")
 def relitto():
     m, st = hull_mesh(5.0, 1.8, 0.85, "m_wreck")
     for z in (-1.6, -0.8, 0.0, 0.8, 1.5):
@@ -141,7 +141,7 @@ def relitto():
     return m.transformed(rz=0.38, t=(0, -0.2 * M, 0)), cbox(2.0, 0.9, 5.0)
 
 
-@model(214, "PALIZZATA", "Tratto di palizzata di tavole, 2 x 2,4 m")
+@model(314, "PALIZZATA", "Tratto di palizzata di tavole, 2 x 2,4 m")
 def palizzata():
     m = G.Mesh()
     r = np.random.default_rng(84)
@@ -152,14 +152,14 @@ def palizzata():
     return m, cbox(2.0, 2.4, 0.3)
 
 
-@model(215, "PIASTRA_PIETRA", "Lastra di pietra a pressione, 1,6 m")
+@model(315, "PIASTRA_PIETRA", "Lastra di pietra a pressione, 1,6 m")
 def piastra():
     m = G.box(1.6, 0.06, 1.6, "m_stone", top="m_rock")
     m.merge(G.box(0.9, 0.04, 0.9, "m_iron", center=(0, 0.06, 0)))
     return m, None
 
 
-@model(216, "TAVOLACCIO", "Tavolo grezzo da lavoro, 1,4 x 0,8 m, alto 80 cm")
+@model(316, "TAVOLACCIO", "Tavolo grezzo da lavoro, 1,4 x 0,8 m, alto 80 cm")
 def tavolaccio():
     m = G.box(1.4, 0.07, 0.8, "m_wood", center=(0, 0.73, 0), bottom=True)
     for x in (-0.6, 0.6):
@@ -168,13 +168,13 @@ def tavolaccio():
     return m, cbox(1.4, 0.8, 0.8)
 
 
-@model(217, "ANFORA", "Anfora romana incrostata")
+@model(317, "ANFORA", "Anfora romana incrostata")
 def anfora():
     m = G.tube([(0, 0.0, 0), (0, 0.25, 0), (0, 0.6, 0), (0, 0.85, 0), (0, 1.0, 0)], [0.03, 0.2, 0.24, 0.1, 0.09], "m_clay", n=7)
     return m.transformed(rz=1.25, t=(0, 0.22 * M, 0)), None
 
 
-@model(218, "FALDA_TETTO", "Falda di tetto in coppi su travi, 4 x 4,4 m: si appoggia in cima ai muri (origine al colmo basso)")
+@model(318, "FALDA_TETTO", "Falda di tetto in coppi su travi, 4 x 4,4 m: si appoggia in cima ai muri (origine al colmo basso)")
 def falda():
     m = G.Mesh()
     for i in range(2):          # 2 x 2 panels, the tile texture once per panel
@@ -188,7 +188,7 @@ def falda():
     return m, None
 
 
-@model(219, "SCALA_CORDA", "Scala di corda spezzata, 5 m, appesa (origine in alto)")
+@model(319, "SCALA_CORDA", "Scala di corda spezzata, 5 m, appesa (origine in alto)")
 def scala_corda():
     m = G.Mesh()
     for x in (-0.25, 0.25):
@@ -198,7 +198,7 @@ def scala_corda():
     return m, None
 
 
-@model(220, "RUDERE_ARCO", "Arco di pietra del portale della tonnara, luce 2 m, alto 3,4 m")
+@model(320, "RUDERE_ARCO", "Arco di pietra del portale della tonnara, luce 2 m, alto 3,4 m")
 def arco():
     m = G.Mesh()
     for x in (-1.3, 1.3):

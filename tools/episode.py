@@ -265,12 +265,12 @@ LEVEL_FLOW = {
     "Lungomare": {"track": "108", "fog": None, "far": 128},
     # Dawn mist over the sandbar: fog of the colour of the sky layer, full before the draw distance, so the sea and
     # the top of the cliff melt into it and the map has no visible end.
-    "Marinello": {"track": "108", "fog": (178, 180, 188, 9, 27), "far": 32, "sky": (178, 180, 188), "stars": 0},
+    "Marinello": {"track": "108", "fog": (196, 180, 170, 12, 30), "far": 34, "sky": (196, 180, 170), "stars": 0, "horizon": True},
     "Laghetti": {"track": "108", "fog": None, "far": 128},
-    "Tindari": {"track": "108", "fog": (214, 170, 132, 14, 40), "far": 44, "sky": (214, 170, 132), "stars": 0},
+    "Tindari": {"track": "108", "fog": (214, 170, 132, 18, 44), "far": 48, "sky": (214, 170, 132), "stars": 0, "horizon": True},
     "Sommersa": {"track": "108", "fog": (8, 30, 38, 8, 30), "far": 40, "sky": (8, 30, 38), "stars": 0},
     "Collaudo": {"track": "108", "fog": None, "far": 40},
-    "MarinelloB": {"track": "108", "fog": (178, 180, 188, 9, 27), "far": 32, "sky": (178, 180, 188), "stars": 0},
+    "MarinelloB": {"track": "108", "fog": (196, 180, 170, 12, 30), "far": 34, "sky": (196, 180, 170), "stars": 0, "horizon": True},
 }
 
 
@@ -303,7 +303,8 @@ def write_gameflow(only=None):
 """.format(k=k, lk=k.lower(), track=lf["track"], far=lf["far"], hz="false" if k == "Sommersa" else "true")
         if lf.get("sky"):
             r, g, b = lf["sky"]
-            block += "{k}.horizon1.enabled = false\n".format(k=k)
+            if not lf.get("horizon"):
+                block += "{k}.horizon1.enabled = false\n".format(k=k)
             block += "{k}.layer1 = TEN.Flow.SkyLayer(TEN.Color({r}, {g}, {b}), 2)\n".format(k=k, r=r, g=g, b=b)
             block += "{k}.starfield = TEN.Flow.Starfield({n})\n".format(k=k, n=lf.get("stars", 0))
         if lf["fog"]:

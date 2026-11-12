@@ -15,6 +15,8 @@ MODELS = []
 
 def model(sid, name, note=""):
     def deco(fn):
+        clash = [m for m in MODELS if m[0] == sid or m[1] == name]
+        assert not clash, "duplicate static id or name: %s %s clashes with %s %s" % (sid, name, clash[0][0], clash[0][1])
         MODELS.append((sid, name, fn, note))
         return fn
     return deco
