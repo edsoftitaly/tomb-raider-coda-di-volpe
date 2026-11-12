@@ -44,16 +44,14 @@ end
 -- Lara puts something in its place: the "insert" animation (LA_USE_PUZZLE, 134), then fn when her hand comes away;
 -- mid() runs half way (the thing showing up). The engine jumps to the animation written in her item flag 0 at the
 -- last frame: it is kept at zero. If this ever crashes, CDV.USE_PUZZLE_ANIM = false goes back to the key animation.
-CDV.USE_PUZZLE_ANIM = true
+CDV.USE_PUZZLE_ANIM = false          -- 134 crashed the game at its last frame (Ed, 12/11 21:26): back to 131
 function CDV.InsertItem(fn, mid)
     local anim = CDV.USE_PUZZLE_ANIM and 134 or 131
-    pcall(function() Lara:SetItemFlags(0, 0) end)
     Lara:SetAnim(anim)
     Lara:SetState(CDV.USE_PUZZLE_ANIM and 43 or 42)
     local n = 0
     local function wait()
         n = n + 1
-        pcall(function() Lara:SetItemFlags(0, 0) end)
         if n == 40 and mid then mid() end
         if n < 240 and (n < 45 or Lara:GetAnim() == anim) then CDV.After(1, wait); return end
         if fn then fn() end
