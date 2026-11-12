@@ -169,3 +169,90 @@ def raw_objects(path):
         for oc, op in chunks(d.get(b"TeObjects", b"\x00"))[0]:
             out.append((name, oc, op))
     return out
+
+
+def edit_sectors(rooms_payload, room_name, fn):
+    """fn(lx, lz, sec) may change sec = {"props": int, "floor": [4], "fsplits": [[4]...], "faces": {face: (coords,
+    mode, texture)}} of every sector of the room called exactly room_name. Returns (payload, sectors changed)."""
+    from prj2_check import Reader
+    import copy
+    rooms, _ = chunks(rooms_payload)
+    done = 0
+    for k, (c, p) in enumerate(rooms):
+        r = Reader(p)
+        nx, nz = r.leb(), r.leb()
+        head = p[:r.s.tell()]
+        items, _ = chunks(p[r.s.tell():])
+        if dict(items).get(b"TeName", b"").decode("utf-8", "replace") != room_name:
+            continue
+        for j, (c2, p2) in enumerate(items):
+            if c2 != b"TeSecs":
+                continue
+            secs, _ = chunks(p2)
+            for s, (c3, p3) in enumerate(secs):
+                idx = struct.unpack_from("<i", p3, 0)[0]
+                sub, _ = chunks(p3[4:])
+                sec = {"props": 0, "floor": [0] * 4, "fsplit": 0, "fsplits": [], "faces": {}}
+                for c4, p4 in sub:
+                    rr = Reader(p4)
+                    if c4 == b"\x00":
+                        sec["props"] = rr.leb()
+                    elif c4 == b"\x07":
+                        sec["fsplit"] = rr.leb()
+                        sec["floor"] = [rr.leb() for _ in range(4)]
+                    elif c4 == b"\x09":
+                        sec["fsplits"] = [[rr.leb() for _ in range(4)] for _ in range(rr.leb())]
+                    elif c4 == prj2.cid(prj2.TEX_LEVEL2):
+                        face = rr.leb()
+                        vals = struct.unpack("<12f", rr.raw(48))
+                        mode, tex = rr.leb(), rr.leb()
+                        sec["faces"][face] = ([(vals[i], vals[i + 1]) for i in range(0, 8, 2)], mode, tex)
+                before = copy.deepcopy(sec)
+                fn(idx % nx, idx // nx, sec)
+                if sec == before:
+                    continue
+                done += 1
+                out, seen = [], set()
+                for c4, p4 in sub:
+                    if c4 == b"\x00":
+                        out.append((c4, prj2.leb(sec["props"])))
+                    elif c4 == b"\x07":
+                        out.append((c4, prj2.leb(sec["fsplit"]) + b"".join(prj2.leb(h) for h in sec["floor"])))
+                    elif c4 == b"\x09":
+                        seen.add("fs")
+                        out.append((c4, prj2.leb(len(sec["fsplits"])) + b"".join(prj2.leb(h) for sp in sec["fsplits"] for h in sp)))
+                    elif c4 == prj2.cid(prj2.TEX_LEVEL2):
+                        continue
+                    else:
+                        out.append((c4, p4))
+                if "fs" not in seen and sec["fsplits"]:
+                    out.append((b"\x09", prj2.leb(len(sec["fsplits"])) + b"".join(prj2.leb(h) for sp in sec["fsplits"] for h in sp)))
+                for face, (coords, mode, tex) in sec["faces"].items():
+                    us, vs = [q[0] for q in coords], [q[1] for q in coords]
+                    body = prj2.leb(face) + prj2.f32(*[v for q in coords for v in q])
+                    body += prj2.f32(min(us), min(vs), max(us), max(vs)) + prj2.leb(mode) + prj2.leb(tex)
+                    out.append((prj2.cid(prj2.TEX_LEVEL2), body))
+                secs[s] = (c3, p3[:4] + pack(out))
+            items[j] = (c2, pack(secs))
+        rooms[k] = (c, head + pack(items))
+    return pack(rooms), done
+
+
+def map_objects(rooms_payload, fn):
+    """fn(room name, chunk id, payload) -> payload (kept, maybe changed) or None (the object is removed)."""
+    from prj2_check import Reader
+    rooms, _ = chunks(rooms_payload)
+    for k, (c, p) in enumerate(rooms):
+        r = Reader(p)
+        r.leb(), r.leb()
+        head = p[:r.s.tell()]
+        items, _ = chunks(p[r.s.tell():])
+        name = dict(items).get(b"TeName", b"").decode("utf-8", "replace")
+        new = []
+        for c2, p2 in items:
+            if c2 == b"TeObjects":
+                obs = [(oc, fn(name, oc, op)) for oc, op in chunks(p2)[0]]
+                p2 = pack([(oc, op) for oc, op in obs if op is not None])
+            new.append((c2, p2))
+        rooms[k] = (c, head + pack(new))
+    return pack(rooms)

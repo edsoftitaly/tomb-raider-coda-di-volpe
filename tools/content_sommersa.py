@@ -300,6 +300,17 @@ def build_standalone(ctx):
     flood(F_TEMPIO, [h], [u])
     ur, hr = u.room, h.room
 
+    # A flipmap swaps the whole room, statics included: whatever is put in a room with a twin goes in the twin too,
+    # or the columns and the statues would vanish when the water comes.
+    real_static = L.add_static
+
+    def add_static(room, *args, **kw):
+        r = real_static(room, *args, **kw)
+        if room in twins:
+            real_static(twins[room], *args, **kw)
+        return r
+    L.add_static = add_static
+
     def light(it, wx, wz, hh, color, intensity=0.8, inner=1.0, outer=5.0):
         M2.light(ctx, it, wx, wz, hh, color, intensity, inner, outer)
         if it.room in twins:
