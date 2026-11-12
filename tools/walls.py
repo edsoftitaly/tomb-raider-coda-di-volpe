@@ -97,10 +97,13 @@ def texture_walls(room, atlases, column_fn, portal_sides=(), invisible=False, op
             border = x in (0, n_x - 1) or z in (0, n_z - 1)
             if (x in (0, n_x - 1)) and (z in (0, n_z - 1)):
                 continue
+            frame = False
             if border:
                 side = "-x" if x == 0 else "+x" if x == n_x - 1 else "-z" if z == 0 else "+z"
                 if side in portal_sides and (not open_portals_only or not w.wall):
-                    continue
+                    if w.wall:
+                        continue
+                    frame = True          # a doorway: the wall under and over the opening belongs to this sector
             elif not w.wall:
                 continue
             opens = []
@@ -113,12 +116,19 @@ def texture_walls(room, atlases, column_fn, portal_sides=(), invisible=False, op
             fmin = min(min(s.floor) for _, s in opens)
             cmin = min(min(s.ceil) for _, s in opens)
             cmax = max(max(s.ceil) for _, s in opens)
-            mid = min(fmax + SEG, cmin) if cmin > fmax else fmax
-            mid = int(round(mid / 64.0)) * 64
-            w.floor = [mid] * 4
-            w.ceil = [mid] * 4
-            w.fsplits = [[mid - SEG * k] * 4 for k in range(1, 9) if mid - SEG * k > fmin]
-            w.csplits = [[mid + SEG * k] * 4 for k in range(1, 9) if mid + SEG * k < cmax]
+            if frame:
+                f0, c0 = max(w.floor), min(w.ceil)
+                if f0 <= fmin and c0 >= cmax:
+                    continue
+                w.fsplits = [[f0 - SEG * k] * 4 for k in range(1, 9) if f0 - SEG * k > fmin]
+                w.csplits = [[c0 + SEG * k] * 4 for k in range(1, 9) if c0 + SEG * k < cmax]
+            else:
+                mid = min(fmax + SEG, cmin) if cmin > fmax else fmax
+                mid = int(round(mid / 64.0)) * 64
+                w.floor = [mid] * 4
+                w.ceil = [mid] * 4
+                w.fsplits = [[mid - SEG * k] * 4 for k in range(1, 9) if mid - SEG * k > fmin]
+                w.csplits = [[mid + SEG * k] * 4 for k in range(1, 9) if mid + SEG * k < cmax]
             for d, s in opens:
                 oi, pi, _ = DIRS[d]
                 if invisible:
@@ -144,7 +154,7 @@ def texture_walls(room, atlases, column_fn, portal_sides=(), invisible=False, op
                 # Middle part.
                 lo = (max(w.floor[oi[0]], nbf[0]), max(w.floor[oi[1]], nbf[1]))
                 hi = (min(w.ceil[oi[0]], nbc[0]), min(w.ceil[oi[1]], nbc[1]))
-                if hi[0] > lo[0] or hi[1] > lo[1]:
+                if not frame and (hi[0] > lo[0] or hi[1] > lo[1]):
                     ti, c = atlases.vertical(col, world([hi[0], hi[1], lo[1], lo[0]]), ref)
                     w.set_tex(prj2.F_WALL_MIDDLE[d], c, ti)
                 # Ceiling part.

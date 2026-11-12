@@ -583,7 +583,9 @@ def cancello():
 def argano():
     m = G.Mesh()
     box(m, 0.42, 0.56, 0.18, "ca_argano_lato", y=0.80, z=0.09)
-    fface(m, [V(-0.21, 1.36, 0.182), V(0.21, 1.36, 0.182), V(0.21, 0.80, 0.182), V(-0.21, 0.80, 0.182)],
+    # corners from the bottom left as the texture has them (v = 1 is its bottom): given from the top, the label
+    # and the socket came out upside down
+    fface(m, [V(0.21, 0.80, 0.182), V(-0.21, 0.80, 0.182), V(-0.21, 1.36, 0.182), V(0.21, 1.36, 0.182)],
           "ca_argano", V(0, 0, 1))
     box(m, 0.06, 0.06, 0.08, "ca_cavo", y=1.05, z=0.22)            # socket stub, where the crank goes
     box(m, 0.05, 1.6, 0.05, "ca_argano_lato", x=0.15, y=1.36, z=0.05)  # conduit up to the shutter roller

@@ -4,6 +4,7 @@ A stretched texture is better than a hole. Faces marked invisible (portals, sky)
 import prj2
 from kit import DIRS
 
+DEBUG = None
 FLOORS = (prj2.F_FLOOR, prj2.F_FLOOR_TRI2)
 CEILS = (prj2.F_CEILING, prj2.F_CEILING_TRI2)
 
@@ -13,6 +14,32 @@ def _wanted(room, lx, lz):
     border = lx in (0, room.nx - 1) or lz in (0, room.nz - 1)
     out = []
     if border:
+        # a doorway (portal sector with the heights of the room beyond): the wall under and over the opening
+        if s.wall:
+            return out
+        for d, (oi, pi, (dx, dz)) in DIRS.items():
+            x, z = lx + dx, lz + dz
+            if not (0 < x < room.nx - 1 and 0 < z < room.nz - 1):
+                continue
+            o = room.sectors[x][z]
+            if o.wall:
+                continue
+            nbf = (o.floor[pi[0]], o.floor[pi[1]])
+            nbc = (o.ceil[pi[0]], o.ceil[pi[1]])
+            tops = [(s.floor[oi[0]], s.floor[oi[1]])] + [(sp[oi[0]], sp[oi[1]]) for sp in (s.fsplits or [])]
+            for i, top in enumerate(tops):
+                bot = nbf
+                if i + 1 < len(tops) and tops[i + 1][0] >= nbf[0] and tops[i + 1][1] >= nbf[1]:
+                    bot = tops[i + 1]
+                if top[0] > bot[0] or top[1] > bot[1]:
+                    out.append(("w", prj2.f_wall_floor(d, i)))
+            bots = [(s.ceil[oi[0]], s.ceil[oi[1]])] + [(sp[oi[0]], sp[oi[1]]) for sp in (s.csplits or [])]
+            for i, bot in enumerate(bots):
+                top = nbc
+                if i + 1 < len(bots) and bots[i + 1][0] <= nbc[0] and bots[i + 1][1] <= nbc[1]:
+                    top = bots[i + 1]
+                if top[0] > bot[0] or top[1] > bot[1]:
+                    out.append(("w", prj2.f_wall_ceiling(d, i)))
         return out
     if not s.wall:
         out.append(("f", prj2.F_FLOOR))
@@ -66,14 +93,15 @@ def fill_missing(level):
             for s in col:
                 for face, t in (s.tex or {}).items():
                     any_of.setdefault(_kind(face), t)
-        for lx in range(1, room.nx - 1):
-            for lz in range(1, room.nz - 1):
+        for lx in range(room.nx):
+            for lz in range(room.nz):
                 s = room.sectors[lx][lz]
                 for kind, face in _wanted(room, lx, lz):
                     if (s.tex and face in s.tex) or (s.invisible and face in s.invisible):
                         continue
                     src = None
-                    for cand in [s] + [room.sectors[lx + a][lz + b] for a, b in ((1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (-1, -1), (1, -1), (-1, 1))]:
+                    for cand in [s] + [room.sectors[lx + a][lz + b] for a, b in ((1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (-1, -1), (1, -1), (-1, 1))
+                                     if 0 <= lx + a < room.nx and 0 <= lz + b < room.nz]:
                         for f2, t in (cand.tex or {}).items():
                             if _kind(f2) == kind:
                                 src = t
@@ -90,4 +118,6 @@ def fill_missing(level):
                         coords = coords[:3]
                     s.tex[face] = (coords, src[1], src[2])
                     total += 1
+                    if DEBUG is not None:
+                        DEBUG[(room.name, kind, face, lx in (0, room.nx - 1) or lz in (0, room.nz - 1), s.wall)] = DEBUG.get((room.name, kind, face, lx in (0, room.nx - 1) or lz in (0, room.nz - 1), s.wall), 0) + 1
     return total

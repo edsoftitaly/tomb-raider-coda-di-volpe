@@ -52,8 +52,15 @@ def edit_room(rooms_payload, name, fn):
         nx, nz = r.leb(), r.leb()
         head = p[:r.s.tell()]
         items, _ = chunks(p[r.s.tell():])
-        if dict(items).get(b"TeName", b"").split(b"\x00")[0].decode("utf-8", "replace").strip("\x00") .find(name) < 0:
-            continue
+        rname = dict(items).get(b"TeName", b"").decode("utf-8", "replace")
+        if callable(name):
+            if not name(rname):
+                continue
+            room_fn = lambda lx, lz, f, rn=rname: fn(rn, lx, lz, f)      # noqa: E731
+        else:
+            if dict(items).get(b"TeName", b"").split(b"\x00")[0].decode("utf-8", "replace").strip("\x00") .find(name) < 0:
+                continue
+            room_fn = fn
         for j, (c2, p2) in enumerate(items):
             if c2 != b"TeSecs":
                 continue
@@ -72,7 +79,7 @@ def edit_room(rooms_payload, name, fn):
                     else:
                         rest.append((c4, p4))
                 before = dict(faces)
-                fn(idx % nx, idx // nx, faces)
+                room_fn(idx % nx, idx // nx, faces)
                 if faces != before:
                     done += 1
                     for face, (coords, mode, tex) in faces.items():
@@ -95,3 +102,70 @@ def load(path):
 
 def save(path, head, top):
     open(path, "wb").write(head + pack(top))
+
+
+def objects(path):
+    """[(room name, kind 'mov'|'sta', type, (x, y, z) room-local, rot_y, lua name, extra)] of a .prj2."""
+    from prj2_check import Reader
+    _, top = load(path)
+    out = []
+    for c, p in chunks(dict(top)[b"TeRooms"])[0]:
+        r = Reader(p)
+        r.leb(), r.leb()
+        items, _ = chunks(p[r.s.tell():])
+        d = dict(items)
+        name = d.get(b"TeName", b"").decode("utf-8", "replace")
+        for oc, op in chunks(d.get(b"TeObjects", b"\x00"))[0]:
+            rr = Reader(op)
+            if oc in (b"TeMovTen2", b"TeMovTn3"):
+                rr.leb()
+                x, y, z, ry, rx, rz = struct.unpack("<6f", rr.raw(24))
+                rr.leb()
+                t = struct.unpack("<I", rr.raw(4))[0]
+                ocb = struct.unpack("<h", rr.raw(2))[0]
+                rr.raw(3 + 12)
+                n = rr.raw(struct.unpack("<i", rr.raw(4))[0]).decode("utf-8", "replace")
+                out.append((name, "mov", t, (x, y, z), ry, n, {"ocb": ocb, "rx": rx, "rz": rz}))
+            elif oc in (b"TeStaTen2", b"TeStaTn3"):
+                rr.leb()
+                x, y, z, ry, rx, rz, sc = struct.unpack("<7f", rr.raw(28))
+                rr.leb()
+                t = struct.unpack("<I", rr.raw(4))[0]
+                rr.raw(12 + 2)
+                n = rr.raw(struct.unpack("<i", rr.raw(4))[0]).decode("utf-8", "replace")
+                out.append((name, "sta", t, (x, y, z), ry, n, {"scale": sc, "rx": rx, "rz": rz}))
+    return out
+
+
+def add_objects(rooms_payload, room_name, raw_chunks):
+    """Append object chunks [(chunk id, payload)] to the TeObjects of the room called exactly room_name."""
+    from prj2_check import Reader
+    rooms, _ = chunks(rooms_payload)
+    done = False
+    for k, (c, p) in enumerate(rooms):
+        r = Reader(p)
+        r.leb(), r.leb()
+        head = p[:r.s.tell()]
+        items, _ = chunks(p[r.s.tell():])
+        if dict(items).get(b"TeName", b"").decode("utf-8", "replace") != room_name:
+            continue
+        items = [(c2, pack(chunks(p2)[0] + list(raw_chunks)) if c2 == b"TeObjects" else p2) for c2, p2 in items]
+        rooms[k] = (c, head + pack(items))
+        done = True
+    assert done, room_name
+    return pack(rooms)
+
+
+def raw_objects(path):
+    """[(room name, chunk id, payload)] of every object chunk; the payload starts with the LEB object id."""
+    from prj2_check import Reader
+    _, top = load(path)
+    out = []
+    for c, p in chunks(dict(top)[b"TeRooms"])[0]:
+        r = Reader(p)
+        r.leb(), r.leb()
+        d = dict(chunks(p[r.s.tell():])[0])
+        name = d.get(b"TeName", b"").decode("utf-8", "replace")
+        for oc, op in chunks(d.get(b"TeObjects", b"\x00"))[0]:
+            out.append((name, oc, op))
+    return out

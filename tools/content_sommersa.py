@@ -22,7 +22,7 @@ import walls
 from kit import CLICK
 
 # first in the list: their slots win over the same ones in the other wads (BRIDGE_FLAT 1340 = the golden slab)
-WADS_FIRST = ["CodaDiVolpe\\CdV_Tempio.wad2", "CodaDiVolpe\\CdV_Domus.wad2"]
+WADS_FIRST = ["CodaDiVolpe\\CdV_Tempio.wad2", "CodaDiVolpe\\CdV_Domus.wad2", "CodaDiVolpe\\CdV_Gemelli.wad2"]
 F_TERME, F_TEMPIO = 2, 1
 DEEP = -16 * CLICK
 VOID = K.rect(49, 22, 57, 26)
@@ -39,8 +39,8 @@ LATTICE = {9: "..P.B.P..", 8: "..B.B.B..", 7: "P.P.B.P.P", 6: "B...B...B", 5: "P
 
 HELPERS = '''-- A model that is shown only once Lara has put the thing there (with her "use" animation).
 function CDV.Put(name)
-    Lara:SetAnim(131)
-    Lara:SetState(40)
+    Lara:SetAnim(131)          -- LA_USE_KEY with state 42, as at the seal of Marinello
+    Lara:SetState(42)
     CDV.After(45, function() CDV.ShowModel(name, true) end)
 end
 function CDV.Flyby(seq)
@@ -313,6 +313,22 @@ def build_standalone(ctx):
 
     WARM, COLD, SEA = (1.0, 0.8, 0.5), (0.55, 0.7, 1.0), (0.4, 0.9, 0.95)
 
+    def statua(room, h0, x, z, rot, pollux=False):
+        """The twins of Tindari (CdV_Gemelli.wad2: 446 Castore, 447 Polluce), 4 m with their plinth, at a sector centre."""
+        L.add_static(room, 447 if pollux else 446, ((x - room.x) * 1024.0, float(h0 - room.y), (z - room.z) * 1024.0), rot_y=float(rot))
+        k.links.append((int(x), int(z)))
+
+    statua(t2.room, 0, 29.5, 39.5, 90)
+    statua(t2.room, 0, 35.5, 39.5, 270, True)
+    statua(s2.room, 0, 34.5, 3.5, 0)
+    statua(s2.room, 0, 38.5, 3.5, 0, True)
+    statua(ur, 0, 46.5, 19.5, 45)
+    statua(ur, 0, 60.5, 29.5, 225, True)
+    statua(hr, DEEP, 49.5, 25.5, 90)
+    statua(hr, DEEP, 57.5, 25.5, 270, True)
+    statua(pr.room, 0, 43.5, 21.5, 0)
+    statua(pr.room, 0, 43.5, 27.5, 180, True)
+
     # ---------------------------------------------------------------- 1
     k.place(K.LARA, 3, 30, room=p0.room, rot=180.0, name="lara_start")
     lua.start('if not CDV.Has(ID.PUZZLE_ITEM7) then TEN.Inventory.GiveItem(ID.PUZZLE_ITEM7, 1) end')
@@ -396,7 +412,7 @@ end)''' % gp)
     light(bal, 38.5, 43.0, 1800, WARM, 0.9, 1.0, 6.0)
     props(t1.room, 0, [("ANFORA", 30.5, 35.5, 0), ("ANFORA", 34.4, 35.4, 60), ("TAVOLACCIO", 30.6, 33.5, 90), ("MACERIE", 34.4, 32.6, 0)])
     props(t2.room, 0, [("COLONNA", 28.5, 36.5, 0), ("COLONNA", 36.5, 36.5, 0), ("COLONNA", 28.5, 41.5, 0), ("COLONNA", 36.5, 40.4, 0),
-                       ("STATUA_DIOSCURO", 29.4, 39.0, 90), ("BRACIERE", 35.5, 38.5, 0), ("ANFORA", 29.5, 37.5, 0)])
+                       ("ANFORA", 29.5, 37.5, 0)])
     props(t2v.room, -2048, [("MACERIE", 31.5, 39.5, 0), ("ANFORA", 30.5, 37.5, 40)])
     props(ipo.room, -2048, [("MACERIE", 30.5, 45.5, 0), ("ANFORA", 34.5, 43.5, 0)])
     props(bal.room, 0, [("COLONNA", 37.5, 46.5, 0), ("COLONNA", 39.5, 46.5, 0), ("BRACIERE", 39.5, 42.5, 0)])
@@ -439,7 +455,7 @@ end)''' % F_TERME)
                        ("BRACIERE", 32.5, 11.5, 0)])
     props(s3.room, 0, [("TAVOLACCIO", 43.4, 13.5, 90), ("ANFORA", 41.5, 14.5, 0), ("ANFORA", 43.5, 12.5, 40), ("BOTTE", 41.5, 12.5, 0)])
     props(s2.room, 0, [("COLONNA", 32.5, 10.5, 0), ("COLONNA", 40.5, 10.5, 0), ("COLONNA", 32.5, 3.5, 0), ("COLONNA", 40.5, 3.5, 0),
-                       ("BRACIERE", 34.5, 3.5, 0), ("BRACIERE", 38.5, 3.5, 0), ("STATUA_DIOSCURO", 36.5, 3.3, 0), ("MACERIE", 39.5, 4.5, 0)])
+                       ("BRACIERE", 33.5, 3.5, 0), ("BRACIERE", 39.5, 3.5, 0), ("MACERIE", 39.5, 4.5, 0)])
     slabs = []
     for z, row in LATTICE.items():
         for i, c in enumerate(row):
@@ -490,12 +506,12 @@ end)''')
     at = _top("ALTARE_ASTRI")
     k.place(SHOW_ASTRO_C, ALTAR[0], ALTAR[1], room=ur, h=at, dx=0.2, dz=0.6, name="astro_c_posto")
     k.place(SHOW_ASTRO_P, ALTAR[0], ALTAR[1], room=ur, h=at, dx=0.8, dz=0.6, name="astro_p_posto")
-    props(ur, 0, [("STATUA_DIOSCURO", 46.5, 19.5, 45), ("STATUA_DIOSCURO", 60.5, 29.5, 225), ("BRACIERE", 46.5, 26.5, 0),
+    props(ur, 0, [("BRACIERE", 46.5, 26.5, 0),
                   ("BRACIERE", 48.5, 29.5, 0), ("BRACIERE", 58.5, 19.5, 0), ("BRACIERE", 60.5, 21.5, 0), ("COLONNA_ROTTA", 48.5, 19.5, 0),
                   ("MACERIE", 59.5, 29.4, 0), ("COLONNA", 48.5, 21.5, 0), ("COLONNA", 48.5, 27.5, 0), ("COLONNA", 58.5, 21.5, 0),
                   ("COLONNA", 58.5, 27.5, 0), ("COLONNA", 46.5, 21.5, 0), ("COLONNA", 60.5, 27.5, 0)])
     props(pr.room, 0, [("COLONNA", 42.5, 21.5, 0), ("COLONNA", 42.5, 27.5, 0), ("COLONNA", 45.5, 22.4, 0), ("COLONNA", 45.5, 26.6, 0),
-                       ("BRACIERE", 44.5, 22.5, 0), ("BRACIERE", 44.5, 26.5, 0), ("ANFORA", 43.5, 27.4, 0)])
+                       ("BRACIERE", 44.5, 22.5, 0), ("BRACIERE", 44.5, 26.5, 0)])
     light(u, 47.5, 27.5, 1700, WARM, 0.9, 1.0, 5.0)
     light(u, 59.5, 24.5, 1700, WARM, 0.8, 1.0, 5.0)
     light(u, 53.5, 24.5, 3300, COLD, 0.9, 2.0, 9.0)
@@ -514,8 +530,7 @@ end)''')
     k.place(K.BIGMEDI, 60, 22, room=hr, h=DEEP)
     for x, z in ((50.5, 26.55), (53.5, 26.55), (56.5, 26.55), (54.5, 22.45), (56.5, 22.45)):
         k.prop("COLONNA_TEMPIO", x, z, rot=0.0, h=DEEP, room=hr)
-    props(hr, DEEP, [("STATUA_DIOSCURO", 49.5, 25.5, 90, 1.3), ("STATUA_DIOSCURO", 57.4, 25.5, 270, 1.3), ("STATUA_DIOSCURO", 57.4, 22.6, 270, 1.3),
-                     ("SARCOFAGO", 53.5, 25.6, 0), ("ANFORA", 50.5, 25.5, 30), ("ANFORA", 56.5, 22.5, 100), ("MACERIE", 55.5, 23.5, 0),
+    props(hr, DEEP, [("SARCOFAGO", 53.5, 25.6, 0), ("ANFORA", 50.5, 25.5, 30), ("ANFORA", 56.5, 22.5, 100), ("MACERIE", 55.5, 23.5, 0),
                      ("ANFORA", 59.5, 22.5, 0), ("ANFORA", 60.4, 26.4, 60)])
     lua.zone("tempio", k.lua_pos(47, 24, 0), r=1300, dy=600, secs=8, fn='CDV.Enable("g1")\nCDV.Enable("g2")',
              text="Il tempio dei Dioscuri. La cella è otto metri più in basso, e là sotto ci sono gli uomini di Turi.")
@@ -559,8 +574,8 @@ CDV.Loop(function()
     local on = not CDV.Flag("acqua")
     if on and not CDV.Has(ID.PUZZLE_ITEM7) then return end
     altarBusy = true
-    Lara:SetAnim(131)
-    Lara:SetState(40)
+    Lara:SetAnim(131)          -- LA_USE_KEY with state 42, as at the seal of Marinello
+    Lara:SetState(42)
     CDV.After(45, function()
         if on then CDV.Take(ID.PUZZLE_ITEM7) else CDV.Give(ID.PUZZLE_ITEM7, 1) end
         CDV.ShowModel("astro_c_posto", on)

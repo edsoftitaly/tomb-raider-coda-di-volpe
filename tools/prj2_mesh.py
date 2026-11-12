@@ -39,7 +39,7 @@ def read_rooms(path):
 
             def sc(c4, s4):
                 if c4 == b"\x00":
-                    sec["wall"] = bool(r.leb() & 1)
+                    sec["wall"] = bool(r.leb() & 3)          # 1 wall, 2 border wall (files saved by Tomb Editor)
                 elif c4 == b"\x07":
                     sec["split"] = bool(r.leb() & 1)
                     sec["floor"] = [r.leb() for _ in range(4)]
