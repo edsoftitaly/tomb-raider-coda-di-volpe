@@ -157,6 +157,59 @@ def t_head(panel, knob, glow=(255, 96, 24), text=(20, 20, 22, 255)):
     return arr(im)
 
 
+def t_fusto(base, seed, lug=True):
+    """Shell: sparkle lacquer with the chrome lugs; wraps once around the drum."""
+    w, h = 256, 64
+    rng = np.random.default_rng(seed)
+    a = np.zeros((h, w, 3))
+    a[:] = np.array(base, float)
+    a *= 0.75 + 0.5 * np.sin(np.linspace(0, 4 * math.pi, w))[None, :, None] ** 2          # highlights round the shell
+    sp = rng.random((h, w)) > 0.93
+    a[sp] = np.minimum(255, a[sp] * 2.2 + 40)
+    im = Image.fromarray(np.clip(a, 0, 255).astype(np.uint8)).convert("RGBA")
+    d = ImageDraw.Draw(im)
+    if lug:
+        for i in range(8):
+            x = 16 + i * 32
+            d.rounded_rectangle([x - 4, 18, x + 4, 46], radius=3, fill=(196, 200, 208, 255), outline=(70, 72, 78, 255))
+            d.line([x, 0, x, 18], fill=(170, 174, 182, 255), width=2)
+            d.line([x, 46, x, h], fill=(170, 174, 182, 255), width=2)
+            d.line([x - 2, 22, x - 2, 42], fill=(250, 250, 252, 255))
+    return arr(im)
+
+
+def t_radiale(stops):
+    """For the triangle fans of discs: row 0 is the centre, the last row the rim."""
+    w, h = 16, 64
+    a = np.zeros((h, w, 4))
+    a[..., 3] = 255
+    for y in range(h):
+        t = y / float(h - 1)
+        for k in range(len(stops) - 1):
+            (t0, c0), (t1, c1) = stops[k], stops[k + 1]
+            if t0 <= t <= t1:
+                f = (t - t0) / max(1e-6, t1 - t0)
+                a[y, :, :3] = np.array(c0) * (1 - f) + np.array(c1) * f
+    return a
+
+
+def t_piatto():
+    a = t_radiale([(0, (236, 206, 120)), (0.16, (214, 176, 84)), (0.2, (150, 116, 44)), (0.24, (206, 168, 78)), (1, (182, 142, 58))])
+    for y in range(18, 64, 3):                                                     # the lathing
+        a[y, :, :3] *= 0.86
+    a[-2:, :, :3] *= 1.25
+    return np.clip(a, 0, 255)
+
+
+def t_kicklogo():
+    s = 128
+    im = Image.new("RGBA", (s, s), (12, 12, 14, 255))          # opaque: the square sits inside the head
+    d = ImageDraw.Draw(im)
+    if os.path.exists(LOGO):
+        _stencil(im, [2, 26, s - 3, s - 27], 1.0)
+    return arr(im)
+
+
 def t_grille(w, h, horn=False):
     im = Image.new("RGBA", (w, h), (18, 18, 20, 255))
     d = ImageDraw.Draw(im)
@@ -238,9 +291,13 @@ def textures():
     pk.put("co_moquette", noisy(64, 64, (34, 34, 38), 2, 0.5))
     pk.put("co_alu", noisy(32, 32, (178, 182, 190), 3, 0.12))
     pk.put("co_cromo", noisy(32, 32, (150, 156, 166), 4, 0.3))
-    pk.put("co_fusto", noisy(64, 64, (120, 14, 20), 5, 0.6))
+    pk.put("co_fusto", t_fusto((16, 44, 150), 5))
+    pk.put("co_rullante", t_fusto((150, 156, 166), 9))
+    pk.put("co_kicklogo", t_kicklogo())
+    pk.put("co_testa", t_radiale([(0, (238, 236, 226)), (0.82, (232, 230, 220)), (0.9, (196, 194, 186)), (1, (214, 212, 204))]))
+    pk.put("co_nera", t_radiale([(0, (12, 12, 14)), (0.9, (16, 16, 18)), (1, (40, 40, 44))]))
     pk.put("co_pelle", noisy(32, 32, (226, 222, 206), 6, 0.06))
-    pk.put("co_piatto", noisy(32, 32, (192, 152, 64), 7, 0.25))
+    pk.put("co_piatto", t_piatto())
     for name, c in (("co_par_r", (255, 60, 40)), ("co_par_b", (60, 110, 255)), ("co_par_y", (255, 210, 90)), ("co_par_v", (190, 70, 255))):
         pk.put(name, noisy(16, 16, c, 8, 0.05))
 
@@ -322,43 +379,104 @@ def stack_basso():
     return m, ((lo[0], 0.0, lo[2]), (hi[0], hi[1], hi[2]))
 
 
-def drum(r, depth, pos, tilt=0.0, shell="co_fusto"):
-    c = G.cylinder(r, r, depth, shell, n=12, cap="co_pelle")
-    return c.transformed(rx=tilt, t=(pos[0] * M, pos[1] * M, pos[2] * M))
+def disco(*args, **kw):
+    """G.disc drawn on both faces (heads and cymbals are seen from above and from below)."""
+    m = G.disc(*args, **kw)
+    m.f = [(idx, px, page, blend, False) for idx, px, page, blend, dbl in m.f]
+    m.f += [(idx[::-1], px[::-1], page, blend, False) for idx, px, page, blend, dbl in m.f]
+    return m
 
 
-def stand(m, x, z, y0, y1, r=0.014):
-    m.merge(G.cylinder(r, r, y1 - y0, "co_cromo", n=5, base=(x, y0, z), top_cap=False))
-    for a in (0.5, 2.6, 4.7):                                                      # the tripod
-        m.merge(G.tube([(x, y0 + 0.28, z), (x + math.cos(a) * 0.26, y0 + 0.01, z + math.sin(a) * 0.26)], [0.01, 0.01], "co_cromo", n=4))
+def tamburo(r, depth, pos=(0, 0, 0), rx=0.0, shell="co_fusto", logo=False, n=16):
+    """A drum along +y in its own frame (batter head on top), then tilted by rx and moved (metres)."""
+    m = G.cylinder(r, r, depth, shell, n=n, top_cap=False)
+    for y in (0.0, depth - 0.028):                                                 # the hoops
+        m.merge(G.cylinder(r + 0.012, r + 0.012, 0.028, "co_cromo", n=n, base=(0, y, 0), top_cap=False))
+    m.merge(disco(r + 0.004, "co_nera" if logo else "co_testa", center=(0, depth + 0.002, 0), n=n))
+    m.merge(disco(r + 0.004, "co_testa", center=(0, -0.002, 0), n=n))
+    if logo:
+        q = r * 0.69
+        rectf(m, V(-q, depth + 0.006, -q), V(1, 0, 0), V(0, 0, 1), 2 * q, 2 * q, "co_kicklogo", V(0, 1, 0), tile=None)
+    return m.transformed(rx=rx, t=(pos[0] * M, pos[1] * M, pos[2] * M))
+
+
+def treppiede(m, x, z, y0, y1, r=0.013, spread=0.3):
+    m.merge(G.cylinder(r + 0.004, r + 0.004, min(0.55, y1 - y0), "co_cromo", n=6, base=(x, y0 + 0.02, z), top_cap=False))
+    m.merge(G.cylinder(r, r, y1 - y0, "co_cromo", n=6, base=(x, y0, z), top_cap=False))
+    for a in (0.5, 2.6, 4.7):
+        m.merge(G.tube([(x, y0 + 0.34, z), (x + math.cos(a) * spread, y0 + 0.015, z + math.sin(a) * spread)], [0.011, 0.011], "co_cromo", n=4))
+        m.merge(G.tube([(x, y0 + 0.12, z), (x + math.cos(a) * spread * 0.55, y0 + 0.16, z + math.sin(a) * spread * 0.55)], [0.007, 0.007], "co_cromo", n=4))
+
+
+def piatto(m, r, c, tilt=0.0, ry=0.0, china=False):
+    """A cymbal: bow and bell, the felt and the wing nut."""
+    cone = -0.035 if china else 0.035
+    m.merge(disco(r, "co_piatto", center=c, n=18, cone=cone, tilt=tilt, ry=ry))
+    m.merge(G.cylinder(0.014, 0.01, 0.04, "co_nero", n=5, base=(c[0], c[1] + (0.0 if china else 0.03), c[2])))
+
+
+def asta_piatto(m, base, r, c, h, tilt=0.0, ry=0.0, china=False):
+    """Boom stand: tripod at base (x, z) on the riser, the boom up to the cymbal at c."""
+    top = (base[0], c[1] - 0.22, base[1])
+    treppiede(m, base[0], base[1], h, top[1])
+    m.merge(G.tube([top, (c[0], c[1] - 0.01, c[2])], [0.009, 0.009], "co_cromo", n=5))
+    m.merge(G.box(0.045, 0.045, 0.045, "co_nero", center=(top[0], top[1] - 0.02, top[2])))
+    piatto(m, r, c, tilt, ry, china)
+
+
+def pedale(m, x, z, h):
+    m.merge(G.box(0.11, 0.02, 0.32, "co_cromo", center=(x, h, z)))
+    m.merge(G.box(0.09, 0.012, 0.26, "co_nero", center=(x, h + 0.02, z)).transformed(rx=0.0))
+    for dx in (-0.06, 0.06):
+        m.merge(G.cylinder(0.008, 0.008, 0.2, "co_cromo", n=4, base=(x + dx, h, z - 0.15), top_cap=False))
+    m.merge(G.tube([(x, h + 0.2, z - 0.15), (x, h + 0.33, z - 0.21)], [0.006, 0.006], "co_cromo", n=4))
+    m.merge(G.cylinder(0.022, 0.022, 0.05, "co_testa", n=6, base=(x, h + 0.31, z - 0.22)))
 
 
 def batteria():
+    """Double bass drum kit on its riser: the audience at -z, the drummer on the throne at +z."""
     h = 0.4
-    m = G.box(2.6, h, 2.2, "co_nero", top="co_moquette", center=(0, 0, 0))
-    m.merge(G.box(2.64, 0.04, 2.24, "co_alu", center=(0, h - 0.06, 0)))
-    # bass drum on its side, the front head towards the audience
-    kick = G.cylinder(0.29, 0.29, 0.46, "co_fusto", n=14, cap="co_pelle").transformed(rx=-math.pi / 2, t=(0, (h + 0.30) * M, -0.12 * M))
-    m.merge(kick)
-    m.merge(G.disc(0.1, "co_nero", center=(0, h + 0.30, -0.585), n=10, tilt=math.pi / 2))      # the port
-    m.merge(drum(0.15, 0.2, (-0.2, h + 0.68, -0.38), tilt=0.3))
-    m.merge(drum(0.165, 0.22, (0.2, h + 0.68, -0.38), tilt=0.3))
-    m.merge(drum(0.2, 0.4, (0.62, h + 0.22, 0.12)))
-    for a in (0.3, 2.4, 4.5):
-        m.merge(G.cylinder(0.01, 0.01, 0.3, "co_cromo", n=4, base=(0.62 + math.cos(a) * 0.19, h, 0.12 + math.sin(a) * 0.19), top_cap=False))
-    m.merge(drum(0.18, 0.14, (-0.5, h + 0.5, 0.08), shell="co_cromo"))
-    stand(m, -0.5, 0.08, h, h + 0.5)
-    stand(m, -0.92, 0.1, h, h + 0.9)                                               # hi-hat
-    m.merge(G.disc(0.18, "co_piatto", center=(-0.92, h + 0.86, 0.1), cone=0.02))
-    m.merge(G.disc(0.18, "co_piatto", center=(-0.92, h + 0.9, 0.1), cone=0.03))
-    for x, z, y, r, tl in ((-0.72, -0.5, 1.32, 0.22, 0.25), (0.75, -0.48, 1.38, 0.24, -0.25), (1.0, 0.25, 1.05, 0.27, -0.15), (0.0, -0.75, 1.5, 0.2, 0.3)):
-        stand(m, x, z, h, h + y)
-        m.merge(G.disc(r, "co_piatto", center=(x, h + y, z), cone=0.03, tilt=tl))
-    m.merge(G.cylinder(0.03, 0.03, 0.48, "co_cromo", n=6, base=(0, h, 0.62), top_cap=False))    # the throne
-    m.merge(G.cylinder(0.17, 0.17, 0.09, "co_nero", n=12, base=(0, h + 0.48, 0.62)))
+    m = G.box(3.0, h, 2.4, "co_nero", top="co_moquette", center=(0, 0, 0))
+    m.merge(G.box(3.04, 0.04, 2.44, "co_alu", center=(0, h - 0.06, 0)))
+    m.merge(G.box(3.04, 0.03, 2.44, "co_alu", center=(0, 0.0, 0)))
+    kr, kd = 0.28, 0.46
+    for x in (-0.43, 0.43):                                                        # the two bass drums
+        m.merge(tamburo(kr, kd, (x, h + kr + 0.03, -0.2), rx=-math.pi / 2, logo=True, n=18))
+        for sx in (-1, 1):                                                         # the spurs
+            m.merge(G.tube([(x + sx * 0.2, h + 0.2, -0.58), (x + sx * 0.36, h + 0.01, -0.68)], [0.009, 0.009], "co_cromo", n=4))
+        pedale(m, x, 0.02, h)
+    # rack toms on a stand between the bass drums, tilted to the drummer
+    ty = h + 0.82
+    m.merge(tamburo(0.13, 0.2, (-0.22, ty, -0.34), rx=0.42))
+    m.merge(tamburo(0.155, 0.23, (0.2, ty - 0.02, -0.36), rx=0.42))
+    treppiede(m, 0.0, -0.3, h, ty + 0.02, r=0.016, spread=0.24)
+    for x in (-0.14, 0.12):
+        m.merge(G.tube([(0, ty, -0.3), (x, ty + 0.06, -0.3)], [0.009, 0.009], "co_cromo", n=4))
+    # floor toms on their legs
+    for x, z, r, d in ((0.86, 0.3, 0.205, 0.4), (1.16, -0.16, 0.18, 0.36)):
+        m.merge(tamburo(r, d, (x, h + 0.26, z)))
+        for a in (0.3, 2.4, 4.5):
+            m.merge(G.cylinder(0.008, 0.008, 0.52, "co_cromo", n=4, base=(x + math.cos(a) * (r + 0.02), h, z + math.sin(a) * (r + 0.02)), top_cap=False))
+    # snare on its stand
+    m.merge(tamburo(0.178, 0.14, (-0.36, h + 0.56, 0.28), rx=0.08, shell="co_rullante"))
+    treppiede(m, -0.36, 0.28, h, h + 0.55, spread=0.24)
+    # hi-hat
+    treppiede(m, -0.86, 0.2, h, h + 0.98, spread=0.26)
+    piatto(m, 0.178, (-0.86, h + 0.9, 0.2))
+    m.merge(disco(0.178, "co_piatto", center=(-0.86, h + 0.885, 0.2), n=18, cone=-0.03))
+    m.merge(G.box(0.09, 0.02, 0.26, "co_cromo", center=(-0.86, h, 0.42)))
+    # cymbals: two crashes, a splash, the ride and a china
+    asta_piatto(m, (-0.98, -0.62), 0.23, (-0.78, h + 1.38, -0.5), h, tilt=0.22, ry=0.4)
+    asta_piatto(m, (0.92, -0.72), 0.24, (0.66, h + 1.44, -0.56), h, tilt=0.22, ry=-0.5)
+    asta_piatto(m, (0.0, -0.86), 0.13, (0.0, h + 1.2, -0.62), h, tilt=0.3)
+    asta_piatto(m, (1.26, 0.34), 0.27, (0.72, h + 1.02, 0.02), h, tilt=0.3, ry=-0.9)
+    asta_piatto(m, (1.3, -0.62), 0.23, (1.24, h + 1.5, -0.3), h, tilt=0.35, ry=-1.2, china=True)
+    # the throne
+    m.merge(G.cylinder(0.028, 0.028, 0.46, "co_cromo", n=6, base=(0, h, 0.72), top_cap=False))
+    m.merge(G.cylinder(0.18, 0.17, 0.1, "co_nero", n=14, base=(0, h + 0.46, 0.72), cap="co_moquette"))
     for a in (0.5, 2.6, 4.7):
-        m.merge(G.tube([(0, h + 0.22, 0.62), (math.cos(a) * 0.25, h + 0.01, 0.62 + math.sin(a) * 0.25)], [0.012, 0.012], "co_cromo", n=4))
-    return m, ((-1.3 * M, 0.0, -1.1 * M), (1.3 * M, 1.5 * M, 1.1 * M))
+        m.merge(G.tube([(0, h + 0.24, 0.72), (math.cos(a) * 0.27, h + 0.012, 0.72 + math.sin(a) * 0.27)], [0.012, 0.012], "co_cromo", n=4))
+    return m, ((-1.5 * M, 0.0, -1.2 * M), (1.5 * M, 1.6 * M, 1.2 * M))
 
 
 def tastiera():
