@@ -64,53 +64,96 @@ def t_truss():
     return arr(im.resize((w, h), Image.LANCZOS))
 
 
-def t_cab():
-    s = 128
-    im = Image.new("RGBA", (s, s), (14, 14, 15, 255))
+def _stencil(im, box, strength=0.8):
+    """The band's own logo printed on a cabinet (as bands do on their backline); nothing if the file is not there."""
+    if not os.path.exists(LOGO):
+        return
+    logo = Image.open(LOGO).convert("RGB")
+    w, h = box[2] - box[0], box[3] - box[1]
+    r = min(w / float(logo.width), h / float(logo.height))
+    logo = logo.resize((max(1, int(logo.width * r)), max(1, int(logo.height * r))), Image.LANCZOS)
+    a = logo.convert("L").point(lambda v: int(min(255, v * 1.6) * strength))
+    im.paste(logo, (box[0] + (w - logo.width) // 2, box[1] + (h - logo.height) // 2), a)
+
+
+def _cloth(d, box, base, line):
+    d.rectangle(box, fill=base)
+    for y in range(box[1] + 1, box[3], 2):
+        d.line([box[0] + 1, y, box[2] - 1, y], fill=line)
+    for x in range(box[0] + 1, box[2], 4):
+        d.line([x, box[1] + 1, x, box[3] - 1], fill=tuple(int((a + b) / 2) for a, b in zip(base[:3], line[:3])) + (255,))
+
+
+def _corners(d, w, h, c=(120, 122, 128, 255), n=14):
+    for cx, cy in ((2, 2), (w - n - 3, 2), (2, h - n - 3), (w - n - 3, h - n - 3)):
+        d.rounded_rectangle([cx, cy, cx + n, cy + n], radius=4, fill=c, outline=(40, 40, 44, 255))
+
+
+def t_cab(logo=True):
+    s = 256
+    im = Image.new("RGBA", (s, s), (13, 13, 14, 255))
     d = ImageDraw.Draw(im)
-    d.rectangle([7, 7, s - 8, s - 8], fill=(30, 30, 32, 255))
-    for y in range(8, s - 8, 2):                                                   # the weave of the cloth
-        d.line([8, y, s - 9, y], fill=(22, 22, 24, 255))
-    for cx in (38, 90):
-        for cy in (38, 90):
-            d.ellipse([cx - 23, cy - 23, cx + 23, cy + 23], outline=(40, 40, 43, 255), width=2)
-            d.ellipse([cx - 7, cy - 7, cx + 7, cy + 7], fill=(24, 24, 26, 255))
-    d.rectangle([4, 4, s - 5, s - 5], outline=(70, 70, 74, 255), width=2)          # the piping
-    for cx, cy in ((3, 3), (s - 12, 3), (3, s - 12), (s - 12, s - 12)):            # corner protectors
-        d.rectangle([cx, cy, cx + 8, cy + 8], fill=(52, 52, 56, 255))
+    _cloth(d, [14, 14, s - 15, s - 15], (30, 30, 32, 255), (20, 20, 22, 255))
+    for cx in (74, 182):
+        for cy in (74, 182):
+            d.ellipse([cx - 48, cy - 48, cx + 48, cy + 48], outline=(42, 42, 46, 255), width=3)
+            d.ellipse([cx - 38, cy - 38, cx + 38, cy + 38], outline=(34, 34, 37, 255), width=2)
+            d.ellipse([cx - 14, cy - 14, cx + 14, cy + 14], fill=(22, 22, 24, 255), outline=(40, 40, 44, 255))
+    d.rectangle([9, 9, s - 10, s - 10], outline=(196, 196, 200, 255), width=2)       # white piping
+    d.rectangle([12, 12, s - 13, s - 13], outline=(8, 8, 9, 255), width=2)
+    _corners(d, s, s)
+    if logo:
+        _stencil(im, [48, 96, 208, 160])
     return arr(im)
 
 
 def t_cab8():
     w, h = 128, 232
-    im = Image.new("RGBA", (w, h), (14, 14, 15, 255))
+    im = Image.new("RGBA", (w, h), (13, 13, 14, 255))
     d = ImageDraw.Draw(im)
-    d.rectangle([8, 8, w - 9, h - 9], fill=(74, 78, 84, 255))                      # silver-grey cloth
-    for y in range(9, h - 9, 2):
-        d.line([9, y, w - 10, y], fill=(60, 64, 70, 255))
+    _cloth(d, [8, 8, w - 9, h - 9], (70, 74, 82, 255), (54, 58, 66, 255))
     for i in range(4):
         for cx in (38, 90):
             cy = 36 + i * 53
-            d.ellipse([cx - 22, cy - 22, cx + 22, cy + 22], outline=(50, 53, 58, 255), width=2)
-            d.ellipse([cx - 6, cy - 6, cx + 6, cy + 6], fill=(56, 60, 66, 255))
-    d.rectangle([4, 4, w - 5, h - 5], outline=(150, 152, 158, 255), width=2)
+            d.ellipse([cx - 22, cy - 22, cx + 22, cy + 22], outline=(48, 51, 58, 255), width=2)
+            d.ellipse([cx - 6, cy - 6, cx + 6, cy + 6], fill=(52, 56, 64, 255))
+    d.rectangle([4, 4, w - 5, h - 5], outline=(160, 162, 168, 255), width=2)
+    d.line([8, h // 2, w - 9, h // 2], fill=(20, 20, 22, 255), width=3)             # the bar across the baffle
+    _corners(d, w, h, n=9)
+    _stencil(im, [20, 12, 108, 50], 0.9)
     return arr(im)
 
 
-def t_head(panel, knob):
-    w, h = 128, 48
-    im = Image.new("RGBA", (w, h), (14, 14, 15, 255))
+def t_head(panel, knob, glow=(255, 96, 24), text=(20, 20, 22, 255)):
+    w, h = 256, 96
+    im = Image.new("RGBA", (w, h), (13, 13, 14, 255))
     d = ImageDraw.Draw(im)
-    d.rectangle([5, 5, w - 6, 22], fill=(26, 26, 28, 255))                         # the grille over the valves
-    for x in range(8, w - 8, 3):
-        d.line([x, 6, x, 21], fill=(40, 40, 44, 255))
-    d.rectangle([5, 26, w - 6, 41], fill=panel)
-    for i in range(9):
-        cx = 16 + i * 10
-        d.ellipse([cx - 3, 30, cx + 3, 36], fill=knob, outline=(10, 10, 10, 255))
-    d.rectangle([w - 22, 30, w - 17, 37], fill=(190, 30, 30, 255))                 # mains and standby
-    d.rectangle([w - 14, 30, w - 9, 37], fill=(40, 40, 40, 255))
-    d.rectangle([2, 2, w - 3, h - 3], outline=(66, 66, 70, 255))
+    d.rectangle([10, 9, w - 11, 46], fill=(8, 8, 9, 255))                           # behind the grille: the valves, lit
+    g = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    gd = ImageDraw.Draw(g)
+    for cx in (88, 112, 144, 168):
+        gd.ellipse([cx - 9, 18, cx + 9, 52], fill=glow + (150,))
+        gd.ellipse([cx - 3, 26, cx + 3, 46], fill=(255, 210, 140, 220))
+    im.alpha_composite(g.filter(ImageFilter.GaussianBlur(4)).crop((0, 0, w, h)))
+    d = ImageDraw.Draw(im)
+    d.rectangle([10, 47, w - 11, 52], fill=(13, 13, 14, 255))
+    for x in range(12, w - 11, 5):                                                  # the steel grille
+        d.line([x, 9, x, 46], fill=(64, 64, 68, 255))
+    for y in range(12, 46, 5):
+        d.line([10, y, w - 11, y], fill=(48, 48, 52, 255))
+    d.rectangle([10, 9, w - 11, 46], outline=(90, 90, 96, 255))
+    d.rectangle([10, 54, w - 11, 86], fill=panel)
+    d.line([10, 54, w - 11, 54], fill=tuple(min(255, c + 40) for c in panel[:3]) + (255,))
+    for i in range(10):
+        cx = 34 + i * 17
+        d.ellipse([cx - 6, 62, cx + 6, 74], fill=knob, outline=(6, 6, 6, 255))
+        d.line([cx, 68, cx + (i % 3 - 1) * 3, 63], fill=(230, 230, 230, 255))
+        d.line([cx - 5, 79, cx + 5, 79], fill=text)
+    d.ellipse([16, 65, 22, 71], fill=(20, 20, 20, 255), outline=(140, 140, 146, 255))           # input
+    d.rectangle([w - 46, 60, w - 34, 78], fill=(26, 26, 28, 255), outline=(6, 6, 6, 255))       # standby
+    d.rectangle([w - 30, 60, w - 18, 78], fill=(230, 40, 28, 255), outline=(6, 6, 6, 255))      # mains, lit
+    d.ellipse([w - 56, 66, w - 52, 70], fill=(60, 255, 80, 255))
+    _corners(d, w, h, n=9)
     return arr(im)
 
 
@@ -186,9 +229,9 @@ def textures():
     pk.put("co_cab", t_cab())
     pk.put("co_truss", t_truss())
     pk.put("co_cab8", t_cab8())
-    pk.put("co_head_b", t_head((40, 44, 52, 255), (190, 192, 198, 255)))
-    pk.put("co_head_s", t_head((176, 180, 186, 255), (20, 20, 22, 255)))
-    pk.put("co_head_g", t_head((196, 160, 84, 255), (24, 20, 14, 255)))
+    pk.put("co_head_b", t_head((22, 24, 28, 255), (30, 30, 32, 255), glow=(255, 140, 40), text=(210, 210, 214, 255)))
+    pk.put("co_head_s", t_head((34, 36, 40, 255), (16, 16, 18, 255), glow=(255, 40, 30), text=(200, 200, 206, 255)))
+    pk.put("co_head_g", t_head((198, 162, 86, 255), (212, 176, 96, 255)))
     pk.put("co_pa", t_grille(128, 48, horn=True))
     pk.put("co_wedge", t_grille(128, 64))
     pk.put("co_nero", noisy(64, 64, (22, 22, 24), 1))
