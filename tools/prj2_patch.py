@@ -206,9 +206,11 @@ def edit_sectors(rooms_payload, room_name, fn):
                         sec["fsplits"] = [[rr.leb() for _ in range(4)] for _ in range(rr.leb())]
                     elif c4 == prj2.cid(prj2.TEX_LEVEL2):
                         face = rr.leb()
-                        vals = struct.unpack("<12f", rr.raw(48))
+                        n = 4 if len(p4) - rr.s.tell() >= 50 else 3        # old files: triangles written with three corners
+                        vals = struct.unpack("<%df" % (2 * n + 4), rr.raw(8 * n + 16))
                         mode, tex = rr.leb(), rr.leb()
-                        sec["faces"][face] = ([(vals[i], vals[i + 1]) for i in range(0, 8, 2)], mode, tex)
+                        pts = [(vals[i], vals[i + 1]) for i in range(0, 2 * n, 2)]
+                        sec["faces"][face] = (pts + [pts[-1]] * (4 - n), mode, tex)
                 before = copy.deepcopy(sec)
                 fn(idx % nx, idx // nx, sec)
                 if sec == before:
