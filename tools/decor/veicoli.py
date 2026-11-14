@@ -18,15 +18,27 @@ from PIL import Image, ImageDraw, ImageFilter
 from decor.geom import M
 
 SS = 4          # supersampling of the painted images
+BAKE = True     # body textures lit by an offline render (falls back to painted light if the renderer is missing)
 MAXR = 256      # largest texture region (px)
 
 
 # ------------------------------------------------------------------------------------------- helpers
+_PCHIP = {}
+
+
 def interp(points, z):
-    """Piecewise-linear y(z) through [(z, y), ...] sorted by z."""
+    """y(z) through [(z, y), ...] sorted by z: a monotone cubic (no overshoot), so bonnets, roofs and tails
+    are curves and not chains of flats. Falls back to straight segments if two points share a z."""
     zs = [p[0] for p in points]
     ys = [p[1] for p in points]
-    return float(np.interp(z, zs, ys))
+    if any(b - a < 1e-4 for a, b in zip(zs, zs[1:])):
+        return float(np.interp(z, zs, ys))
+    key = id(points)
+    f = _PCHIP.get(key)
+    if f is None or f[0] is not points:
+        from scipy.interpolate import PchipInterpolator
+        f = _PCHIP[key] = (points, PchipInterpolator(zs, ys))
+    return float(f[1](min(max(z, zs[0]), zs[-1])))
 
 
 def shade(c, k):
@@ -146,8 +158,9 @@ class Body:
         self.L, self.W = spec["L"], spec["W"]
         self.zmin, self.zmax = -self.L / 2, self.L / 2
         self.H = max(p[1] for p in spec["top"])
-        self.pxm = spec.get("pxm", 96)
-        zs = set(np.round(np.linspace(self.zmin, self.zmax, spec.get("n", 22)), 4))
+        # texture density: as fine as the 256 px limit of a region allows on the height of the vehicle
+        self.pxm = int(min(spec.get("pxm", 96) * 1.7, 250 / (self.H + 0.04)))
+        zs = set(np.round(np.linspace(self.zmin, self.zmax, max(44, spec.get("n", 22))), 4))
         for p in spec["top"] + spec["belt"]:
             zs.add(round(p[0], 4))
         for z in spec.get("extra_z", ()):
@@ -198,7 +211,13 @@ class Body:
         yr = max(yl + 0.45 * (yt - yl), yt - 0.05)
         t2 = (yr - yl) / max(1e-6, yt - yl)
         xr = (w - sh) + (p3[0] - (w - sh)) * t2 + min(0.03, 0.4 * (yt - yr))
-        return [(w - tuck, yb), (w - 0.015, y1), (w, ym), (w - sh, yl), (xr, yr), (p3[0] - 0.04, yt)]
+        ctrl = np.array([(w - tuck, yb), (w - 0.015, y1), (w, ym), (w - sh, yl), (xr, yr), (p3[0] - 0.04, yt)])
+        # a smooth section through the control points, sampled evenly: the flank is a curve
+        from scipy.interpolate import PchipInterpolator
+        d = np.r_[0, np.cumsum(np.hypot(*np.diff(ctrl, axis=0).T))] + np.arange(len(ctrl)) * 1e-5
+        t = np.linspace(0, d[-1], 11)
+        xs, ys = PchipInterpolator(d, ctrl[:, 0])(t), PchipInterpolator(d, ctrl[:, 1])(t)
+        return [(float(a), float(min(max(b, yb), yt))) for a, b in zip(xs, ys)]
 
     # image coordinates (px, unscaled)
     def side_px(self, z, y):
@@ -300,9 +319,10 @@ class Body:
                     q = [(s * B[j + 1][0], B[j + 1][1], z1), (s * A[j + 1][0], A[j + 1][1], z0),
                          (s * A[j][0], A[j][1], z0), (s * B[j][0], B[j][1], z1)]
                     add_face(m, self, q, "side2" if s > 0 and "side2" in self.img_size else "side", out=(s, 0, 0))
-            # top strip
+            # top strip, in two halves with a slight crown along the centre line
             t = len(A) - 1
-            q = [(-B[t][0], B[t][1], z1), (B[t][0], B[t][1], z1), (A[t][0], A[t][1], z0), (-A[t][0], A[t][1], z0)]
+            ca = 0.0 if i == 0 else min(0.03, 0.05 * A[t][0])
+            cb = 0.0 if i == n - 2 else min(0.03, 0.05 * B[t][0])
             slope = abs(B[t][1] - A[t][1]) / max(1e-6, z1 - z0)
             view = "top"
             ymid = (A[t][1] + B[t][1]) / 2
@@ -311,7 +331,9 @@ class Body:
             # only 27-35 degrees steep, so the slope alone is not enough); bumpers and noses: steep
             if slope > 0.75 or (slope > 0.3 and ymid > self.belt(zmid) + 0.04):
                 view = "front" if zmid > 0 else "rear"
-            add_face(m, self, q, view, out=(0, 1, 0))
+            for sgn in (-1, 1):
+                q = [(sgn * B[t][0], B[t][1], z1), (0.0, B[t][1] + cb, z1), (0.0, A[t][1] + ca, z0), (sgn * A[t][0], A[t][1], z0)]
+                add_face(m, self, q, view, out=(0, 1, 0))
             if extra_under:
                 q = [(A[0][0], A[0][1], z0), (-A[0][0], A[0][1], z0), (-B[0][0], B[0][1], z1), (B[0][0], B[0][1], z1)]
                 add_face(m, self, q, None, out=(0, -1, 0), region=self.s.get("under", "veh_under"))
@@ -358,7 +380,7 @@ def add_face(m, body, q, view, out, region=None, uv=None):
 
 
 # ------------------------------------------------------------------------------------------- parts
-def wheel(m, r, width, x, z, rim_region, tyre_region="veh_tyre", n=14, side=1):
+def wheel(m, r, width, x, z, rim_region, tyre_region="veh_tyre", n=18, side=1):
     """Wheel with its axle along X; the outer face (rim) looks to `side`."""
     cx = x
     xo, xi = cx + side * width / 2, cx - side * width / 2
@@ -370,12 +392,24 @@ def wheel(m, r, width, x, z, rim_region, tyre_region="veh_tyre", n=14, side=1):
         mid = np.array([cx, r + (s0 + s1) / 2 * r, z + (c0 + c1) / 2 * r])
         add_face(m, None, q, None, out=tuple(mid - np.array([cx, r, z])), region=tyre_region,
                  uv=[(0, k / n), (0, (k + 1) / n), (1, (k + 1) / n), (1, k / n)])
-    # outer rim disc: triangles from the centre with polar uv
+    # outer face in rings: the tyre wall bulges out, the rim sits back in it, the hub a little proud of the dish
+    prof = [(1.0, -0.028), (0.90, 0.010), (0.72, -0.004), (0.66, -0.030), (0.30, -0.040), (0.16, -0.018)]
+    for j in range(len(prof) - 1):
+        (f0, d0), (f1, d1) = prof[j], prof[j + 1]
+        for k in range(n):
+            c0, s0 = ring[k]
+            c1, s1 = ring[(k + 1) % n]
+            q = [(xo + side * d0, r + s0 * r * f0, z + c0 * r * f0), (xo + side * d0, r + s1 * r * f0, z + c1 * r * f0),
+                 (xo + side * d1, r + s1 * r * f1, z + c1 * r * f1), (xo + side * d1, r + s0 * r * f1, z + c0 * r * f1)]
+            uv = [(0.5 + 0.5 * f0 * c0 * side, 0.5 - 0.5 * f0 * s0), (0.5 + 0.5 * f0 * c1 * side, 0.5 - 0.5 * f0 * s1),
+                  (0.5 + 0.5 * f1 * c1 * side, 0.5 - 0.5 * f1 * s1), (0.5 + 0.5 * f1 * c0 * side, 0.5 - 0.5 * f1 * s0)]
+            add_face(m, None, q, None, out=(side, 0, 0), region=rim_region, uv=uv)
+    f1, d1 = prof[-1]
     for k in range(n):
         c0, s0 = ring[k]
         c1, s1 = ring[(k + 1) % n]
-        tri = [(xo + side * 0.004, r, z), (xo + side * 0.004, r + s0 * r, z + c0 * r), (xo + side * 0.004, r + s1 * r, z + c1 * r)]
-        uv = [(0.5, 0.5), (0.5 + 0.5 * c0 * side, 0.5 - 0.5 * s0), (0.5 + 0.5 * c1 * side, 0.5 - 0.5 * s1)]
+        tri = [(xo + side * d1, r, z), (xo + side * d1, r + s0 * r * f1, z + c0 * r * f1), (xo + side * d1, r + s1 * r * f1, z + c1 * r * f1)]
+        uv = [(0.5, 0.5), (0.5 + 0.5 * f1 * c0 * side, 0.5 - 0.5 * f1 * s0), (0.5 + 0.5 * f1 * c1 * side, 0.5 - 0.5 * f1 * s1)]
         tri3(m, tri, uv, rim_region, out=(side, 0, 0))
     for k in range(n):      # inner face, dark
         c0, s0 = ring[k]
@@ -493,6 +527,8 @@ def finish(cv, seed, top=1.07, bottom=0.86):
     carry a film of dust. The view is told by the gradient asked for (side 1.07, ends 1.04, plan 1.05)."""
     from scipy import ndimage
     a = cv.array()
+    if BAKE:
+        return a                       # the light comes from the render (decor/veicoli_bake.py)
     h, w = a.shape[:2]
     rgb = a[..., :3]
     view = "top" if abs(top - 1.05) < 1e-6 else ("end" if abs(top - 1.04) < 1e-6 else "side")
@@ -1273,6 +1309,9 @@ def build_tex(pk):
     for key, v in VEHICLES.items():
         if v.get("body"):
             imgs = v["paint"](v["body"])
+            if BAKE:
+                from decor import veicoli_bake
+                imgs = veicoli_bake.bake(key, v, imgs)
             v["body"].register(pk, imgs)
         if v.get("mirror"):
             pk.put("veh_%s_paint" % key, swatch(v["mirror"][2]))
@@ -1549,7 +1588,6 @@ def alfa156_cc(key, plate_txt="CC BT 418"):
         both(cv, lambda s: lampbox(cv, s * 0.42, 0.635, s * 0.84, 0.72, [(1.0, WHITEL)]))
         plate(cv, 0.42, 0.42, plate_txt, w=0.46, h=0.10)                                             # offset plate
         screen(cv, 0.76, 0.955, 0.60, 1.375, heads=[(-0.35, 1.14, 0.1, 0.12), (0.35, 1.14, 0.1, 0.12)])
-        cv.rect(-0.62, 1.385, 0.62, 1.46, fill=white)
 
     def rear(cv):
         cv.rrect(-0.85, 0.22, 0.85, 0.58, 0.06, fill=shade(navy, 0.9))
@@ -1558,10 +1596,9 @@ def alfa156_cc(key, plate_txt="CC BT 418"):
         cv.line([(-0.80, 0.965), (0.80, 0.965)], fill=(6, 8, 16), width=1.5)                          # boot lid edge
         cv.rrect(-0.66, 1.03, 0.66, 1.37, 0.06, fill=TRIM)
         glass_fill(cv, squircle(-0.62, 1.06, 0.62, 1.34, 0.06), tint=GLASS, heads=[(-0.33, 1.14, 0.09, 0.1), (0.33, 1.14, 0.09, 0.1)])
-        cv.rect(-0.62, 1.385, 0.62, 1.46, fill=white)
 
     def topp(cv):
-        cv.rrect(-0.62, -1.18, 0.62, 0.02, 0.10, fill=white)                                         # white roof
+        cv.rrect(-0.60, -1.02, 0.60, -0.06, 0.10, fill=white)                                        # white roof
 
     def extras(m, B):
         # two blue beacons on the roof, as on the patrol cars

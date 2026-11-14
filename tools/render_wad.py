@@ -72,7 +72,7 @@ def main():
         lo, hi = P.min(0), P.max(0)
         c = (lo + hi) / 2
         L, H = max(hi[2] - lo[2], hi[0] - lo[0]), hi[1] - lo[1]
-        d = max(L, H * 1.6) * 1.3
+        d = max(L, H * 1.6) * float(os.environ.get("CAMD", "1.3"))
         cy = c[1]
         views = {"w%d_a" % sid: [c[0] + d * 0.7, cy + H * 0.8 + 0.3, c[2] + d * 0.7, c[0], cy, c[2]],
                  "w%d_b" % sid: [c[0] - d * 0.75, cy + H * 0.8 + 0.3, c[2] - d * 0.7, c[0], cy, c[2]],
