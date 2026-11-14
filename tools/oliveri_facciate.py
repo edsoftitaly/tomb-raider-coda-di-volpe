@@ -7,7 +7,7 @@
   per sector; the switches stand on the stone piers between the arched doors.
 - Balconies under the two French windows opposite and at the west end of Ed's long balcony, two more
   air-conditioner motors on Ed's ground floor; the motors that would hang over the new windows move.
-- Floors of the house: gen_pavimenti.py, one 512 px square per sector.
+- Floors of the house: gen_pavimenti.py, one 256 px square per sector.
 """
 import struct
 import sys
@@ -18,6 +18,7 @@ from prj2_check import Reader
 T1 = "$(LevelDirectory)\\..\\CdV_Textures\\cdv_via_amodeo_1.png"
 T2 = "$(LevelDirectory)\\..\\CdV_Textures\\cdv_via_amodeo_2.png"
 TP = "$(LevelDirectory)\\..\\CdV_Textures\\cdv_pavimenti.png"
+SLOT = 256        # px per sector on cdv_pavimenti.png (1024 x 512), like every other room texture of the level
 FLOORS = {"INGRESSO": 0, "DISIMPEGNO": 0, "CANTINA": 1, "LAB": 1, "DISPENSA": 1, "SOGGIORNO": 2, "GALLERIA": 2, "RIPOSTIGLIO": 2,
           "CAMERA": 3, "CAMERETTA1": 3, "CAMERETTA2": 3, "CUCINA": 4, "BAGNO": 5, "WC": 5, "LAVANDERIA": 5}
 
@@ -65,8 +66,8 @@ def main(src, dst):
             slot = FLOORS[key]
             pts = f[25][0]
             us, vs = [p[0] for p in pts], [p[1] for p in pts]
-            u0, v0 = (slot % 4) * 512, (slot // 4) * 512
-            new = [(u0 + (511 if p[0] > min(us) + 100 else 0), v0 + (511 if p[1] > min(vs) + 100 else 0)) for p in pts]
+            u0, v0 = (slot % 4) * SLOT, (slot // 4) * SLOT
+            new = [(u0 + (SLOT - 1 if p[0] > min(us) + 100 else 0), v0 + (SLOT - 1 if p[1] > min(vs) + 100 else 0)) for p in pts]
             assert len(set(new)) >= 3, pts
             f[25] = (new, f[25][1], ip)
             n["pav"] += 1

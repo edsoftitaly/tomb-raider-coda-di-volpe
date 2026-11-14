@@ -1,6 +1,6 @@
 """Floors of Ed's house in Oliveri: Italian tiles from CC0 photographs (ambientCG, assets/tex_cc0).
 
-cdv_pavimenti.png, 2048 x 1024, six 512 px squares = one sector (2 m) each, all tileable:
+cdv_pavimenti.png, 1024 x 512 (drawn at twice that), six 256 px squares = one sector (2 m) each, all tileable:
   0 cotto esagonale con tozzetti chiari (ingresso, disimpegno)   1 cotto esagonale (cantina, laboratorio, dispensa)
   2 marmette di graniglia 40 cm, impasto caldo (soggiorno, galleria, ripostiglio)
   3 marmette di graniglia 40 cm, impasto chiaro (camere)
@@ -49,7 +49,7 @@ def main(out):
     img = Image.new("RGB", (2048, 1024), (0, 0, 0))
     for i, t in enumerate(tiles):
         img.paste(Image.fromarray(t.astype(np.uint8)), ((i % 4) * 512, (i // 4) * 512))
-    img.save(os.path.join(out, "cdv_pavimenti.png"), optimize=True)
+    img.resize((1024, 512), Image.LANCZOS).save(os.path.join(out, "cdv_pavimenti.png"), optimize=True)
 
 
 if __name__ == "__main__":
