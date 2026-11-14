@@ -194,7 +194,11 @@ class Body:
         y1 = yb + min(0.12, (yl - yb) * 0.3)
         ym = yb + (yl - yb) * 0.62
         sh = self.s.get("shoulder", 0.025)
-        return [(w - tuck, yb), (w - 0.015, y1), (w, ym), (w - sh, yl), p3]
+        # roof edge (or bonnet edge) rounded: a point just under the top, a little further out
+        yr = max(yl + 0.45 * (yt - yl), yt - 0.05)
+        t2 = (yr - yl) / max(1e-6, yt - yl)
+        xr = (w - sh) + (p3[0] - (w - sh)) * t2 + min(0.03, 0.4 * (yt - yr))
+        return [(w - tuck, yb), (w - 0.015, y1), (w, ym), (w - sh, yl), (xr, yr), (p3[0] - 0.04, yt)]
 
     # image coordinates (px, unscaled)
     def side_px(self, z, y):
@@ -225,15 +229,15 @@ class Body:
         self.regions = {}
         for name, a in images.items():
             h, w = a.shape[:2]
-            if name in ("side", "top"):
-                long_ = w if name == "side" else h
+            if name in ("side", "side2", "top"):
+                long_ = w if name != "top" else h
                 n = int(math.ceil(long_ / MAXR)) if name == "top" else self.side_chunks
                 n = max(n, int(math.ceil(long_ / MAXR)))
                 edges = [int(round(long_ * k / n)) for k in range(n + 1)]
                 chunks = []
                 for k in range(n):
                     a0, a1 = edges[k], edges[k + 1]
-                    part = a[:, a0:a1] if name == "side" else a[a0:a1, :]
+                    part = a[:, a0:a1] if name != "top" else a[a0:a1, :]
                     rn = "veh_%s_%s_%d" % (self.key, name, k)
                     if part.shape[0] > MAXR or part.shape[1] > MAXR:
                         part = np.asarray(Image.fromarray(part.astype(np.uint8)).resize(
@@ -256,7 +260,7 @@ class Body:
     def uv_for(self, view, pts_m):
         """Region and per-corner uv for a face projected on `view` (side/front/rear/top)."""
         h, w = self.img_size[view]
-        if view == "side":
+        if view in ("side", "side2"):
             px = [self.side_px(p[2], p[1]) for p in pts_m]
         elif view == "front":
             px = [self.front_px(p[0], p[1]) for p in pts_m]
@@ -266,11 +270,11 @@ class Body:
             px = [self.top_px(p[0], p[2]) for p in pts_m]
         info = self.regions[view]
         chunks = info[0]
-        if view in ("side", "top"):
-            along = [q[0] for q in px] if view == "side" else [q[1] for q in px]
+        if view in ("side", "side2", "top"):
+            along = [q[0] for q in px] if view != "top" else [q[1] for q in px]
             mid = sum(along) / len(along)
             a0, a1, rn = next(((a0, a1, rn) for a0, a1, rn in chunks if a0 - 0.5 <= mid <= a1 + 0.5), chunks[-1])
-            if view == "side":
+            if view != "top":
                 uv = [((q[0] - a0) / max(1, a1 - a0), q[1] / h) for q in px]
             else:
                 uv = [(q[0] / w, (q[1] - a0) / max(1, a1 - a0)) for q in px]
@@ -295,7 +299,7 @@ class Body:
                 for s in (1, -1):
                     q = [(s * B[j + 1][0], B[j + 1][1], z1), (s * A[j + 1][0], A[j + 1][1], z0),
                          (s * A[j][0], A[j][1], z0), (s * B[j][0], B[j][1], z1)]
-                    add_face(m, self, q, "side", out=(s, 0, 0))
+                    add_face(m, self, q, "side2" if s > 0 and "side2" in self.img_size else "side", out=(s, 0, 0))
             # top strip
             t = len(A) - 1
             q = [(-B[t][0], B[t][1], z1), (B[t][0], B[t][1], z1), (A[t][0], A[t][1], z0), (-A[t][0], A[t][1], z0)]
@@ -473,9 +477,72 @@ def wiper(cv, x0, y0, length, ang):
     cv.line([(x0, y0), (x0 + length * math.cos(ang), y0 + length * math.sin(ang))], fill=(18, 18, 18), width=2)
 
 
+def _fbm(h, w, sy, sx, seed):
+    from scipy import ndimage
+    r = np.random.default_rng(seed)
+    out = np.zeros((h, w))
+    for o in range(3):
+        g = r.random((max(2, int(h / (sy / 2 ** o)) + 2), max(2, int(w / (sx / 2 ** o)) + 2)))
+        out += ndimage.zoom(g, (h / (g.shape[0] - 1), w / (g.shape[1] - 1)), order=1)[:h, :w] / 2 ** o
+    return out / 1.75
+
+
 def finish(cv, seed, top=1.07, bottom=0.86):
+    """Turns the flat painted elevation into something lit: the paint mirrors the sky above and the ground
+    below a soft horizon, the glass mirrors the sky, the body darkens towards the road, and the lower panels
+    carry a film of dust. The view is told by the gradient asked for (side 1.07, ends 1.04, plan 1.05)."""
+    from scipy import ndimage
     a = cv.array()
-    a = vgrad(a, top, bottom)
+    h, w = a.shape[:2]
+    rgb = a[..., :3]
+    view = "top" if abs(top - 1.05) < 1e-6 else ("end" if abs(top - 1.04) < 1e-6 else "side")
+    # the body colour is the most common colour of the image
+    q = (rgb // 8).astype(int)
+    keys = q[..., 0] * 1024 + q[..., 1] * 32 + q[..., 2]
+    vals, counts = np.unique(keys, return_counts=True)
+    k = vals[np.argmax(counts)]
+    base = np.array([(k // 1024) * 8 + 4, ((k // 32) % 32) * 8 + 4, (k % 32) * 8 + 4], float)
+    dist = np.abs(rgb - base).sum(axis=2)
+    thr = max(10.0, min(70.0, 0.45 * float(np.abs(base - np.array(GLASS, float)).sum())))   # dark paint is close to glass
+    paint = ndimage.gaussian_filter((dist < thr).astype(float), 0.7)
+    lum = rgb.mean(axis=2)
+    glass = ((lum < 75) & (rgb[..., 2] > rgb[..., 0] + 4)).astype(float) * (dist >= thr)
+    yy = (np.arange(h) / max(1, h - 1))[:, None] * np.ones((1, w))
+    xx = (np.arange(w) / max(1, w - 1))[None, :] * np.ones((h, 1))
+    dark = base.mean() < 70
+    skyc, gndc = np.array((214, 226, 240.0)), np.array((120, 110, 98.0))
+    if view == "top":
+        # bonnet and roof mirror the open sky: a broad light band off-centre, cloud-soft, darker at the edges
+        m = 0.30 * np.exp(-((xx - 0.42) / 0.20) ** 2) + 0.10 * (_fbm(h, w, h / 2.5, w / 1.5, seed) - 0.3)
+        m = np.clip(m, 0, 0.5) * paint
+        rgb[:] = rgb * (1 - m[..., None]) + skyc * m[..., None]
+        rgb *= (1 - 0.22 * paint * np.clip(np.abs(xx - 0.5) * 2 - 0.55, 0, 1) / 0.45)[..., None]
+    else:
+        wob = 0.018 * (_fbm(h, w, h, w / 3.0, seed) - 0.5) if view == "side" else 0.0
+        y = yy + wob
+        hz = 0.63                                                  # where the flank mirrors the horizon
+        # above the horizon the panel mirrors the sky, more and more towards the shoulder
+        sky = np.clip((hz - y) / 0.22, 0, 1) ** 1.3 * 0.42 * np.clip((y - 0.30) / 0.10, 0, 1)
+        sky = sky * (0.75 + 0.5 * _fbm(h, w, h / 3.0, w / 2.5, seed + 1))
+        # the horizon itself: a dark soft-edged line of far buildings, then the lit ground coming up from below
+        line = np.exp(-(np.clip(y - hz, 0, 1) / 0.035) ** 2) * (y >= hz) + np.exp(-((hz - y) / 0.012) ** 2) * (y < hz)
+        gnd = np.clip((y - hz - 0.03) / 0.22, 0, 1) * 0.20
+        k = paint * np.clip((y - 0.30) / 0.06, 0, 1)
+        rgb[:] = rgb * (1 - (sky * k)[..., None]) + skyc * (sky * k)[..., None]
+        rgb *= (1 - 0.34 * line * k)[..., None]
+        rgb[:] = rgb * (1 - (gnd * k)[..., None]) + gndc * (gnd * k)[..., None]
+        # the crease under the windows catches the light
+        hl = np.exp(-((y - 0.415) / 0.008) ** 2) * 0.55 * paint
+        rgb[:] = rgb * (1 - hl[..., None]) + 255 * hl[..., None]
+        # glass: sky in the upper part, the dark of the street across the middle
+        g = np.clip(1 - yy / 0.30, 0, 1) * 0.55 + 0.10
+        rgb[:] = rgb * (1 - (glass * g)[..., None]) + np.array((150, 176, 204.0)) * (glass * g)[..., None]
+        # contact shadow towards the road and a film of dust on the lower third
+        rgb *= (1 - 0.35 * np.clip((yy - 0.84) / 0.16, 0, 1))[..., None]
+        dust = np.clip((yy - 0.66) / 0.28, 0, 1) * (0.5 + _fbm(h, w, h / 5.0, w / 6.0, seed + 2)) * 0.16
+        rgb[:] = rgb * (1 - dust[..., None]) + np.array((128, 116, 98.0)) * dust[..., None]
+    del dark, lum
+    a[..., :3] = np.clip(rgb, 0, 255)
     return grain(a, seed, 0.012)
 
 
@@ -511,6 +578,17 @@ def rim_texture(kind, size=128):
             a = 2 * math.pi * k / 8
             cv.ellipse(0.22 * math.cos(a), 0.22 * math.sin(a), 0.04, 0.04, fill=(25, 25, 26))
         cv.ellipse(0, 0, 0.12, 0.12, fill=(80, 82, 84))
+    elif kind == "steelw":       # white painted steel wheel with round holes (Cinquecento, Ape)
+        cv.ellipse(0, 0, 0.35, 0.35, fill=(226, 226, 220))
+        cv.ellipse(0, 0, 0.30, 0.30, fill=(206, 206, 200))
+        cv.ellipse(0, 0, 0.27, 0.27, fill=(232, 232, 226))
+        for k in range(12):
+            a = 2 * math.pi * k / 12
+            cv.ellipse(0.21 * math.cos(a), 0.21 * math.sin(a), 0.027, 0.027, fill=(46, 46, 48))
+        cv.ellipse(0, 0, 0.10, 0.10, fill=(200, 200, 196))
+        for k in range(4):
+            a = 2 * math.pi * k / 4 + 0.4
+            cv.ellipse(0.06 * math.cos(a), 0.06 * math.sin(a), 0.014, 0.014, fill=(90, 90, 92))
     elif kind == "scooter":      # small alloy wheel of the Vespa
         cv.ellipse(0, 0, 0.33, 0.33, fill=(175, 178, 182))
         for k in range(5):
@@ -518,6 +596,12 @@ def rim_texture(kind, size=128):
             cv.ellipse(0.2 * math.cos(a), 0.2 * math.sin(a), 0.06, 0.06, fill=(70, 72, 74))
         cv.ellipse(0, 0, 0.1, 0.1, fill=(120, 122, 126))
     a = cv.array()
+    # light from above: the upper half of the wheel a little brighter, the tyre wall with a soft sheen
+    n = a.shape[0]
+    yy, xx = np.mgrid[0:n, 0:n] / (n - 1) - 0.5
+    rr = np.hypot(xx, yy)
+    a[..., :3] *= (1.10 - 0.35 * (yy + 0.5))[..., None]
+    a[..., :3] += (np.exp(-((rr - 0.42) / 0.02) ** 2) * 26 * np.clip(-yy * 2, 0, 1))[..., None]
     return grain(a, 7, 0.02)
 
 
@@ -712,8 +796,24 @@ def modern(key, colour, plate_txt, spec, wheels, wheel_w, rim, sidep, frontp, re
         body_paint(top, colour)
         if topp:
             topp(top)
-        return dict(side=finish(side, hash(key) % 97), front=finish(front, 2, 1.04, 0.9), rear=finish(rear, 3, 1.04, 0.9),
-                    top=finish(top, 4, 1.05, 1.0))
+        out = dict(front=finish(front, 2, 1.04, 0.9), rear=finish(rear, 3, 1.04, 0.9), top=finish(top, 4, 1.05, 1.0))
+        seed = sum(ord(ch) for ch in key) % 97
+        if sidep.get("texts"):
+            # lettering: the side image serves both flanks mirrored, so it is written twice, once each way
+            plain = side.im.copy()
+            for (z, y, txt, col, size) in sidep["texts"]:
+                side.text(z, y, txt, col, size)
+            out["side"] = finish(side, seed)
+            side.im = plain.transpose(Image.FLIP_LEFT_RIGHT)
+            side.d = ImageDraw.Draw(side.im)
+            for (z, y, txt, col, size) in sidep["texts"]:
+                side.text(-z, y, txt, col, size)
+            side.im = side.im.transpose(Image.FLIP_LEFT_RIGHT)
+            side.d = ImageDraw.Draw(side.im)
+            out["side2"] = finish(side, seed)
+        else:
+            out["side"] = finish(side, seed)
+        return out
     return dict(body=B, paint=paint, wheels=wheels, wheel_w=wheel_w, rim=rim, mirror=mirror, extras=extras)
 
 
@@ -1161,7 +1261,7 @@ def build_tex(pk):
     pk.put("veh_under", swatch((16, 16, 17)))
     pk.put("veh_trim", swatch(TRIM))
     pk.put("veh_mirror_glass", swatch((60, 70, 80)))
-    for k in ("steel", "cover", "alloy", "van", "scooter"):
+    for k in ("steel", "steelw", "cover", "alloy", "van", "scooter"):
         pk.put("veh_rim_" + k, rim_texture(k))
     pk.put("veh_seat", swatch((30, 26, 24)))
     pk.put("veh_grip", swatch((20, 20, 20)))
@@ -1169,6 +1269,7 @@ def build_tex(pk):
     pk.put("veh_floor", stripes_rubber())
     pk.put("veh_headlamp", lamp_round())
     pk.put("veh_taillamp", swatch((180, 24, 26)))
+    pk.put("veh_cc_beacon", vgrad(swatch((40, 90, 235), 32), 1.5, 0.7))
     for key, v in VEHICLES.items():
         if v.get("body"):
             imgs = v["paint"](v["body"])
@@ -1219,10 +1320,424 @@ def cbox_m(B, h=None):
     return ((-W / 2 * M, 0, -L / 2 * M), (W / 2 * M, H * M, L / 2 * M))
 
 
+# =============================================================================================================
+# 14/11/2026: the cars of Via Amodeo redone on the models of Ed's reference pictures (shape, proportions,
+# colours and details taken from them by eye; nothing of the pictures is used as a texture). No badges.
+AMBER, REDL, WHITEL = (232, 140, 36), (176, 26, 30), (226, 228, 230)
+
+
+def lampbox(cv, x0, y0, x1, y1, parts):
+    """A lamp cluster: parts = [(fraction from x0, colour)], drawn side by side on a dark bed with a lens sheen."""
+    xa, xb = min(x0, x1), max(x0, x1)
+    cv.rrect(xa, y0, xb, y1, 0.012, fill=(40, 30, 30))
+    f0 = 0.0
+    for f1, c in parts:
+        a, b = x0 + (x1 - x0) * f0, x0 + (x1 - x0) * f1
+        cv.rect(min(a, b) + 0.006, y0 + 0.008, max(a, b) - 0.006, y1 - 0.008, fill=c)
+        cv.rect(min(a, b) + 0.006, y1 - 0.03, max(a, b) - 0.006, y1 - 0.012, fill=shade(c, 1.25))
+        f0 = f1
+
+
+# --- Fiat Punto, first series (176), 5 doors, 1993-99: 3,76 x 1,625 x 1,45 m, passo 2,45 m ----------------
+def punto1(colour, plate_txt, key):
+    hz = 1.88
+    spec = dict(L=3.76, W=1.625, pxm=110, tumble=0.16, roofw=0.9, tuck=0.06, n=26,
+                top=[(-hz, 0.92), (-1.865, 1.04), (-1.74, 1.34), (-1.52, 1.435), (-0.5, 1.45), (0.12, 1.42),
+                     (0.96, 0.93), (1.58, 0.80), (1.80, 0.70), (hz, 0.55)],
+                belt=[(-hz, 0.99), (-1.3, 0.985), (0.96, 0.90), (hz, 0.58)],
+                bottom=[(-hz, 0.40), (-1.74, 0.21), (1.70, 0.20), (hz, 0.30)],
+                plan=[(-hz, 0.86), (-1.82, 0.94), (-1.6, 1.0), (1.2, 1.0), (1.55, 0.96), (1.78, 0.88), (hz, 0.78)],
+                extra_z=(1.12, -1.33, -0.16, -1.02))
+    wz = [(1.12, 0.285), (-1.33, 0.285)]
+    sidep = dict(
+        arch=0.335,
+        frame=[(0.98, 0.91), (0.14, 1.41), (-1.30, 1.41), (-1.66, 1.20), (-1.68, 0.99)],
+        windows=[[(0.90, 0.95), (0.16, 1.375), (-0.10, 1.38), (-0.10, 0.935)],
+                 [(-0.21, 0.94), (-0.21, 1.38), (-0.98, 1.375), (-1.06, 0.975)],
+                 [(-1.13, 0.985), (-1.13, 1.36), (-1.28, 1.36), (-1.60, 1.16), (-1.60, 1.0)]],
+        pillars=[(-0.21, -0.10, 0.92, 1.41)], heads=[(0.02, 1.13, 0.08, 0.10), (-0.72, 1.13, 0.08, 0.10)],
+        cuts=[(1.00, 0.26, 0.91), (-0.155, 0.26, 0.94), (-1.09, 0.34, 0.98)],
+        handles=[(-0.02, 0.83), (-0.94, 0.85)], handle_col=TRIM, cap=(-1.42, 0.86),
+        lamps=[([(1.50, 0.775), (1.84, 0.69), (1.875, 0.60), (1.56, 0.665)], (214, 218, 222)),
+               ([(1.50, 0.775), (1.60, 0.75), (1.63, 0.655), (1.56, 0.665)], AMBER),
+               ([(-1.72, 1.00), (-1.87, 0.97), (-1.83, 1.36), (-1.72, 1.385)], REDL)])
+
+    def post(cv):
+        cv.rect(-1.55, 0.50, 0.98, 0.555, fill=TRIM)                          # rubbing strip along the doors
+        cv.rect(1.36, 0.385, hz, 0.435, fill=TRIM)                            # bumper strips
+        cv.rect(-hz, 0.47, -1.50, 0.52, fill=TRIM)
+        cv.rect(-hz, 0.20, hz, 0.255, fill=shade(colour, 0.55))               # sill in shadow
+        cv.ellipse(1.02, 0.62, 0.028, 0.022, fill=AMBER)                      # repeater
+    sidep["post"] = post
+
+    def front(cv):
+        cv.rrect(-0.79, 0.21, 0.79, 0.56, 0.05, fill=shade(colour, 0.97))
+        cv.rect(-0.79, 0.385, 0.79, 0.435, fill=TRIM)
+        cv.rect(-0.30, 0.44, 0.30, 0.465, fill=(22, 23, 25))                   # slot under the bonnet
+        cv.rrect(-0.33, 0.23, 0.33, 0.34, 0.02, fill=(22, 23, 25))             # lower intake
+        for k in range(3):
+            cv.line([(-0.31, 0.255 + k * 0.03), (0.31, 0.255 + k * 0.03)], fill=(56, 58, 60), width=1)
+        both(cv, lambda s: cv.rrect(min(s * 0.52, s * 0.70), 0.24, max(s * 0.52, s * 0.70), 0.31, 0.01, fill=(30, 31, 33)))
+        plate(cv, 0, 0.345, plate_txt, w=0.50, h=0.105)
+        both(cv, lambda s: lampbox(cv, s * 0.34, 0.60, s * 0.78, 0.70, [(0.68, WHITEL), (1.0, AMBER)]))
+        cv.line([(-0.80, 0.585), (0.80, 0.585)], fill=shade(colour, 0.55), width=1.5)   # bonnet shut line
+        screen(cv, 0.71, 0.94, 0.57, 1.41, heads=[(-0.33, 1.15, 0.1, 0.12), (0.33, 1.15, 0.1, 0.12)])
+
+    def rear(cv):
+        cv.rrect(-0.79, 0.26, 0.79, 0.60, 0.05, fill=shade(colour, 0.97))
+        cv.rect(-0.79, 0.47, 0.79, 0.52, fill=TRIM)
+        cv.rrect(-0.30, 0.30, 0.30, 0.44, 0.015, fill=shade(colour, 0.8))
+        plate(cv, 0, 0.37, plate_txt, w=0.50, h=0.105)
+        both(cv, lambda s: lampbox(cv, s * 0.64, 0.99, s * 0.79, 1.37, [(1.0, REDL)]))
+        both(cv, lambda s: cv.rect(min(s * 0.655, s * 0.775), 1.08, max(s * 0.655, s * 0.775), 1.15, fill=AMBER))
+        both(cv, lambda s: cv.rect(min(s * 0.655, s * 0.775), 1.00, max(s * 0.655, s * 0.775), 1.05, fill=WHITEL))
+        cv.line([(-0.62, 0.62), (0.62, 0.62)], fill=shade(colour, 0.5), width=1.5)        # tailgate shut line
+        cv.rrect(-0.20, 0.72, 0.20, 0.78, 0.02, fill=TRIM)                                # handle
+        cv.rrect(-0.60, 0.98, 0.60, 1.40, 0.05, fill=TRIM)
+        glass_fill(cv, squircle(-0.56, 1.01, 0.56, 1.37, 0.05), tint=GLASS, heads=[(-0.3, 1.1, 0.09, 0.1), (0.3, 1.1, 0.09, 0.1)])
+        wiper(cv, 0.0, 1.03, 0.36, math.radians(160))
+    return modern(key, colour, plate_txt, spec, wz, 0.165, "cover", sidep, front, rear, mirror=(0.93, 0.93, TRIM))
+
+
+# --- Fiat Cinquecento (170), 1991-98: 3,23 x 1,49 x 1,435 m, passo 2,20 m -------------------------------
+def cinquecento170(colour, plate_txt, key):
+    hz = 1.615
+    spec = dict(L=3.23, W=1.49, pxm=120, tumble=0.10, roofw=0.92, tuck=0.05, n=24,
+                top=[(-hz, 0.80), (-1.60, 0.94), (-1.53, 1.37), (-1.42, 1.435), (0.04, 1.435), (0.14, 1.41),
+                     (0.78, 0.915), (1.44, 0.83), (1.57, 0.74), (hz, 0.58)],
+                belt=[(-hz, 0.93), (0.78, 0.895), (hz, 0.64)],
+                bottom=[(-hz, 0.36), (-1.50, 0.20), (1.50, 0.20), (hz, 0.30)],
+                plan=[(-hz, 0.90), (-1.55, 0.97), (-1.35, 1.0), (1.15, 1.0), (1.45, 0.96), (hz, 0.84)],
+                extra_z=(1.015, -1.185, -0.25, 0.78))
+    wz = [(1.015, 0.265), (-1.185, 0.265)]
+    sidep = dict(
+        arch=0.315,
+        frame=[(0.80, 0.905), (0.16, 1.405), (-1.44, 1.405), (-1.52, 1.34), (-1.55, 0.935)],
+        windows=[[(0.72, 0.945), (0.18, 1.37), (-0.20, 1.37), (-0.20, 0.935)],
+                 [(-0.32, 0.94), (-0.32, 1.37), (-1.40, 1.37), (-1.47, 1.30), (-1.49, 0.955)]],
+        pillars=[(-0.32, -0.20, 0.92, 1.405)], heads=[(-0.02, 1.12, 0.08, 0.10)],
+        cuts=[(0.82, 0.24, 0.905), (-0.26, 0.24, 0.93)], handles=[(-0.12, 0.80)], handle_col=TRIM, cap=(-1.22, 0.72),
+        lamps=[([(-1.50, 0.56), (-hz, 0.56), (-hz, 0.68), (-1.50, 0.68)], REDL),
+               ([(1.45, 0.66), (1.60, 0.62), (1.60, 0.72), (1.45, 0.76)], AMBER)])
+
+    def post(cv):
+        cv.poly([(1.22, 0.20), (hz, 0.20), (hz, 0.52), (1.40, 0.52), (1.30, 0.44)], fill=TRIM)     # front bumper end
+        cv.poly([(-1.30, 0.22), (-hz, 0.22), (-hz, 0.56), (-1.48, 0.56), (-1.40, 0.46)], fill=TRIM)   # rear bumper end
+        cv.rect(-1.30, 0.20, 1.22, 0.255, fill=TRIM)                                               # sill
+        cv.line([(-1.50, 0.86), (1.44, 0.80)], fill=shade(colour, 0.72), width=1)                  # waist crease
+        cv.ellipse(0.98, 0.60, 0.024, 0.02, fill=AMBER)
+    sidep["post"] = post
+
+    def front(cv):
+        cv.rrect(-0.73, 0.20, 0.73, 0.52, 0.04, fill=TRIM)
+        cv.rrect(-0.30, 0.24, 0.30, 0.33, 0.015, fill=(18, 18, 19))
+        plate(cv, 0, 0.42, plate_txt, w=0.50, h=0.105)
+        both(cv, lambda s: lampbox(cv, s * 0.34, 0.56, s * 0.70, 0.70, [(0.78, WHITEL), (1.0, AMBER)]))
+        cv.rect(-0.30, 0.60, 0.30, 0.66, fill=(22, 23, 25))                                        # grille slot
+        cv.line([(-0.72, 0.725), (0.72, 0.725)], fill=shade(colour, 0.55), width=1.5)
+        screen(cv, 0.66, 0.935, 0.60, 1.40, heads=[(-0.31, 1.14, 0.1, 0.12), (0.31, 1.14, 0.1, 0.12)])
+
+    def rear(cv):
+        cv.rrect(-0.74, 0.22, 0.74, 0.56, 0.04, fill=TRIM)
+        plate(cv, 0, 0.40, plate_txt, w=0.50, h=0.105)
+        both(cv, lambda s: lampbox(cv, s * 0.30, 0.565, s * 0.73, 0.685, [(0.55, REDL), (0.72, WHITEL), (1.0, AMBER)]))
+        cv.line([(-0.70, 0.70), (0.70, 0.70)], fill=shade(colour, 0.5), width=1.5)
+        cv.ellipse(0, 0.80, 0.03, 0.03, fill=TRIM)                                                   # lock
+        cv.rrect(-0.62, 0.93, 0.62, 1.40, 0.04, fill=TRIM)
+        glass_fill(cv, squircle(-0.58, 0.96, 0.58, 1.37, 0.04), tint=GLASS, heads=[(-0.3, 1.08, 0.09, 0.1), (0.3, 1.08, 0.09, 0.1)])
+        wiper(cv, 0.0, 0.98, 0.36, math.radians(160))
+    return modern(key, colour, plate_txt, spec, wz, 0.15, "steelw", sidep, front, rear, mirror=(0.74, 0.93, TRIM))
+
+
+# --- Autobianchi Y10, 1985-95: 3,39 x 1,51 x 1,425 m, passo 2,16 m ---------------------------------------
+def y10(colour, plate_txt, key):
+    hz = 1.695
+    satin = (40, 52, 62)                                       # the satin black tailgate, a shade of blue in it
+    spec = dict(L=3.39, W=1.51, pxm=116, tumble=0.11, roofw=0.92, tuck=0.05, n=24,
+                top=[(-hz, 0.72), (-1.69, 0.98), (-1.66, 1.36), (-1.57, 1.425), (-0.10, 1.425), (0.04, 1.40),
+                     (0.80, 0.90), (1.50, 0.80), (1.65, 0.70), (hz, 0.56)],
+                belt=[(-hz, 0.95), (0.80, 0.885), (hz, 0.62)],
+                bottom=[(-hz, 0.36), (-1.58, 0.20), (1.56, 0.20), (hz, 0.30)],
+                plan=[(-hz, 0.93), (-1.62, 0.98), (-1.30, 1.0), (1.15, 1.0), (1.50, 0.95), (hz, 0.84)],
+                extra_z=(1.045, -1.115, -0.30, 0.80))
+    wz = [(1.045, 0.27), (-1.115, 0.27)]
+    sidep = dict(
+        arch=0.32,
+        frame=[(0.82, 0.895), (0.06, 1.395), (-1.55, 1.395), (-1.62, 1.33), (-1.63, 0.95)],
+        windows=[[(0.74, 0.935), (0.08, 1.36), (-0.24, 1.36), (-0.24, 0.925)],
+                 [(-0.36, 0.93), (-0.36, 1.36), (-1.50, 1.36), (-1.56, 1.30), (-1.57, 0.96)]],
+        pillars=[(-0.36, -0.24, 0.91, 1.395)], heads=[(-0.05, 1.12, 0.08, 0.10)],
+        cuts=[(0.84, 0.26, 0.895), (-0.30, 0.26, 0.925)], handles=[(-0.16, 0.84)], handle_col=TRIM, cap=(-1.24, 0.70),
+        lamps=[([(-1.56, 0.60), (-hz, 0.60), (-hz, 0.74), (-1.56, 0.74)], REDL),
+               ([(1.48, 0.66), (1.66, 0.62), (1.66, 0.72), (1.48, 0.76)], AMBER)])
+
+    def post(cv):
+        cv.poly([(1.24, 0.20), (hz, 0.20), (hz, 0.54), (1.42, 0.54), (1.32, 0.46)], fill=GREYPL)
+        cv.poly([(-1.28, 0.22), (-hz, 0.22), (-hz, 0.59), (-1.52, 0.59), (-1.42, 0.48)], fill=GREYPL)
+        cv.rect(-1.28, 0.20, 1.24, 0.26, fill=GREYPL)
+        cv.rect(-1.64, 0.76, -hz, 1.40, fill=satin)                                                 # edge of the tailgate
+        cv.ellipse(1.0, 0.62, 0.024, 0.02, fill=AMBER)
+    sidep["post"] = post
+
+    def front(cv):
+        cv.rrect(-0.74, 0.20, 0.74, 0.54, 0.04, fill=GREYPL)
+        cv.rrect(-0.34, 0.24, 0.34, 0.33, 0.015, fill=(24, 25, 27))
+        plate(cv, 0, 0.43, plate_txt, w=0.50, h=0.105)
+        both(cv, lambda s: lampbox(cv, s * 0.32, 0.57, s * 0.72, 0.70, [(0.8, WHITEL), (1.0, AMBER)]))
+        cv.rect(-0.31, 0.585, 0.31, 0.685, fill=(22, 23, 25))
+        for k in range(4):
+            cv.line([(-0.30, 0.60 + k * 0.022), (0.30, 0.60 + k * 0.022)], fill=(70, 72, 74), width=1)
+        cv.line([(-0.73, 0.72), (0.73, 0.72)], fill=shade(colour, 0.55), width=1.5)
+        screen(cv, 0.67, 0.925, 0.60, 1.39, heads=[(-0.31, 1.13, 0.1, 0.12), (0.31, 1.13, 0.1, 0.12)])
+
+    def rear(cv):
+        cv.rect(-0.80, 0.59, 0.80, 1.45, fill=satin)                                                # the black tailgate
+        cv.rrect(-0.75, 0.22, 0.75, 0.59, 0.04, fill=GREYPL)
+        both(cv, lambda s: lampbox(cv, s * 0.28, 0.605, s * 0.74, 0.74, [(0.22, REDL), (0.36, WHITEL), (0.76, REDL), (1.0, AMBER)]))
+        plate(cv, 0, 0.67, plate_txt, w=0.50, h=0.105)
+        cv.rrect(-0.62, 0.95, 0.62, 1.39, 0.04, fill=(26, 30, 34))
+        glass_fill(cv, squircle(-0.58, 0.98, 0.58, 1.36, 0.04), tint=GLASS, heads=[(-0.3, 1.1, 0.09, 0.1), (0.3, 1.1, 0.09, 0.1)])
+        wiper(cv, -0.08, 1.0, 0.40, math.radians(18))
+        cv.ellipse(0, 0.86, 0.025, 0.025, fill=(20, 22, 24))
+    return modern(key, colour, plate_txt, spec, wz, 0.15, "cover", sidep, front, rear, mirror=(0.76, 0.92, TRIM))
+
+
+# --- Alfa Romeo 156 berlina of the Carabinieri, 1997-2005: 4,43 x 1,745 x 1,415 m, passo 2,595 m ---------
+def alfa156_cc(key, plate_txt="CC BT 418"):
+    hz = 2.215
+    navy, red, white = (16, 22, 48), (200, 24, 30), (238, 238, 236)
+    spec = dict(L=4.43, W=1.745, pxm=100, tumble=0.19, roofw=0.9, tuck=0.07, n=28,
+                top=[(-hz, 0.84), (-2.19, 0.97), (-1.78, 1.03), (-1.20, 1.375), (-0.60, 1.415), (0.0, 1.40),
+                     (0.98, 0.955), (1.75, 0.80), (2.08, 0.70), (hz, 0.52)],
+                belt=[(-hz, 0.95), (-1.25, 0.975), (0.98, 0.915), (hz, 0.58)],
+                bottom=[(-hz, 0.38), (-2.05, 0.20), (2.0, 0.19), (hz, 0.30)],
+                plan=[(-hz, 0.84), (-2.12, 0.93), (-1.80, 0.99), (1.30, 1.0), (1.80, 0.95), (2.08, 0.86), (hz, 0.72)],
+                extra_z=(1.305, -1.29, 0.0, -0.95))
+    wz = [(1.305, 0.305), (-1.29, 0.305)]
+    sidep = dict(
+        arch=0.355,
+        frame=[(1.0, 0.925), (0.04, 1.375), (-1.16, 1.36), (-1.70, 1.04), (-1.72, 0.975)],
+        windows=[[(0.90, 0.96), (0.06, 1.34), (-0.04, 1.34), (-0.04, 0.95)],
+                 [(-0.15, 0.955), (-0.15, 1.34), (-0.92, 1.33), (-1.00, 0.985)],
+                 [(-1.07, 0.99), (-1.00, 1.31), (-1.14, 1.30), (-1.62, 1.03), (-1.62, 0.995)]],
+        pillars=[(-0.15, -0.04, 0.93, 1.375)], heads=[(0.18, 1.12, 0.08, 0.10), (-0.60, 1.12, 0.08, 0.10)],
+        cuts=[(1.02, 0.26, 0.92), (-0.095, 0.26, 0.95), (-1.04, 0.34, 0.985)],
+        handles=[(0.02, 0.86)], handle_col=CHROME, cap=(-1.55, 0.86),
+        lamps=[([(1.55, 0.745), (2.00, 0.68), (2.10, 0.62), (1.62, 0.665)], WHITEL),
+               ([(-1.90, 0.80), (-2.20, 0.78), (-2.20, 0.94), (-1.86, 0.955)], REDL)],
+        texts=[(0.42, 0.56, "CARABINIERI", white, 0.185), (-1.80, 0.60, "112", white, 0.15)])
+
+    def post(cv):
+        # the red flash: a band along the flank, stepping up behind the rear door
+        cv.poly([(1.50, 0.735), (-1.02, 0.775), (-1.02, 0.835), (1.50, 0.775)], fill=red)
+        cv.poly([(-1.02, 0.775), (-1.30, 0.70), (-hz, 0.70), (-hz, 0.76), (-1.26, 0.76), (-1.02, 0.835)], fill=red)
+        cv.rect(-1.25, 1.375, 0.05, 1.45, fill=white)                                                # white roof edge
+        cv.rect(-hz, 0.19, hz, 0.25, fill=(8, 10, 20))
+        cv.ellipse(1.18, 0.66, 0.026, 0.02, fill=AMBER)
+    sidep["post"] = post
+
+    def front(cv):
+        cv.rrect(-0.85, 0.19, 0.85, 0.52, 0.06, fill=shade(navy, 0.9))
+        cv.rrect(-0.60, 0.22, 0.60, 0.31, 0.02, fill=(8, 8, 10))
+        both(cv, lambda s: cv.ellipse(s * 0.66, 0.30, 0.045, 0.04, fill=(170, 176, 182)))
+        # the shield-shaped grille between the lamps, chrome edge, no badge
+        cv.poly([(-0.17, 0.72), (0.17, 0.72), (0.0, 0.40)], fill=CHROME)
+        cv.poly([(-0.135, 0.70), (0.135, 0.70), (0.0, 0.445)], fill=(12, 12, 14))
+        for k in range(1, 6):
+            cv.line([(-0.13 + k * 0.012, 0.70 - k * 0.04), (0.13 - k * 0.012, 0.70 - k * 0.04)], fill=(80, 84, 88), width=1)
+        both(cv, lambda s: cv.rect(min(s * 0.20, s * 0.56), 0.60, max(s * 0.20, s * 0.56), 0.625, fill=CHROME))
+        both(cv, lambda s: lampbox(cv, s * 0.42, 0.635, s * 0.84, 0.72, [(1.0, WHITEL)]))
+        plate(cv, 0.42, 0.42, plate_txt, w=0.46, h=0.10)                                             # offset plate
+        screen(cv, 0.76, 0.955, 0.60, 1.375, heads=[(-0.35, 1.14, 0.1, 0.12), (0.35, 1.14, 0.1, 0.12)])
+        cv.rect(-0.62, 1.385, 0.62, 1.46, fill=white)
+
+    def rear(cv):
+        cv.rrect(-0.85, 0.22, 0.85, 0.58, 0.06, fill=shade(navy, 0.9))
+        plate(cv, 0, 0.44, plate_txt, w=0.50, h=0.105)
+        both(cv, lambda s: lampbox(cv, s * 0.36, 0.80, s * 0.86, 0.93, [(0.6, REDL), (0.75, WHITEL), (1.0, REDL)]))
+        cv.line([(-0.80, 0.965), (0.80, 0.965)], fill=(6, 8, 16), width=1.5)                          # boot lid edge
+        cv.rrect(-0.66, 1.03, 0.66, 1.37, 0.06, fill=TRIM)
+        glass_fill(cv, squircle(-0.62, 1.06, 0.62, 1.34, 0.06), tint=GLASS, heads=[(-0.33, 1.14, 0.09, 0.1), (0.33, 1.14, 0.09, 0.1)])
+        cv.rect(-0.62, 1.385, 0.62, 1.46, fill=white)
+
+    def topp(cv):
+        cv.rrect(-0.62, -1.18, 0.62, 0.02, 0.10, fill=white)                                         # white roof
+
+    def extras(m, B):
+        # two blue beacons on the roof, as on the patrol cars
+        for x in (-0.32, 0.32):
+            boxm(m, x - 0.075, x + 0.075, B.top(-0.45) - 0.01, B.top(-0.45) + 0.03, -0.525, -0.375, "veh_trim")
+            boxm(m, x - 0.06, x + 0.06, B.top(-0.45) + 0.03, B.top(-0.45) + 0.15, -0.51, -0.39, "veh_cc_beacon")
+            boxm(m, x - 0.04, x + 0.04, B.top(-0.45) + 0.15, B.top(-0.45) + 0.18, -0.49, -0.41, "veh_cc_beacon")
+    return modern(key, navy, plate_txt, spec, wz, 0.19, "steel", sidep, front, rear, topp, mirror=(0.95, 0.95, navy), extras=extras)
+
+
+# --- Fiat Ducato, first series (280), furgone, 1981-93: 4,75 x 1,97 x 2,10 m, passo 2,92 m ---------------
+def ducato1(colour, plate_txt, key):
+    hz = 2.375
+    spec = dict(L=4.75, W=1.97, pxm=88, tumble=0.06, roofw=0.95, tuck=0.05, shoulder=0.02, n=26,
+                top=[(-hz, 2.00), (-2.35, 2.07), (-2.25, 2.10), (1.42, 2.10), (1.54, 2.06), (1.96, 1.27),
+                     (2.24, 1.16), (2.35, 1.02), (hz, 0.60)],
+                belt=[(-hz, 1.26), (1.96, 1.245), (hz, 0.80)],
+                bottom=[(-hz, 0.48), (-2.28, 0.38), (2.25, 0.38), (hz, 0.44)],
+                plan=[(-hz, 0.97), (-2.30, 1.0), (1.60, 1.0), (2.10, 0.98), (2.30, 0.94), (hz, 0.90)],
+                extra_z=(1.555, -1.365, 1.02, 0.80, -0.55))
+    wz = [(1.555, 0.33), (-1.365, 0.33)]
+    sidep = dict(
+        arch=0.40,
+        frame=[(1.94, 1.25), (1.56, 2.00), (1.02, 2.00), (1.02, 1.25)],
+        windows=[[(1.86, 1.29), (1.56, 1.94), (1.09, 1.94), (1.09, 1.29)]], heads=[(1.42, 1.60, 0.11, 0.14)],
+        cuts=[(1.98, 0.60, 1.24), (1.00, 0.60, 2.04), (0.80, 0.60, 2.02), (-0.55, 0.60, 2.02), (-2.30, 0.60, 2.04)],
+        handles=[(1.14, 1.16), (0.70, 1.16)], handle_col=TRIM,
+        lamps=[([(-2.28, 0.74), (-hz, 0.74), (-hz, 1.08), (-2.28, 1.08)], REDL),
+               ([(2.20, 0.98), (2.36, 0.96), (2.36, 1.04), (2.20, 1.06)], AMBER)])
+
+    def post(cv):
+        cv.rect(-hz, 0.38, hz, 0.60, fill=TRIM)                                                      # black sill band
+        cv.poly([(1.98, 0.38), (hz, 0.38), (hz, 0.74), (2.20, 0.74), (2.02, 0.60)], fill=TRIM)       # bumper ends
+        cv.poly([(-2.05, 0.38), (-hz, 0.38), (-hz, 0.68), (-2.20, 0.68)], fill=TRIM)
+        cv.rrect(-1.95, 0.98, 0.62, 1.05, 0.02, fill=TRIM)                                           # rubbing strip
+        for (z0, z1) in ((0.74, -0.50), (-0.60, -2.24)):                                             # pressed panels
+            cv.rrect(z0, 1.36, z1, 1.98, 0.04, fill=None, outline=shade(colour, 0.80), width=1)
+        for (z, r) in wz:                                                                            # arch flares
+            cv.ellipse(z, r, 0.46, 0.46, fill=None, outline=shade(colour, 0.78), width=2)
+        # a working van: rust at the sills and arches, scuffs
+        r = np.random.default_rng(31)
+        for _ in range(26):
+            z, y = r.uniform(-2.2, 2.0), r.uniform(0.62, 0.95)
+            cv.ellipse(z, y, r.uniform(0.008, 0.03), r.uniform(0.006, 0.02), fill=(150, 96, 60))
+        for _ in range(10):
+            z = r.uniform(-2.2, 1.8)
+            y = r.uniform(1.1, 1.9)
+            cv.line([(z, y), (z + r.uniform(0.05, 0.25), y + r.uniform(-0.02, 0.02))], fill=shade(colour, 0.86), width=1)
+    sidep["post"] = post
+
+    def front(cv):
+        cv.rrect(-0.98, 0.38, 0.98, 0.74, 0.04, fill=TRIM)
+        plate(cv, 0, 0.55, plate_txt)
+        cv.rect(-0.94, 0.78, 0.94, 1.08, fill=(20, 21, 23))                                          # grille panel
+        for k in range(7):
+            cv.line([(-0.56, 0.81 + k * 0.038), (0.56, 0.81 + k * 0.038)], fill=(64, 66, 68), width=1.5)
+        both(cv, lambda s: lampbox(cv, s * 0.60, 0.84, s * 0.90, 1.04, [(1.0, WHITEL)]))
+        both(cv, lambda s: cv.rect(min(s * 0.62, s * 0.90), 0.785, max(s * 0.62, s * 0.90), 0.83, fill=AMBER))
+        screen(cv, 0.90, 1.29, 0.84, 2.00, heads=[(-0.45, 1.62, 0.13, 0.16), (0.45, 1.62, 0.13, 0.16)])
+
+    def rear(cv):
+        cv.rrect(-0.98, 0.38, 0.98, 0.68, 0.04, fill=TRIM)
+        plate(cv, -0.45, 0.86, plate_txt)
+        cv.line([(0.0, 0.70), (0.0, 2.04)], fill=shade(colour, 0.5), width=2)
+        both(cv, lambda s: lampbox(cv, s * 0.84, 0.74, s * 0.97, 1.08, [(1.0, REDL)]))
+        both(cv, lambda s: cv.rect(min(s * 0.85, s * 0.96), 0.96, max(s * 0.85, s * 0.96), 1.06, fill=AMBER))
+        both(cv, lambda s: cv.rrect(min(s * 0.10, s * 0.80), 1.34, max(s * 0.10, s * 0.80), 1.96, 0.04, fill=TRIM))
+        both(cv, lambda s: glass_fill(cv, [(s * 0.14, 1.38), (s * 0.76, 1.38), (s * 0.76, 1.92), (s * 0.14, 1.92)], tint=(96, 84, 52), interior=False))
+        both(cv, lambda s: cv.rect(min(s * 0.04, s * 0.10), 1.10, max(s * 0.04, s * 0.10), 1.24, fill=TRIM))
+
+    def topp(cv):
+        for k in range(7):
+            z = 1.2 - k * 0.55
+            cv.line([(-0.86, z), (0.86, z)], fill=shade(colour, 0.86), width=2)
+    return modern(key, colour, plate_txt, spec, wz, 0.20, "van", sidep, front, rear, topp, mirror=(1.90, 1.40, TRIM))
+
+
+# --- Motorhome with an overcab bed on the Ducato first series, 1980s: 5,60 x 2,15 x 2,85 m ---------------
+def camper_mansardato(key, plate_txt="ME 402618"):
+    hz = 2.80
+    colour = (226, 214, 182)
+    brown, ochre = (120, 84, 60), (206, 170, 96)
+    spec = dict(L=5.60, W=2.15, pxm=72, tumble=0.04, roofw=0.96, tuck=0.04, shoulder=0.015, n=28,
+                top=[(-hz, 2.70), (-2.76, 2.80), (-2.62, 2.85), (1.50, 2.85), (2.26, 2.52), (2.31, 2.04),
+                     (2.34, 1.28), (2.62, 1.16), (2.76, 1.00), (hz, 0.60)],
+                belt=[(-hz, 1.30), (2.30, 1.26), (hz, 0.80)],
+                bottom=[(-hz, 0.70), (-2.60, 0.48), (2.65, 0.40), (hz, 0.46)],
+                plan=[(-hz, 0.97), (-2.70, 1.0), (2.30, 1.0), (2.36, 0.90), (2.70, 0.88), (hz, 0.84)],
+                extra_z=(1.95, -1.25, 1.25, 0.90, 0.30, -0.50, -1.70))
+    wz = [(1.95, 0.33), (-1.25, 0.33)]
+    sidep = dict(
+        arch=0.40,
+        windows=[[(2.22, 1.32), (2.00, 1.96), (1.42, 1.96), (1.42, 1.32)]], heads=[(1.75, 1.62, 0.11, 0.14)],
+        cuts=[(2.30, 0.50, 2.04), (1.26, 0.50, 2.04)], handles=[(1.50, 1.18)], handle_col=TRIM,
+        lamps=[([(2.56, 0.98), (2.78, 0.94), (2.78, 1.04), (2.56, 1.08)], AMBER)])
+
+    def post(cv):
+        # the coachwork: ribbed aluminium, brown skirt, the three stripes of the eighties
+        for k in range(46):
+            y = 0.80 + k * 0.045
+            cv.line([(-hz, y), (1.24, y)], fill=shade(colour, 0.95), width=1)
+        cv.poly([(1.26, 2.04), (2.31, 2.04), (2.26, 2.52), (1.50, 2.85), (1.26, 2.85)], fill=colour)   # the overcab
+        cv.poly([(1.26, 2.04), (2.31, 2.04), (2.31, 1.98), (1.26, 1.98)], fill=(60, 50, 44))            # its shadowed underside
+        cv.rect(-hz, 0.46, 1.24, 0.80, fill=brown)
+        for (y0, y1, c) in ((1.00, 1.07, brown), (1.10, 1.20, ochre), (1.23, 1.27, brown), (2.38, 2.46, ochre), (2.50, 2.54, brown)):
+            cv.rect(-hz, y0, 1.24 if y0 < 2 else 2.20, y1, fill=c)
+        cv.line([(-hz, 2.85), (1.50, 2.85), (2.26, 2.52), (2.31, 2.04)], fill=(40, 36, 34), width=2)    # black edge trim
+        cv.line([(1.25, 0.46), (1.25, 2.85)], fill=(60, 54, 50), width=2)
+        # windows with curtains, the entrance door, lockers and vents, the awning in its case
+        for (z0, z1, y0, y1) in ((-0.55, -1.50, 1.50, 2.10), (1.36, 2.02, 2.20, 2.62)):
+            cv.rrect(z0 + 0.04, y0 - 0.04, z1 - 0.04, y1 + 0.04, 0.08, fill=(30, 30, 32))
+            cv.rrect(z0, y0, z1, y1, 0.06, fill=(150, 124, 92))
+            zm = (z0 + z1) / 2
+            cv.line([(zm, y0), (zm, y1)], fill=(30, 30, 32), width=2)
+            for k in range(1, 8):
+                zz = z0 + (z1 - z0) * k / 8
+                cv.line([(zz, y0 + 0.02), (zz, y1 - 0.02)], fill=(128, 104, 76), width=1)
+        cv.rrect(0.88, 0.50, 0.30, 2.14, 0.06, fill=shade(colour, 1.03), outline=(40, 36, 34), width=2)
+        cv.rrect(0.76, 1.50, 0.42, 2.02, 0.06, fill=(92, 60, 44), outline=(30, 30, 32), width=2)
+        cv.rect(0.80, 1.16, 0.72, 1.26, fill=TRIM)
+        cv.rrect(-0.08, 0.86, -0.44, 1.36, 0.03, fill=shade(colour, 1.02), outline=(120, 110, 96), width=1)
+        for (z0, y0) in ((-1.70, 1.30), (-1.70, 1.95)):
+            cv.rect(z0, y0, z0 - 0.42, y0 + 0.24, fill=(196, 196, 190))
+            for k in range(5):
+                cv.line([(z0 - 0.02, y0 + 0.03 + k * 0.045), (z0 - 0.40, y0 + 0.03 + k * 0.045)], fill=(120, 120, 116), width=1)
+        cv.rrect(-2.40, 2.42, 0.20, 2.60, 0.07, fill=(236, 234, 226), outline=(150, 146, 136), width=1)
+        cv.rect(-2.40, 2.42, 0.20, 2.46, fill=(190, 186, 176))
+        cv.rect(-hz, 0.86, -2.72, 1.30, fill=REDL)
+        cv.rect(1.26, 0.40, hz, 0.56, fill=TRIM)                                                     # cab sill and bumper end
+        cv.poly([(2.50, 0.40), (hz, 0.40), (hz, 0.74), (2.62, 0.74)], fill=TRIM)
+    sidep["post"] = post
+
+    def front(cv):
+        cv.rrect(-0.98, 0.40, 0.98, 0.74, 0.04, fill=TRIM)
+        plate(cv, 0, 0.56, plate_txt)
+        cv.rect(-0.92, 0.78, 0.92, 1.10, fill=(20, 21, 23))
+        for k in range(7):
+            cv.line([(-0.56, 0.81 + k * 0.04), (0.56, 0.81 + k * 0.04)], fill=(64, 66, 68), width=1.5)
+        both(cv, lambda s: lampbox(cv, s * 0.60, 0.86, s * 0.88, 1.06, [(1.0, WHITEL)]))
+        both(cv, lambda s: cv.rect(min(s * 0.62, s * 0.88), 0.79, max(s * 0.62, s * 0.88), 0.84, fill=AMBER))
+        cv.rect(-1.10, 1.26, 1.10, 2.04, fill=(58, 50, 44))                                          # the cab in the shade of the overcab
+        screen(cv, 0.88, 1.30, 0.82, 1.98, heads=[(-0.45, 1.60, 0.13, 0.16), (0.45, 1.60, 0.13, 0.16)])
+        cv.rect(-1.10, 2.04, 1.10, 2.90, fill=colour)
+        cv.rect(-1.10, 2.38, 1.10, 2.46, fill=ochre)
+        cv.rect(-1.10, 2.50, 1.10, 2.54, fill=brown)
+        cv.rrect(-0.70, 2.56, 0.70, 2.82, 0.05, fill=(30, 30, 32))
+        cv.rrect(-0.66, 2.59, 0.66, 2.79, 0.04, fill=(140, 112, 84))                                  # overcab window, curtain drawn
+
+    def rear(cv):
+        for k in range(46):
+            cv.line([(-1.1, 0.80 + k * 0.045), (1.1, 0.80 + k * 0.045)], fill=shade(colour, 0.95), width=1)
+        cv.rect(-1.10, 0.46, 1.10, 0.80, fill=brown)
+        for (y0, y1, c) in ((1.00, 1.07, brown), (1.10, 1.20, ochre), (1.23, 1.27, brown)):
+            cv.rect(-1.10, y0, 1.10, y1, fill=c)
+        plate(cv, 0, 0.62, plate_txt)
+        both(cv, lambda s: lampbox(cv, s * 0.78, 0.86, s * 1.04, 1.30, [(1.0, REDL)]))
+        both(cv, lambda s: cv.rect(min(s * 0.80, s * 1.02), 1.08, max(s * 0.80, s * 1.02), 1.18, fill=AMBER))
+        cv.rrect(-0.60, 1.56, 0.60, 2.14, 0.08, fill=(30, 30, 32))
+        cv.rrect(-0.56, 1.60, 0.56, 2.10, 0.06, fill=(150, 124, 92))
+        for k in range(4):                                                                           # ladder to the roof
+            cv.line([(0.72, 0.9 + k * 0.5), (0.98, 0.9 + k * 0.5)], fill=(60, 60, 62), width=2)
+        cv.line([(0.72, 0.70), (0.72, 2.80)], fill=(60, 60, 62), width=2)
+        cv.line([(0.98, 0.70), (0.98, 2.80)], fill=(60, 60, 62), width=2)
+
+    def topp(cv):
+        for (z, w) in ((0.4, 0.45), (-1.9, 0.45)):
+            cv.rrect(-w / 2, z, w / 2, z - w, 0.04, fill=(214, 210, 198))
+        for k in range(8):
+            cv.line([(-1.0, 1.2 - k * 0.5), (1.0, 1.2 - k * 0.5)], fill=shade(colour, 0.92), width=1)
+    return modern(key, colour, plate_txt, spec, wz, 0.20, "van", sidep, front, rear, topp, mirror=(2.26, 1.42, TRIM))
+
+
 vehicle("panda141_rossa", **panda141((168, 26, 30), "AL 482 KD", "panda141_rossa"))
 vehicle("panda_bianca", **panda3((232, 232, 228), "FG 715 RM", "panda_bianca"))
-vehicle("punto_grigia", **punto((150, 154, 158), "EM 203 TP", "punto_grigia"))
-vehicle("ypsilon_blu", **ypsilon((26, 40, 78), "GA 368 BN", "ypsilon_blu"))
+vehicle("punto_grigia", **punto1((30, 118, 204), "AH 203 TP", "punto_grigia"))
+vehicle("ypsilon_blu", **y10((92, 138, 176), "ME 368024", "ypsilon_blu"))
 
 
 def carabinieri(key):
@@ -1257,10 +1772,10 @@ def carabinieri(key):
         modern = plain
 
 
-vehicle("punto_carabinieri", **carabinieri("punto_carabinieri"))
-vehicle("cinquecento_azzurra", **cinquecento((132, 176, 200), "FK 954 ME", "cinquecento_azzurra"))
-vehicle("daily_bianco", **daily((236, 236, 232), "GB 541 ZT", "daily_bianco"))
-vehicle("camper", **camper("camper"))
-vehicle("ape", **ape((138, 158, 170), "ape"))
-vehicle("vespa_rossa", **vespa((176, 22, 26), "vespa_rossa"))
+vehicle("punto_carabinieri", **alfa156_cc("punto_carabinieri"))
+vehicle("cinquecento_azzurra", **cinquecento170((34, 186, 186), "AB 954 ME", "cinquecento_azzurra"))
+vehicle("daily_bianco", **ducato1((232, 230, 222), "ME 541907", "daily_bianco"))
+vehicle("camper", **camper_mansardato("camper"))
+vehicle("ape", **ape((64, 132, 196), "ape"))
+vehicle("vespa_rossa", **vespa((84, 128, 172), "vespa_rossa"))
 vehicle("vespa_crema", **vespa((226, 214, 184), "vespa_crema"))

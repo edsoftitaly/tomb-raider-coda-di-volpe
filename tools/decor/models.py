@@ -678,15 +678,15 @@ def ombrellone():
 VEICOLI = [
     (133, "AUTO_UTILITARIA_ROSSA", "panda141_rossa", "Fiat Panda prima serie (141), rossa, 3,41 m"),
     (134, "AUTO_UTILITARIA_BIANCA", "panda_bianca", "Fiat Panda terza serie, bianca, 3,65 m"),
-    (135, "AUTO_BERLINA_GRIGIA", "punto_grigia", "Fiat Grande Punto 5 porte, grigio metallizzato, 4,03 m"),
-    (136, "AUTO_SUV_BLU", "ypsilon_blu", "Lancia Ypsilon 5 porte, blu, 3,84 m"),
-    (137, "FURGONE_BIANCO", "daily_bianco", "Iveco Daily furgone, bianco, 5,48 m"),
-    (138, "CAMPER", "camper", "Camper profilato su Fiat Ducato, 6,99 m"),
-    (139, "SCOOTER_ROSSO", "vespa_rossa", "Vespa Primavera 125, rossa, sul cavalletto"),
+    (135, "AUTO_BERLINA_GRIGIA", "punto_grigia", "Fiat Punto prima serie 5 porte, blu, 3,76 m"),
+    (136, "AUTO_SUV_BLU", "ypsilon_blu", "Autobianchi Y10, celeste, 3,39 m"),
+    (137, "FURGONE_BIANCO", "daily_bianco", "Fiat Ducato prima serie furgone, bianco, 4,75 m"),
+    (138, "CAMPER", "camper", "Camper mansardato anni Ottanta su Fiat Ducato, 5,60 m"),
+    (139, "SCOOTER_ROSSO", "vespa_rossa", "Vespa, azzurra, sul cavalletto"),
     (140, "SCOOTER_CREMA", "vespa_crema", "Vespa Primavera 125, crema, sul cavalletto"),
-    (146, "AUTO_500_AZZURRA", "cinquecento_azzurra", "Fiat 500 (2007), azzurra, 3,55 m"),
+    (146, "AUTO_500_AZZURRA", "cinquecento_azzurra", "Fiat Cinquecento (1991), turchese, 3,23 m"),
     (147, "APE_PIAGGIO", "ape", "Piaggio Ape 50 con cassone, 2,46 m"),
-    (148, "AUTO_CARABINIERI", "punto_carabinieri", "Fiat Grande Punto dei Carabinieri, 4,03 m"),
+    (148, "AUTO_CARABINIERI", "punto_carabinieri", "Alfa Romeo 156 dei Carabinieri, 4,43 m"),
 ]
 
 
