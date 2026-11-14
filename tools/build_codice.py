@@ -2,6 +2,8 @@
 
  455 COMPUTER_LAB          desk with the computer of the workshop, the screen (towards +x) reads 33 2D 32 2D 35
  457 COMPUTER_LAB_SPENTO   the same with the screen off, for the dark twin of the room
+ 458 CATENA_LUCCHETTO      the chain from the trapdoor of the box room down to its padlock at hand height (3.5 m, on a
+                           wall at +z)
  456 NUMERI_INTERRUTTORI   five enamel plates 1-5 on a wall facing +z, over the five small switches (pitch 720 units),
                            1 on the viewer's left
 """
@@ -140,6 +142,29 @@ def t_vents():
     return arr(im)
 
 
+def t_chain():
+    w, h = 32, 64
+    im = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    for y0 in (0, 32):
+        d.rounded_rectangle([9, y0 + 1, 22, y0 + 22], radius=6, outline=(120, 124, 130, 255), width=4)      # a link, face on
+        d.rounded_rectangle([10, y0 + 2, 21, y0 + 21], radius=6, outline=(190, 194, 200, 255), width=1)
+        d.rectangle([14, y0 + 18, 17, y0 + 36], fill=(100, 104, 110, 255))                                   # the next one, edge on
+        d.line([15, y0 + 18, 15, y0 + 36], fill=(170, 174, 180, 255))
+    return arr(im)
+
+
+def t_padlock():
+    w, h = 64, 64
+    im = Image.new("RGBA", (w, h), (176, 138, 60, 255))
+    d = ImageDraw.Draw(im)
+    d.rectangle([0, 0, w - 1, h - 1], outline=(110, 84, 34, 255), width=3)
+    d.rectangle([4, 4, w - 5, 10], fill=(214, 180, 96, 255))
+    d.ellipse([26, 24, 38, 36], fill=(40, 34, 24, 255))
+    d.rectangle([30, 32, 34, 48], fill=(40, 34, 24, 255))
+    return arr(im)
+
+
 def t_number(n):
     s = 64
     im = Image.new("RGBA", (s, s), (226, 224, 214, 255))
@@ -158,6 +183,8 @@ def textures():
     pk.put("cd_tasti", t_keyboard())
     pk.put("cd_case", t_case())
     pk.put("cd_griglie", t_vents())
+    pk.put("cd_catena", t_chain())
+    pk.put("cd_lucchetto", t_padlock())
     for n in range(1, 6):
         pk.put("cd_n%d" % n, t_number(n))
     pk.put("cd_beige", noisy(64, 64, PLA[:3], 1, 0.05))
@@ -226,11 +253,32 @@ def numeri():
     return m, None
 
 
+def catena():
+    """Origin on the floor under the hook: the chain hangs 6 cm off a wall at +z, the padlock at 1.25 m."""
+    m = G.Mesh()
+    z, top, low = -0.06, 3.5, 1.42
+    n = int(round((top - low) / 0.26))
+    for k in range(n):
+        y0, y1 = low + (top - low) * k / n, low + (top - low) * (k + 1) / n
+        for (ax, az) in ((0.035, 0.0), (0.0, 0.035)):                      # two crossed strips, each seen from both sides
+            pts = [((-ax) * M, y1 * M, (z - az) * M), (ax * M, y1 * M, (z + az) * M), (ax * M, y0 * M, (z + az) * M), ((-ax) * M, y0 * M, (z - az) * M)]
+            uv = [(0, 0), (1, 0), (1, 1), (0, 1)]
+            m.face(pts, "cd_catena", uv=uv, blend=1)
+            m.face(pts[::-1], "cd_catena", uv=uv[::-1], blend=1)
+    m.merge(G.box(0.05, 0.04, 0.05, "cd_ferro", center=(0, top - 0.02, -0.035)))        # the eye in the ceiling
+    m.merge(G.box(0.085, 0.1, 0.035, "cd_lucchetto", center=(0, low - 0.19, z)))        # the padlock
+    for x in (-0.026, 0.026):
+        m.merge(G.cylinder(0.008, 0.008, 0.1, "cd_ferro", n=5, base=(x, low - 0.09, z), top_cap=False))
+    m.merge(G.box(0.07, 0.016, 0.016, "cd_ferro", center=(0, low, z)))
+    m.merge(G.box(0.12, 0.05, 0.03, "cd_ferro", center=(0, low - 0.26, -0.015)))        # the staple in the wall
+    return m, None
+
+
 def main():
     textures()
     statics = []
     for sid, name, fn in ((455, "COMPUTER_LAB", lambda: computer("cd_schermo")), (456, "NUMERI_INTERRUTTORI", numeri),
-                          (457, "COMPUTER_LAB_SPENTO", lambda: computer("cd_spento"))):
+                          (457, "COMPUTER_LAB_SPENTO", lambda: computer("cd_spento")), (458, "CATENA_LUCCHETTO", catena)):
         mesh, coll = fn()
         lo, hi = mesh.bbox()
         print(sid, name, len(mesh.f), [int(v) for v in lo], [int(v) for v in hi])
