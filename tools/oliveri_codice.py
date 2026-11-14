@@ -60,8 +60,8 @@ def patch_prj2(src, dst):
     objs = [mov(ids.pop(0), 801, (x, 0.0, SW_Z), 180.0, 1, "int_%d" % (i + 1)) for i, x in enumerate(SW_X)]
     objs.append(sta(ids.pop(0), 456, (SW_X[2], 0.0, WALL_Z)))
     rooms = P.add_objects(rooms, "T_01_00", objs)
-    rooms = P.add_objects(rooms, "CASA_LAB", [sta(ids.pop(0), 455, (1190.0, 0.0, 2150.0))])
-    rooms = P.add_objects(rooms, "CASA_LAB_BUIO", [sta(ids.pop(0), 457, (1190.0, 0.0, 2150.0))])
+    rooms = P.add_objects(rooms, "CASA_LAB", [sta(ids.pop(0), 455, (1226.0, 0.0, 2150.0))])
+    rooms = P.add_objects(rooms, "CASA_LAB_BUIO", [sta(ids.pop(0), 457, (1226.0, 0.0, 2150.0))])
     P.save(dst, head, [(c, settings if c == b"TeSettings" else rooms if c == b"TeRooms" else p) for c, p in top])
 
 
@@ -109,7 +109,7 @@ CDV.Start = function() for _, f in ipairs(CDV.StartList) do f() end end
 
 CDV.Zone({ id = "cancello_chiuso", x = 44544, y = -1280, z = 17920, r = 1300, dy = 900, once = false, text = "Il cancello del cortile è chiuso. Lo comandano i cinque interruttori numerati sul muro, lì a destra.", secs = 6, need = function() return not CDV.Flag("cancello_aperto") end })
 
-CDV.Zone({ id = "computer_lab", x = 32160, y = -1280, z = 26726, r = 700, dy = 500, once = false, text = "Sullo schermo: 33 2D 32 2D 35", secs = 6, need = function() return not CDV.Flag("cancello_aperto") end })
+CDV.Zone({ id = "computer_lab", x = 32200, y = -1280, z = 26726, r = 700, dy = 500, once = false, text = "Sullo schermo: 33 2D 32 2D 35", secs = 6, need = function() return not CDV.Flag("cancello_aperto") end })
 
 '''
 
