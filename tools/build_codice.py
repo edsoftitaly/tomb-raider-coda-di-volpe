@@ -2,8 +2,9 @@
 
  455 COMPUTER_LAB          desk with the computer of the workshop, the screen (towards +x) reads 33 2D 32 2D 35
  457 COMPUTER_LAB_SPENTO   the same with the screen off, for the dark twin of the room
- 458 CATENA_LUCCHETTO      the chain from the trapdoor of the box room down to its padlock at hand height (3.5 m, on a
-                           wall at +z)
+ 458 CATENA_BOTOLA         the chain from the trapdoor of the box room down a wall at +z (3.5 m to 1.42 m)
+ 459 LUCCHETTO_BOTOLA      its padlock, a static of its own so that the script can let it fall
+ 449 CATENA_A_TERRA        the chain in a heap on the floor
  456 NUMERI_INTERRUTTORI   five enamel plates 1-5 on a wall facing +z, over the five small switches (pitch 720 units),
                            1 on the viewer's left
 """
@@ -253,10 +254,14 @@ def numeri():
     return m, None
 
 
+LOW = 1.42                # where the chain ends and the padlock hangs (m)
+
+
 def catena():
-    """Origin on the floor under the hook: the chain hangs 6 cm off a wall at +z, the padlock at 1.25 m."""
+    """Origin on the floor under the hook: the chain hangs 6 cm off a wall at +z down to 1.42 m. The padlock is
+    another static (459), so that it can fall."""
     m = G.Mesh()
-    z, top, low = -0.06, 3.5, 1.42
+    z, top, low = -0.06, 3.5, LOW
     n = int(round((top - low) / 0.26))
     for k in range(n):
         y0, y1 = low + (top - low) * k / n, low + (top - low) * (k + 1) / n
@@ -266,11 +271,31 @@ def catena():
             m.face(pts, "cd_catena", uv=uv, blend=1)
             m.face(pts[::-1], "cd_catena", uv=uv[::-1], blend=1)
     m.merge(G.box(0.05, 0.04, 0.05, "cd_ferro", center=(0, top - 0.02, -0.035)))        # the eye in the ceiling
-    m.merge(G.box(0.085, 0.1, 0.035, "cd_lucchetto", center=(0, low - 0.19, z)))        # the padlock
-    for x in (-0.026, 0.026):
-        m.merge(G.cylinder(0.008, 0.008, 0.1, "cd_ferro", n=5, base=(x, low - 0.09, z), top_cap=False))
-    m.merge(G.box(0.07, 0.016, 0.016, "cd_ferro", center=(0, low, z)))
     m.merge(G.box(0.12, 0.05, 0.03, "cd_ferro", center=(0, low - 0.26, -0.015)))        # the staple in the wall
+    return m, None
+
+
+def lucchetto():
+    """The padlock, origin in the middle of its body: it hangs from the chain (body 0.19 m under LOW) and falls."""
+    m = G.Mesh()
+    m.merge(G.box(0.085, 0.1, 0.035, "cd_lucchetto", center=(0, -0.05, 0), bottom=True))
+    for x in (-0.026, 0.026):
+        m.merge(G.cylinder(0.008, 0.008, 0.1, "cd_ferro", n=5, base=(x, 0.05, 0), top_cap=False))
+    m.merge(G.box(0.07, 0.016, 0.016, "cd_ferro", center=(0, 0.14, 0)))
+    return m, None
+
+
+def catena_a_terra():
+    """The chain once it has come down: a small heap of links on the floor."""
+    import math
+    m = G.Mesh()
+    for i, (a, r, y) in enumerate(((0.0, 0.16, 0.012), (1.1, 0.13, 0.02), (2.3, 0.15, 0.028), (0.6, 0.09, 0.036), (1.8, 0.07, 0.044), (2.8, 0.11, 0.016))):
+        dx, dz = math.cos(a) * r, math.sin(a) * r
+        px, pz = -math.sin(a) * 0.035, math.cos(a) * 0.035
+        pts = [((-dx - px) * M, y * M, (-dz - pz) * M), ((dx - px) * M, y * M, (dz - pz) * M), ((dx + px) * M, y * M, (dz + pz) * M), ((-dx + px) * M, y * M, (-dz + pz) * M)]
+        uv = [(0, 0), (0, 1), (1, 1), (1, 0)]
+        m.face(pts, "cd_catena", uv=uv, blend=1)
+        m.face(pts[::-1], "cd_catena", uv=uv[::-1], blend=1)
     return m, None
 
 
@@ -278,7 +303,7 @@ def main():
     textures()
     statics = []
     for sid, name, fn in ((455, "COMPUTER_LAB", lambda: computer("cd_schermo")), (456, "NUMERI_INTERRUTTORI", numeri),
-                          (457, "COMPUTER_LAB_SPENTO", lambda: computer("cd_spento")), (458, "CATENA_LUCCHETTO", catena)):
+                          (457, "COMPUTER_LAB_SPENTO", lambda: computer("cd_spento")), (458, "CATENA_BOTOLA", catena), (459, "LUCCHETTO_BOTOLA", lucchetto), (449, "CATENA_A_TERRA", catena_a_terra)):
         mesh, coll = fn()
         lo, hi = mesh.bbox()
         print(sid, name, len(mesh.f), [int(v) for v in lo], [int(v) for v in hi])
