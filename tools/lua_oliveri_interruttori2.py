@@ -37,4 +37,11 @@ end)
 
 '''
 s = s[:a] + new + s[b:]
+# Oliveri.lua never had CDV.Sfx (the other levels do): CDV.GateSound stopped GateOpen with an error (TENLog 13:49)
+if "function CDV.Sfx" not in s:
+    s = s.replace("function CDV.GateSound()\n", """function CDV.Sfx(id)
+    local ok = pcall(function() TEN.Sound.PlaySound(id, Lara:GetPosition()) end)
+    if not ok then pcall(function() TEN.Sound.PlaySound(id) end) end
+end
+function CDV.GateSound()\n""", 1)
 open(sys.argv[2], "w", encoding="utf-8", newline="").write(s)
