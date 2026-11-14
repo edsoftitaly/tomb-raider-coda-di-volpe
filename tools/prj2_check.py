@@ -145,7 +145,7 @@ def check(path):
                     for poly in quad_or_tri:
                         us = [p[0] for p in poly]; vs = [p[1] for p in poly]
                         if min(us) < 0 or min(vs) < 0 or max(us) > TEX_SIZE or max(vs) > TEX_SIZE or \
-                                max(us) - min(us) > 256 or max(vs) - min(vs) > 256:
+                                max(us) - min(us) > 1024 or max(vs) - min(vs) > 1024:   # TombEngine compiler: 1024 (Compilers/TombEngine/Rooms.cs)
                             r.errors.append("texture out of bounds: room %s face %d %s" % (room.get("name"), face, pts))
                             break
                     room["textured"] = room.get("textured", 0) + 1
