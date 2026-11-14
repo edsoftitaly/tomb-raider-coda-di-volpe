@@ -155,45 +155,34 @@ def pareti():
 # ------------------------------------------------------------------------------------ vault
 @piece(172, "INTERNO_VOLTA", (33.0, 0.0), "Volta a botte dipinta: cassettoni, scene affrescate, costoloni dorati")
 def volta():
+    """The barrel vault as it is: four frescoed lengths (three in the nave, one over the presbytery), each one
+    photograph laid over the whole width of the vault, a gilded rib between one length and the next."""
     m = G.Mesh()
     n_arc = 8
     arc = [(-NAVE * math.cos(math.pi * k / n_arc), VAULT_SPRING + (VAULT_TOP - VAULT_SPRING) * math.sin(math.pi * k / n_arc))
            for k in range(n_arc + 1)]
-    for x0, x1 in ((0.0, CROSS[0]), (CROSS[1], L)):
-        nb = max(1, int(round((x1 - x0) / 6.0)))
-        for b in range(nb):
-            bx0, bx1 = x0 + (x1 - x0) * b / nb, x0 + (x1 - x0) * (b + 1) / nb
+    third = CROSS[0] / 3
+    panels = [(0.0, third, "a"), (third, 2 * third, "b"), (2 * third, CROSS[0], "c"), (CROSS[1], L, "a")]
+    for x0, x1, kind in panels:
+        for j in range(3):                                   # j = 0 is the end towards the altar
+            xa, xb = x1 - (x1 - x0) * (j + 1) / 3, x1 - (x1 - x0) * j / 3
             for k in range(n_arc):
                 (za, ya), (zb, yb) = arc[k], arc[k + 1]
-                zm, ym = (za + zb) / 2, (ya + yb) / 2
-                nrm = V(0, VAULT_SPRING - ym - 0.01, -zm)
-                if k in (3, 4):
-                    xm = (bx0 + bx1) / 2
-                    for i, (xa, xb) in enumerate(((bx0 + 0.3, xm), (xm, bx1 - 0.3))):
-                        reg = "in_affresco%d_%d_%d" % (b % 3, i, 1 if k == 3 else 0)
-                        fface(m, [V(xa, ya, za), V(xb, ya, za), V(xb, yb, zb), V(xa, yb, zb)], reg, nrm)
-                    for xa, xb in ((bx0, bx0 + 0.3), (bx1 - 0.3, bx1)):
-                        fface(m, [V(xa, ya, za), V(xb, ya, za), V(xb, yb, zb), V(xa, yb, zb)], "in_oro", nrm)
-                else:
-                    xm = (bx0 + bx1) / 2
-                    for xa, xb in ((bx0, xm), (xm, bx1)):
-                        fface(m, [V(xa, ya, za), V(xb, ya, za), V(xb, yb, zb), V(xa, yb, zb)], "in_volta", nrm)
-        # lunette closing the space above the vault where it opens on the crossing
-        xe, nx = (x1, -1.0) if x1 == CROSS[0] else (x0, 1.0)
-        if xe in CROSS:
-            xe += nx * 0.01
+                nrm = V(0, VAULT_SPRING - (ya + yb) / 2 - 0.01, -(za + zb) / 2)
+                fface(m, [V(xa, ya, za), V(xb, ya, za), V(xb, yb, zb), V(xa, yb, zb)], "in_vp%s_%d_%d" % (kind, k, j), nrm,
+                      [(1, 1), (1, 0), (0, 0), (0, 1)])
+        for xr in ((x1,) if x1 < L else ()):                 # gilded transverse rib at the end of the length
             for k in range(n_arc):
                 (za, ya), (zb, yb) = arc[k], arc[k + 1]
-                fface(m, [V(xe, ya, za), V(xe, yb, zb), V(xe, VAULT_TOP + 0.6, zb), V(xe, VAULT_TOP + 0.6, za)], "in_parete",
-                      V(-nx, 0, 0), [(0, 1), (1, 1), (1, 0), (0, 0)])
-        for b in range(nb):
-            bx1 = x0 + (x1 - x0) * (b + 1) / nb
-            # gilded transverse rib
-            for k in range(n_arc):
-                (za, ya), (zb, yb) = arc[k], arc[k + 1]
-                q = [V(bx1 - 0.15, ya - 0.25, za * 0.98), V(bx1 + 0.15, ya - 0.25, za * 0.98),
-                     V(bx1 + 0.15, yb - 0.25, zb * 0.98), V(bx1 - 0.15, yb - 0.25, zb * 0.98)]
+                q = [V(xr - 0.15, ya - 0.25, za * 0.98), V(xr + 0.15, ya - 0.25, za * 0.98),
+                     V(xr + 0.15, yb - 0.25, zb * 0.98), V(xr - 0.15, yb - 0.25, zb * 0.98)]
                 fface(m, q, "in_oro", V(0, VAULT_SPRING - (ya + yb) / 2, -(za + zb) / 2))
+    # lunettes closing the space above the vault where it opens on the crossing
+    for xe, nx in ((CROSS[0] - 0.01, -1.0), (CROSS[1] + 0.01, 1.0)):
+        for k in range(n_arc):
+            (za, ya), (zb, yb) = arc[k], arc[k + 1]
+            fface(m, [V(xe, ya, za), V(xe, yb, zb), V(xe, VAULT_TOP + 0.6, zb), V(xe, VAULT_TOP + 0.6, za)], "in_parete",
+                  V(-nx, 0, 0), [(0, 1), (1, 1), (1, 0), (0, 0)])
     return m
 
 
@@ -254,11 +243,10 @@ def cupola():
             pb1 = V(cx + rb * math.cos(a1), yb, cz + rb * math.sin(a1))
             cen = (pa0 + pa1 + pb0 + pb1) / 4
             nrm = V(cx, base, cz) - cen
-            # a quarter of the dome is one picture of 2 x 2 regions: two segments wide, three rows high each
-            kk, jr = k % 4, j % 3
-            reg = "in_cupola%d_%d_%d" % ((k // 4) % 2, kk // 2, 1 if j < 3 else 0)
-            u0, u1, v0, v1 = (kk % 2) / 2, (kk % 2 + 1) / 2, 1 - jr / 3, 1 - (jr + 1) / 3
-            fface(m, [pa0, pa1, pb1, pb0], reg, nrm, [(u0, v0), (u1, v0), (u1, v1), (u0, v1)])
+            # the dome is four photographs of a quarter each: four segments wide, six rows high
+            kk = k % 4
+            u0, u1, v0, v1 = kk / 4, (kk + 1) / 4, 1 - j / rows, 1 - (j + 1) / rows
+            fface(m, [pa0, pa1, pb1, pb0], "in_cupola%d" % (k // 4), nrm, [(u0, v0), (u1, v0), (u1, v1), (u0, v1)])
     r_top, y_top = prof[-1]
     annulus(m, (cx, cz), 0.0, r_top, y_top, n, "in_oro", nrm=-UP)
     return m
@@ -275,9 +263,7 @@ def cappella():
         cornice(m, a, b, AISLE_H - 0.5, n2, h=0.5, d=0.3, region="in_oro", ext=0.0)
     hrect(m, x0, x1, zs, -HW, AISLE_H - 0.02, "in_cassettoni", down=True)
     xc = (x0 + x1) / 2
-    goverlay(m, (xc, zs), (0.0, 1.0), 3.0, 1.8, 3.6, "in_vetrata1", 1, 2, off=0.06)
-    for dx in (-3.5, 3.5):
-        goverlay(m, (xc + dx, zs), (0.0, 1.0), 2.4, 3.6, 1.8, "in_mosaico%d" % (2 if dx < 0 else 3), 2, 1, off=0.06)
+    goverlay(m, (xc, zs), (0.0, 1.0), 1.2, 6.0, 7.2, "in_altare_sc", 2, 2, off=0.06)      # the real altar of the chapel
     return m
 
 

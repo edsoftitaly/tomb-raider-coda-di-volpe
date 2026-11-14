@@ -656,6 +656,79 @@ def inscription(k, w=256, h=32):
     return arr(part) * (0.9 + 0.2 * fbm(h, w, 40, k)[..., None])
 
 
+# ------------------------------------------------------------------------------------ Ed's photographs (29/10/2026)
+FOTO = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "assets", "foto")
+NAVE_HALF, N_ARC = 5.0, 8
+
+
+def _foto(name):
+    return Image.open(os.path.join(FOTO, name + ".jpg")).convert("RGB")
+
+
+def vault_panel(kind):
+    """One frescoed length of the nave vault seen from below, 512 px across (left = north) x 768 px along
+    (top = towards the altar). 'a' is the photograph taken straight up; 'b' and 'c' put the frescoes of the
+    other two photographs, straightened, on the same gold trellis between the same bands of sky."""
+    W, H = 512, 768
+    base = _foto("tindari_volta_a").resize((W, H), Image.LANCZOS)
+    if kind == "a":
+        return arr(base)
+    x0, x1 = 64, 450                                        # the trellis field between the two bands of sky
+    if kind == "b":
+        src = _foto("tindari_volta_b")
+        quad = (75, 143, 137, 548, 361, 548, 418, 143)      # upper left, lower left, lower right, upper right
+        mid = src.transform((x1 - x0, H), Image.QUAD, quad, Image.BICUBIC)
+    else:
+        mid = _foto("tindari_volta_c").crop((140, 200, 380, 680)).resize((x1 - x0, H), Image.LANCZOS)
+    mid = mid.filter(ImageFilter.UnsharpMask(2, 60, 2))
+    base.paste(mid, (x0, 0))
+    return arr(base)
+
+
+def vault_slices(put, name, a):
+    """Cuts a vault panel into the pieces the model uses: 8 arcs across (as wide as they look from below) x 3
+    lengths along. name_k_j, k = arc from the south springing, j from the altar end."""
+    H, W = a.shape[:2]
+    zs = [-NAVE_HALF * math.cos(math.pi * k / N_ARC) for k in range(N_ARC + 1)]
+    for k in range(N_ARC):
+        pa, pb = (NAVE_HALF - zs[k + 1]) / (2 * NAVE_HALF) * W, (NAVE_HALF - zs[k]) / (2 * NAVE_HALF) * W
+        ia, ib = int(round(pa)), max(int(round(pa)) + 8, int(round(pb)))
+        ib = min(W, ib)
+        ia = min(ia, ib - 8)
+        for j in range(3):
+            put("%s_%d_%d" % (name, k, j), rgba(a[j * H // 3:(j + 1) * H // 3, ia:ib]))
+
+
+def dome_quarters():
+    """The fresco of the dome, unrolled from the photograph taken from the crossing: four quarters, each 256 px
+    of angle x 192 px from the cornice (bottom) to the lantern (top). The dome is seen at a slant, so the rings
+    are ellipses whose centre slides from the cornice ring to the lantern."""
+    from scipy.ndimage import map_coordinates
+    src = np.asarray(_foto("tindari_cupola")).astype(float)
+    C, O, ax, bx, ro = np.array((527.0, 222.0)), np.array((523.0, 137.0)), 166.0, 132.0, 0.30
+    out = []
+    for q in range(4):
+        v, u = np.mgrid[0:192, 0:256]
+        phi = (q + (u + 0.5) / 256) * math.pi / 2
+        t = (1 - (v + 0.5) / 192) * 0.92 / 0.92               # 0 at the cornice, 1 at the rim of the lantern
+        r = ro + (1 - ro) * np.cos(t * math.pi / 2)
+        k = (r - ro) / (1 - ro)                                 # the centre of the ring slides from the lantern to C
+        x = O[0] + k * (C[0] - O[0]) + r * ax * np.cos(phi)
+        y = O[1] + k * (C[1] - O[1]) + r * bx * np.sin(phi)
+        ch = [map_coordinates(src[..., c], [y, x], order=1, mode="nearest") for c in range(3)]
+        im = Image.fromarray(np.clip(np.stack(ch, axis=2), 0, 255).astype(np.uint8)).filter(ImageFilter.UnsharpMask(2, 50, 2))
+        out.append(arr(im))
+    # the half of the dome over the camera is too foreshortened in the photograph to be read: the far half, which
+    # is seen well, is mirrored onto it
+    out[2], out[3] = out[1][:, ::-1], out[0][:, ::-1]
+    return out
+
+
+def chapel_altar():
+    """The altar of the side chapel (aedicule with the statue), from the photograph, above the altar table."""
+    return arr(_foto("tindari_altare").crop((70, 95, 430, 525)).resize((432, 512), Image.LANCZOS))
+
+
 # ------------------------------------------------------------------------------------ packing
 def rgba(a):
     return np.concatenate([np.clip(a, 0, 255), np.full(a.shape[:2] + (1,), 255.0)], axis=2)
@@ -683,10 +756,11 @@ def build(put):
     put("in_volta", rgba(lattice(256, 4, ground=(206, 170, 96), flower=(60, 80, 140), seed=6)))
     put("in_parete", rgba(stucco()))
     put("in_cassettoni", rgba(coffers()))
-    for k in range(3):
-        grid(put, "in_affresco%d" % k, fresco(k, 40 + k), 2, 2)
-    for k in range(2):
-        grid(put, "in_cupola%d" % k, dome_quarter(90 + k), 2, 2)
+    for kind in "abc":                                     # the real vault and dome, from Ed's photographs
+        vault_slices(put, "in_vp" + kind, vault_panel(kind))
+    for q, a in enumerate(dome_quarters()):
+        put("in_cupola%d" % q, rgba(a))
+    grid(put, "in_altare_sc", chapel_altar(), 2, 2)
     for k in range(4):
         grid(put, "in_mosaico%d" % k, mosaic_panel(k, 50 + k), 2, 1)
     for k, kind in enumerate(GLASS):
