@@ -198,7 +198,9 @@ def main():
     pk.put("sg_dorso", back_tex())
     Image.fromarray(np.clip(relief()[..., :3], 0, 255).astype(np.uint8)).save(os.path.join(os.path.dirname(B.WADS), "foto", "sigillo_rilievo.png"))
     bone, ani = B._template()
-    lying = B.remap_pages(sigillo(), first)
+    # turned half round: in the inventory and in the pickup display the engine shows the -z end up (Ed, 14/11: the Seal
+    # was upside down)
+    lying = B.remap_pages(sigillo().transformed(ry=math.pi), first)
     # in the plate: upright, 1.25 times, its back on the plane z = 497, its middle 512 above the item
     placed = B.remap_pages(sigillo().transformed(s=(1.25, 1.25, 1.25), rx=-math.pi / 2, t=(0, 512.0, 497.0)), first)
     movs = []
