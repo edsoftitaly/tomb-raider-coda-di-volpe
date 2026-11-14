@@ -17,7 +17,7 @@ import numpy as np
 from decor import geom as G
 from decor.geom import M
 from decor.models import model
-from decor.santuario_models import UP, V, annulus, cornice, fface, obox, overlay, rectf, wall
+from decor.santuario_models import UP, V, annulus, cornice, fface, frame, obox, overlay, rectf, wall
 
 ANCHORS = {}
 SPOTS = {}     # name -> list of (x, z, rot) for repeated pieces
@@ -63,6 +63,20 @@ def hrect(m, x0, x1, z0, z1, y, region, tile=2.0, down=False):
             fface(m, [V(a0, y, b0), V(a1, y, b0), V(a1, y, b1), V(a0, y, b1)], region, -UP if down else UP)
 
 
+def gpanel(m, o, r, up, w, h, name, nx, ny, n):
+    """A big picture cut into nx x ny regions name_i_j (santuario_arte.grid), i from the left, j from the top."""
+    for i in range(nx):
+        for j in range(ny):
+            bl = o + r * (w * i / nx) + up * (h * (ny - 1 - j) / ny)
+            rectf(m, bl, r, up, w / nx, h / ny, "%s_%d_%d" % (name, i, j), n, None)
+
+
+def goverlay(m, c, n2, y0, w, h, name, nx, ny, off=0.03):
+    n, r = frame(n2)
+    gpanel(m, V(c[0], y0, c[1]) - r * (w / 2) + n * off, r, UP, w, h, name, nx, ny, n)
+
+
+
 # ------------------------------------------------------------------------------------ floors
 @piece(170, "INTERNO_PAVIMENTO", (33.0, 0.0), "Pavimenti in marmo: stelle nella navata centrale, rombi nelle navate laterali")
 def pavimento():
@@ -96,14 +110,14 @@ def pareti():
         for x0, x1 in segs:
             y0 = 0.0
             wall(m, (x0, zw), (x1, zw), y0, 1.2, n2, "in_marmo_rosso", (2.0, 1.2), off=off)
-            wall(m, (x0, zw), (x1, zw), 1.2, AISLE_H, n2, "tn_beige", (2.0, 2.0), off=off)
+            wall(m, (x0, zw), (x1, zw), 1.2, AISLE_H, n2, "in_parete", (2.0, 2.0), off=off)
             cornice(m, (x0, zw), (x1, zw), 1.2, n2, h=0.15, d=0.08, region="in_oro", ext=0.0)
             xs, bw = bay_list(x0, x1)
             for i, xc in enumerate(xs):
                 if xc > PRESB - 1:
                     continue
-                overlay(m, (xc, zw), n2, 2.2, 3.6, 1.8, "in_mosaico%d" % ((i + (side > 0)) % 4), off=off * 2)
-                overlay(m, (xc, zw), n2, 4.8, 1.5, 3.0, "in_vetrata%d" % (i % 5), off=off * 2)
+                goverlay(m, (xc, zw), n2, 2.2, 3.6, 1.8, "in_mosaico%d" % ((i + (side > 0)) % 4), 2, 1, off=off * 2)
+                goverlay(m, (xc, zw), n2, 4.8, 1.5, 3.0, "in_vetrata%d" % (i % 5), 1, 2, off=off * 2)
             cornice(m, (x0, zw), (x1, zw), AISLE_H - 0.5, n2, h=0.5, d=0.3, region="tn_cornice", ext=0.0)
     # aisle ceilings: coffers
     for x0, x1 in ((0.0, CROSS[0]), (CROSS[1], L)):
@@ -116,25 +130,25 @@ def pareti():
         zw = side * NAVE
         n2 = (0.0, -float(side))
         for x0, x1 in ((0.0, CROSS[0]), (CROSS[1], L)):
-            wall(m, (x0, zw), (x1, zw), AISLE_H, VAULT_TOP, n2, "tn_beige", (2.0, 2.0), off=off)
+            wall(m, (x0, zw), (x1, zw), AISLE_H, VAULT_TOP, n2, "in_parete", (2.0, 2.0), off=off)
             for xc in bay_list(x0, x1, 5.0)[0]:
-                overlay(m, (xc, zw), n2, 9.4, 1.3, 2.6, "in_vetrata%d" % (int(xc) % 5), off=off * 2)
+                goverlay(m, (xc, zw), n2, 9.4, 1.3, 2.6, "in_vetrata%d" % (int(xc) % 5), 1, 2, off=off * 2)
             obox(m, ((x0 + x1) / 2, zw), n2, x1 - x0, 0.5, AISLE_H - 0.8, AISLE_H, "in_oro", tile=(2.0, 0.8))
     # entrance wall (inside of the facade) and the gilded apse wall
-    wall(m, (0.0, -HW), (0.0, HW), 0.0, AISLE_H, (1.0, 0.0), "tn_beige", off=off)
-    wall(m, (0.0, -NAVE), (0.0, NAVE), AISLE_H, VAULT_TOP, (1.0, 0.0), "tn_beige", off=off)
+    wall(m, (0.0, -HW), (0.0, HW), 0.0, AISLE_H, (1.0, 0.0), "in_parete", off=off)
+    wall(m, (0.0, -NAVE), (0.0, NAVE), AISLE_H, VAULT_TOP, (1.0, 0.0), "in_parete", off=off)
     overlay(m, (0.0, 0.0), (1.0, 0.0), 0.0, 3.2, 6.4, "tn_porta", off=off * 2)
     for zc in (-2.2, 0.0, 2.2):
-        overlay(m, (0.0, zc), (1.0, 0.0), 9.2, 1.8, 3.6, "in_vetrata%d" % (int(zc + 3) % 5), off=off * 2)
+        goverlay(m, (0.0, zc), (1.0, 0.0), 9.2, 1.8, 3.6, "in_vetrata%d" % (int(zc + 3) % 5), 1, 2, off=off * 2)
     for zc in (-8.0, 8.0):
         overlay(m, (0.0, zc), (1.0, 0.0), 0.0, 1.8, 3.6, "tn_porta", off=off * 2)
-    wall(m, (L, HW), (L, -HW), 0.0, AISLE_H, (-1.0, 0.0), "tn_beige", off=off)
+    wall(m, (L, HW), (L, -HW), 0.0, AISLE_H, (-1.0, 0.0), "in_parete", off=off)
     wall(m, (L, NAVE), (L, -NAVE), PRESB_H, VAULT_TOP, (-1.0, 0.0), "in_giallo", off=off * 2)
-    overlay(m, (L, 0.0), (-1.0, 0.0), 3.2, 2.4, 4.8, "in_icona", off=0.12)
+    goverlay(m, (L, 0.0), (-1.0, 0.0), 3.2, 2.4, 4.8, "in_icona", 1, 2, off=0.12)
     obox(m, (L, 0.0), (-1.0, 0.0), 3.0, 0.1, 2.8, 8.4, "in_oro")
-    overlay(m, (L, 0.0), (-1.0, 0.0), 9.0, 8.0, 2.0, "in_mosaico1", off=0.06)
+    goverlay(m, (L, 0.0), (-1.0, 0.0), 9.2, 7.2, 3.6, "in_mosaico1", 2, 1, off=0.06)
     for zc in (-3.6, 3.6):
-        overlay(m, (L, zc), (-1.0, 0.0), 3.0, 1.4, 2.8, "in_vetrata%d" % (2 if zc < 0 else 4), off=0.06)
+        goverlay(m, (L, zc), (-1.0, 0.0), 3.0, 1.4, 2.8, "in_vetrata%d" % (2 if zc < 0 else 4), 1, 2, off=0.06)
     return m
 
 
@@ -154,22 +168,23 @@ def volta():
                 zm, ym = (za + zb) / 2, (ya + yb) / 2
                 nrm = V(0, VAULT_SPRING - ym - 0.01, -zm)
                 if k in (3, 4):
-                    reg = "in_affresco%d" % ((b + k) % 3)
-                    q = [V(bx0 + 0.3, ya, za), V(bx1 - 0.3, ya, za), V(bx1 - 0.3, yb, zb), V(bx0 + 0.3, yb, zb)]
-                    uv = [(0, 1), (1, 1), (1, 0.5), (0, 0.5)] if k == 3 else [(0, 0.5), (1, 0.5), (1, 0), (0, 0)]
-                    fface(m, q, reg, nrm, uv)
+                    xm = (bx0 + bx1) / 2
+                    for i, (xa, xb) in enumerate(((bx0 + 0.3, xm), (xm, bx1 - 0.3))):
+                        reg = "in_affresco%d_%d_%d" % (b % 3, i, 1 if k == 3 else 0)
+                        fface(m, [V(xa, ya, za), V(xb, ya, za), V(xb, yb, zb), V(xa, yb, zb)], reg, nrm)
                     for xa, xb in ((bx0, bx0 + 0.3), (bx1 - 0.3, bx1)):
                         fface(m, [V(xa, ya, za), V(xb, ya, za), V(xb, yb, zb), V(xa, yb, zb)], "in_oro", nrm)
                 else:
-                    q = [V(bx0, ya, za), V(bx1, ya, za), V(bx1, yb, zb), V(bx0, yb, zb)]
-                    fface(m, q, "in_cassettoni", nrm)
+                    xm = (bx0 + bx1) / 2
+                    for xa, xb in ((bx0, xm), (xm, bx1)):
+                        fface(m, [V(xa, ya, za), V(xb, ya, za), V(xb, yb, zb), V(xa, yb, zb)], "in_volta", nrm)
         # lunette closing the space above the vault where it opens on the crossing
         xe, nx = (x1, -1.0) if x1 == CROSS[0] else (x0, 1.0)
         if xe in CROSS:
             xe += nx * 0.01
             for k in range(n_arc):
                 (za, ya), (zb, yb) = arc[k], arc[k + 1]
-                fface(m, [V(xe, ya, za), V(xe, yb, zb), V(xe, VAULT_TOP + 0.6, zb), V(xe, VAULT_TOP + 0.6, za)], "tn_beige",
+                fface(m, [V(xe, ya, za), V(xe, yb, zb), V(xe, VAULT_TOP + 0.6, zb), V(xe, VAULT_TOP + 0.6, za)], "in_parete",
                       V(-nx, 0, 0), [(0, 1), (1, 1), (1, 0), (0, 0)])
         for b in range(nb):
             bx1 = x0 + (x1 - x0) * (b + 1) / nb
@@ -193,7 +208,7 @@ def cupola():
                            ((CROSS[1], hz), (CROSS[1], -hz), (-1.0, 0.0), VAULT_TOP),
                            ((CROSS[0], hz), (CROSS[1], hz), (0.0, -1.0), AISLE_H),
                            ((CROSS[1], -hz), (CROSS[0], -hz), (0.0, 1.0), AISLE_H)):
-        wall(m, a, b, y0, DRUM[0], n2, "tn_beige", (2.0, 2.0), off=0.02)
+        wall(m, a, b, y0, DRUM[0], n2, "in_parete", (2.0, 2.0), off=0.02)
         cornice(m, a, b, DRUM[0] - 0.6, n2, h=0.6, d=0.3, region="in_oro", ext=0.0)
     for x in CROSS:   # the arches open towards the nave: gilded band under the vault top
         n2 = (1.0, 0.0) if x == CROSS[0] else (-1.0, 0.0)
@@ -212,7 +227,7 @@ def cupola():
             return (cx + t * c, cz + t * s)
         q0, q1 = to_sq(a0), to_sq(a1)
         fface(m, [V(p0[0], DRUM[0], p0[1]), V(p1[0], DRUM[0], p1[1]), V(q1[0], DRUM[0], q1[1]), V(q0[0], DRUM[0], q0[1])],
-              "in_cassettoni", -UP)
+              "in_volta", -UP)
     del sq
     # drum: 16 stained-glass windows facing inwards, three of them the moon, the star and the sun
     special = {5: "in_vetrata_luna", 6: "in_vetrata_stella", 7: "in_vetrata_sole"}
@@ -221,7 +236,9 @@ def cupola():
         a, b = pts[k], pts[(k + 1) % n]
         am = 2 * math.pi * (k + 0.5) / n
         n2 = (-math.cos(am), -math.sin(am))
-        wall(m, a, b, DRUM[0], DRUM[1], n2, special.get(k, "in_vetrata%d" % (k % 5)), (math.dist(a, b), DRUM[1] - DRUM[0]))
+        reg, hh = special.get(k, "in_vetrata%d" % (k % 5)), (DRUM[1] - DRUM[0]) / 2
+        wall(m, a, b, DRUM[0], DRUM[0] + hh, n2, reg + "_0_1", (math.dist(a, b), hh))
+        wall(m, a, b, DRUM[0] + hh, DRUM[1], n2, reg + "_0_0", (math.dist(a, b), hh))
         wall(m, a, b, DRUM[1], DRUM[1] + 0.7, n2, "in_scritta%d" % (k % 4), (math.dist(a, b), 0.7))
     # dome, frescoed, with a golden oculus at the top
     rows = 6
@@ -237,9 +254,11 @@ def cupola():
             pb1 = V(cx + rb * math.cos(a1), yb, cz + rb * math.sin(a1))
             cen = (pa0 + pa1 + pb0 + pb1) / 4
             nrm = V(cx, base, cz) - cen
-            reg = "in_oro" if k % 4 == 0 else "in_affresco%d" % (k % 3)
-            uv = [((k % 4) / 4, 1 - j / rows), ((k % 4 + 1) / 4, 1 - j / rows), ((k % 4 + 1) / 4, 1 - (j + 1) / rows), ((k % 4) / 4, 1 - (j + 1) / rows)]
-            fface(m, [pa0, pa1, pb1, pb0], reg, nrm, None if reg == "in_oro" else uv)
+            # a quarter of the dome is one picture of 2 x 2 regions: two segments wide, three rows high each
+            kk, jr = k % 4, j % 3
+            reg = "in_cupola%d_%d_%d" % ((k // 4) % 2, kk // 2, 1 if j < 3 else 0)
+            u0, u1, v0, v1 = (kk % 2) / 2, (kk % 2 + 1) / 2, 1 - jr / 3, 1 - (jr + 1) / 3
+            fface(m, [pa0, pa1, pb1, pb0], reg, nrm, [(u0, v0), (u1, v0), (u1, v1), (u0, v1)])
     r_top, y_top = prof[-1]
     annulus(m, (cx, cz), 0.0, r_top, y_top, n, "in_oro", nrm=-UP)
     return m
@@ -256,9 +275,9 @@ def cappella():
         cornice(m, a, b, AISLE_H - 0.5, n2, h=0.5, d=0.3, region="in_oro", ext=0.0)
     hrect(m, x0, x1, zs, -HW, AISLE_H - 0.02, "in_cassettoni", down=True)
     xc = (x0 + x1) / 2
-    overlay(m, (xc, zs), (0.0, 1.0), 3.0, 1.8, 3.6, "in_vetrata1", off=0.06)
+    goverlay(m, (xc, zs), (0.0, 1.0), 3.0, 1.8, 3.6, "in_vetrata1", 1, 2, off=0.06)
     for dx in (-3.5, 3.5):
-        overlay(m, (xc + dx, zs), (0.0, 1.0), 2.4, 3.6, 1.8, "in_mosaico%d" % (2 if dx < 0 else 3), off=0.06)
+        goverlay(m, (xc + dx, zs), (0.0, 1.0), 2.4, 3.6, 1.8, "in_mosaico%d" % (2 if dx < 0 else 3), 2, 1, off=0.06)
     return m
 
 

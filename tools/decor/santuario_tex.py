@@ -617,22 +617,5 @@ def build(pk):
     put("tn_portone_seg", segreteria_door())
     put("tn_solare", solar())
     put("tn_lastrico", roof_flat())
-    put("in_stelle", floor_stars())
-    put("in_rombi", floor_diamonds())
-    put("in_marmo_rosso", marble_red())
-    put("in_marmo_rosa", marble_pink())
-    put("in_oro", gilded())
-    put("in_giallo", wall_yellow())
-    put("in_cassettoni", coffers())
-    for k in range(3):
-        put("in_affresco%d" % k, fresco(40 + k))
-    for k in range(4):
-        put("in_mosaico%d" % k, mosaic_panel(50 + k))
-    for k in range(5):
-        put("in_vetrata%d" % k, stained_saint(60 + k))
-    for s in ("luna", "stella", "sole"):
-        put("in_vetrata_" + s, stained_saint(70, s))
-    for k in range(4):
-        put("in_scritta%d" % k, inscription(k * 2))
-    put("in_legno", wood_pew())
-    put("in_icona", icon_madonna())
+    from decor import santuario_arte          # the inside of the church, redone on 14/11/2026
+    santuario_arte.build(put)

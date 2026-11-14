@@ -91,4 +91,5 @@ def main():
     print(out + "wadsheet.png")
 
 
-main()
+if __name__ == "__main__":
+    main()
