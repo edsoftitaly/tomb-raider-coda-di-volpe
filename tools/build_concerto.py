@@ -13,6 +13,7 @@ static is placed with rotation 0. Metres, origin on the deck.
  467 WEDGE             stage monitor, the grille towards +z
  468 STENDARDO         the backdrop banner, 10 x 5 m (the logo comes from assets/foto/azrael_logo.png when it is there)
  469 LINE_ARRAY        six hung elements, origin at the rigging point
+ 470 STACK_BASSO       bass stack: valve head on an 8 x 10 cabinet (collision)
 
 No maker's name or badge is drawn on amplifiers and keyboard.
 """
@@ -80,6 +81,22 @@ def t_cab():
     return arr(im)
 
 
+def t_cab8():
+    w, h = 128, 232
+    im = Image.new("RGBA", (w, h), (14, 14, 15, 255))
+    d = ImageDraw.Draw(im)
+    d.rectangle([8, 8, w - 9, h - 9], fill=(74, 78, 84, 255))                      # silver-grey cloth
+    for y in range(9, h - 9, 2):
+        d.line([9, y, w - 10, y], fill=(60, 64, 70, 255))
+    for i in range(4):
+        for cx in (38, 90):
+            cy = 36 + i * 53
+            d.ellipse([cx - 22, cy - 22, cx + 22, cy + 22], outline=(50, 53, 58, 255), width=2)
+            d.ellipse([cx - 6, cy - 6, cx + 6, cy + 6], fill=(56, 60, 66, 255))
+    d.rectangle([4, 4, w - 5, h - 5], outline=(150, 152, 158, 255), width=2)
+    return arr(im)
+
+
 def t_head(panel, knob):
     w, h = 128, 48
     im = Image.new("RGBA", (w, h), (14, 14, 15, 255))
@@ -141,7 +158,7 @@ def t_banner():
     d = ImageDraw.Draw(im)
     if os.path.exists(LOGO):
         logo = Image.open(LOGO).convert("RGBA")
-        r = min((w - 80) / float(logo.width), (h - 80) / float(logo.height))
+        r = min((w - 36) / float(logo.width), (h - 36) / float(logo.height))
         logo = logo.resize((int(logo.width * r), int(logo.height * r)), Image.LANCZOS)
         im.alpha_composite(logo, ((w - logo.width) // 2, (h - logo.height) // 2))
     else:
@@ -152,7 +169,7 @@ def t_banner():
         d = ImageDraw.Draw(im)
         d.text((w // 2 + 4, h // 2 - 6), "AZRAËL", font=f, fill=(60, 8, 10, 255), anchor="mm")
         d.text((w // 2, h // 2 - 10), "AZRAËL", font=f, fill=(226, 226, 230, 255), anchor="mm")
-    d.rectangle([10, 10, w - 11, h - 11], outline=(150, 18, 22, 255), width=5)
+    d.rectangle([8, 8, w - 9, h - 9], outline=(60, 120, 200, 255) if os.path.exists(LOGO) else (150, 18, 22, 255), width=4)
     for x in range(40, w, 118):                                                    # the eyelets
         for y in (22, h - 23):
             d.ellipse([x - 5, y - 5, x + 5, y + 5], fill=(150, 150, 156, 255))
@@ -168,6 +185,8 @@ def textures():
     pk.put("co_keys", t_keys())
     pk.put("co_cab", t_cab())
     pk.put("co_truss", t_truss())
+    pk.put("co_cab8", t_cab8())
+    pk.put("co_head_b", t_head((40, 44, 52, 255), (190, 192, 198, 255)))
     pk.put("co_head_s", t_head((176, 180, 186, 255), (20, 20, 22, 255)))
     pk.put("co_head_g", t_head((196, 160, 84, 255), (24, 20, 14, 255)))
     pk.put("co_pa", t_grille(128, 48, horn=True))
@@ -247,6 +266,15 @@ def stack(head):
     m.merge(G.box(0.72, 0.28, 0.26, "co_nero", center=(0, 1.52, 0)))
     front(m, 0, 1.52, 0.72, 0.28, -0.134, head)
     m.merge(G.box(0.2, 0.03, 0.04, "co_nero", center=(0, 1.80, 0)))                # the handle
+    lo, hi = m.bbox()
+    return m, ((lo[0], 0.0, lo[2]), (hi[0], hi[1], hi[2]))
+
+
+def stack_basso():
+    m = G.box(0.66, 1.22, 0.41, "co_nero", center=(0, 0, 0))
+    front(m, 0, 0, 0.66, 1.22, -0.209, "co_cab8")
+    m.merge(G.box(0.61, 0.29, 0.33, "co_nero", center=(0, 1.22, 0)))
+    front(m, 0, 1.22, 0.61, 0.29, -0.169, "co_head_b")
     lo, hi = m.bbox()
     return m, ((lo[0], 0.0, lo[2]), (hi[0], hi[1], hi[2]))
 
@@ -364,7 +392,7 @@ def line_array():
 MODELS = [(460, "TORRE_AMERICANA", torre), (461, "TETTO_AMERICANE", tetto), (462, "BATTERIA", batteria),
           (463, "STACK_SINISTRO", lambda: stack("co_head_s")), (464, "STACK_DESTRO", lambda: stack("co_head_g")),
           (465, "TASTIERA", tastiera), (466, "ASTA_MICROFONO", asta), (467, "WEDGE", wedge), (468, "STENDARDO", stendardo),
-          (469, "LINE_ARRAY", line_array)]
+          (469, "LINE_ARRAY", line_array), (470, "STACK_BASSO", stack_basso)]
 
 
 def main():

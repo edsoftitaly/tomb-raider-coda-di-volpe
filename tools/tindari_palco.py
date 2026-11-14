@@ -112,6 +112,7 @@ def main(src, dst, png):
     put(462, 0, 0, 2.6)                       # drums
     put(463, -3.3, 0, 3.6)                    # audience left: Ed
     put(464, 3.3, 0, 3.6)                     # audience right: Andy
+    put(470, -2.05, 0, 3.55)                  # Gianluca's bass stack, between Ed's and the drums
     put(465, 5.4, 0, 1.2)                     # Mik's keyboard
     put(466, 5.9, 0, 0.55)                    # his microphone
     put(466, 0, 0, -3.6)                      # the singer's
