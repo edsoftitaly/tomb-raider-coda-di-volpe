@@ -570,6 +570,6 @@ def segreteria():
 @model(162, "SANTUARIO_RINGHIERA", "Ringhiera in ferro sulla terrazza (2.5 m, con collisione)")
 def ringhiera():
     m = G.Mesh()
-    rectf(m, V(-1.25, 0.35, 0.0), V(1, 0, 0), UP, 2.5, 0.95, "tn_ringhiera", V(0, 0, -1), tile=None, blend=1, double=True)
+    rectf(m, V(-1.25, 0.0, 0.0), V(1, 0, 0), UP, 2.5, 1.3, "tn_ringhiera", V(0, 0, -1), tile=None, blend=1, double=True)      # down to the paving (it began 35 cm up)
     m.merge(G.box(2.5, 0.06, 0.08, "tn_cornice", center=(0, 1.3, 0)))
     return m, ((-1.25 * M, 0, -0.15 * M), (1.25 * M, 1.35 * M, 0.15 * M))

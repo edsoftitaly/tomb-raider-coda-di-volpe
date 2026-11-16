@@ -50,7 +50,7 @@ def ancora():
     m.merge(G.tube([(-0.75, 0.5, -0.55), (-0.45, 0.2, -0.95), (0, 0.15, -1.05), (0.45, 0.2, -0.95), (0.75, 0.5, -0.55)],
                    [0.03, 0.07, 0.08, 0.07, 0.03], "m_rust", n=6))
     m.merge(G.tube([(-0.6, 0.22, 0.7), (0.6, 0.22, 0.7)], [0.05, 0.05], "m_rust", n=5))
-    return m, cbox(1.5, 0.5, 2.0)
+    return G.grounded(m), cbox(1.5, 0.5, 2.0)
 
 
 @model(305, "TENDA", "Tenda canadese dei tombaroli, 3 x 2,4 m")
@@ -171,7 +171,7 @@ def tavolaccio():
 @model(317, "ANFORA", "Anfora romana incrostata")
 def anfora():
     m = G.tube([(0, 0.0, 0), (0, 0.25, 0), (0, 0.6, 0), (0, 0.85, 0), (0, 1.0, 0)], [0.03, 0.2, 0.24, 0.1, 0.09], "m_clay", n=7)
-    return m.transformed(rz=1.25, t=(0, 0.22 * M, 0)), None
+    return G.grounded(m.transformed(rz=1.25), 0.02), None          # lying on its side, on the ground (it used to hover 11 cm)
 
 
 @model(318, "FALDA_TETTO", "Falda di tetto in coppi su travi, 4 x 4,4 m: si appoggia in cima ai muri (origine al colmo basso)")

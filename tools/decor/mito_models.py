@@ -63,7 +63,12 @@ def colonna_rotta():
 
 @model(327, "ROCCHIO", "Rocchio di colonna caduto")
 def rocchio():
-    return G.cylinder(0.44, 0.42, 1.0, "m_limestone", n=10, base=(-0.5, 0.44, 0), axis="x", cap="m_limestone"), cbox(1.0, 0.9, 0.9)
+    # a drum lying on its side, closed at both ends (G.cylinder has no axis: it used to stand upright, 44 cm in the air)
+    half = G.cylinder(0.43, 0.42, 0.5, "m_limestone", n=10, cap="m_limestone")
+    m = G.Mesh()
+    m.merge(half)
+    m.merge(half.transformed(rx=math.pi))
+    return G.grounded(m.transformed(rz=math.pi / 2), 0.02), cbox(1.0, 0.9, 0.9)
 
 
 @model(328, "STATUA_DIOSCURO", "Statua di un Dioscuro con il berretto a punta e la lancia, 2,7 m con la base")

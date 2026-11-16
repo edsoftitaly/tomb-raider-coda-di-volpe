@@ -58,6 +58,13 @@ class Mesh:
         return a.min(axis=0), a.max(axis=0)
 
 
+def grounded(m, sink=0.01):
+    """The mesh moved up or down so that its lowest point is `sink` metres under its origin: a thing that lies on the
+    ground touches it (models built by tilting or stacking parts easily end up hovering)."""
+    lo = min(p[1] for p in m.v)
+    return m.transformed(t=(0, -lo - sink * M, 0))
+
+
 def rot(rx, ry, rz):
     cx, sx = math.cos(rx), math.sin(rx)
     cy, sy = math.cos(ry), math.sin(ry)
