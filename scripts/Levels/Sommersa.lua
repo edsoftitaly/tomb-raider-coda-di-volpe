@@ -133,6 +133,17 @@ end
 -- Run fn after a number of frames (30 = 1 s). Not saved: use only for short visual sequences.
 local timers = {}
 function CDV.After(frames, fn) timers[#timers + 1] = { t = frames, fn = fn } end
+-- An earthquake that can be seen: strength s*5 (150 at most) held for s*2 frames, then the engine lets it die away.
+function CDV.Quake(s)
+    local n, str = s * 2, math.min(150, s * 5)
+    local function go()
+        pcall(function() TEN.Effects.MakeEarthquake(str) end)
+        n = n - 1
+        if n > 0 then CDV.After(1, go) end
+    end
+    go()
+end
+
 local function TimersTick()
     for i = #timers, 1, -1 do
         local t = timers[i]
@@ -821,7 +832,7 @@ function CDV.GateCheck()
         CDV.Flag("tempio_aperto", true)
         CDV.Enable("porta_tempio")
         CDV.GateSound()
-        pcall(function() TEN.Effects.MakeEarthquake(16) end)
+        CDV.Quake(16)
         CDV.Cue("cancello")
         CDV.Log("GATE of the temple open")
     end
@@ -851,7 +862,7 @@ CDV.Zone({ id = "ipocausto", x = 33280, y = 2048, z = 43520, r = 1100, dy = 700,
 CDV.Wheel("ruota_terme", function() return not CDV.Flag("terme_acqua") end, function()
     CDV.Flag("terme_acqua", true)
     CDV.Sfx(238)
-    pcall(function() TEN.Effects.MakeEarthquake(22) end)
+    CDV.Quake(22)
     pcall(function() TEN.View.FadeOut(1.0) end)
     CDV.After(38, function()
         TEN.Flow.FlipMap(2)
@@ -903,7 +914,7 @@ CDV.Loop(function()
             pcall(function() m:SetRotation(TEN.Rotation(math.random(-3, 3), 0, math.random(-3, 3))) end)
         else
             tessere[key] = nil
-            pcall(function() TEN.Effects.MakeEarthquake(10) end)
+            CDV.Quake(10)
             CDV.Sfx(67)        -- and landing below
             pcall(function() m:ShatterMesh(0) end)
             pcall(function() m:Destroy() end)
@@ -1070,7 +1081,7 @@ CDV.Loop(function()
     CDV.Log("ALTAR Castor " .. (on and "set" or "taken back"))
     ;(on and CDV.InsertItem or CDV.PickItem)(function()              -- set: the insert; taken back: a pickup
         CDV.Sfx(238)
-        pcall(function() TEN.Effects.MakeEarthquake(on and 20 or 8) end)
+        CDV.Quake(on and 20 or 8)
         pcall(function() TEN.View.FadeOut(1.4) end)
         CDV.After(35, function()
             SetWater(on)
@@ -1107,7 +1118,7 @@ CDV.Loop(function()
     if t > 0 then
         t = t - 1
         CDV.Flag("fuga_t", t)
-        if t % 40 == 0 then pcall(function() TEN.Effects.MakeEarthquake(14) end) end
+        if t % 40 == 0 then CDV.Quake(14) end
         if t == 0 then Lara:SetHP(0) end
     end
 end)
@@ -1196,7 +1207,7 @@ CDV.Loop(function()
     CDV.SceneOn = true
     CDV.Sfx(479)                                             -- his death cry, at Lara: at his place it is too far to hear
     CDV.After(8, function() CDV.Sfx(482) end)
-    pcall(function() TEN.Effects.MakeEarthquake(24) end)
+    CDV.Quake(24)
     CDV.Say("Turi 'a Vulpi goes down with the temple he came to rob.", 6)
     local n = 0
     local function scene()
@@ -1235,7 +1246,7 @@ CDV.Use({ id = "altare2", item = ID.PUZZLE_ITEM8, x = 48640, y = 0, z = 28480, r
             altarBusy = false
             CDV.Flag("fuga", true)
             CDV.Sfx(105)
-            pcall(function() TEN.Effects.MakeEarthquake(30) end)
+            CDV.Quake(30)
             CDV.Cue("use_altare2")
             CDV.Enable("squalo")
             CDV.Enable("squalo2")                       -- the twins are not alone: two more in the flooded cella
@@ -1269,7 +1280,7 @@ CDV.Loop(function()
     if not CDV.Flag("fuga") or CDV.Flag("gemelli_fine") then return end
     local n = (CDV.Flag("fuga_scossa") or 0) + 1
     CDV.Flag("fuga_scossa", n)
-    if n % 60 == 0 then pcall(function() TEN.Effects.MakeEarthquake(10) end) end
+    if n % 60 == 0 then CDV.Quake(10) end
 end)
 
 -- The way out: three boulders down the stairs, one lane each, one after the other; then the bats of the niches.
@@ -1341,9 +1352,9 @@ local CREDITS = {
     { "Beta testers", "DARIO", "LOW", "ATTILA", "MARCO", "ANTONIO" },
     { "Models of the gang", "MADDEREK" },
     { "Music from Tomb Raider II and III", "NATHAN McCREE" },
-    { "Made with TombEngine and Tomb Editor", "Level building and scripting with CLAUDE" },
+    { "Made with TombEngine and Tomb Editor", "The places depicted are not intended to be exact replicas of reality" },
     { "A fan adventure, free and not for sale.", "Tomb Raider and Lara Croft belong to their owners." },
-    { "Oliveri, Sicily", "THANK YOU FOR PLAYING" },
+    { "Oliveri, Province of Messina, Sicily", "THANK YOU FOR PLAYING" },
 }
 local CARD = 140           -- frames a card stays (4.7 s)
 function CDV.Credits(i)

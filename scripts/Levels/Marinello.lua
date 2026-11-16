@@ -147,6 +147,17 @@ end
 -- Run fn after a number of frames (30 = 1 s). Not saved: use only for short visual sequences.
 local timers = {}
 function CDV.After(frames, fn) timers[#timers + 1] = { t = frames, fn = fn } end
+-- An earthquake that can be seen: strength s*5 (150 at most) held for s*2 frames, then the engine lets it die away.
+function CDV.Quake(s)
+    local n, str = s * 2, math.min(150, s * 5)
+    local function go()
+        pcall(function() TEN.Effects.MakeEarthquake(str) end)
+        n = n - 1
+        if n > 0 then CDV.After(1, go) end
+    end
+    go()
+end
+
 local function TimersTick()
     for i = #timers, 1, -1 do
         local t = timers[i]
@@ -752,7 +763,7 @@ function CDV.OpenSluice(gateName, rise, fn)
         if f == 110 then CDV.Flyby(2) end
         if f == 116 then CDV.Cue("use_chiusa2") end          -- the sea coming in, with the pictures of it
         if f == 110 then CDV.Sfx(105); CDV.Log("SLUICE gate rising") end
-        if f >= 110 and f <= 250 and f % 12 == 0 then pcall(function() TEN.Effects.MakeEarthquake(18) end) end
+        if f >= 110 and f <= 250 and f % 12 == 0 then CDV.Quake(18) end
         if f == 215 then pcall(function() TEN.View.FadeOut(1.2) end) end
         if f == 262 then
             CDV.Log("SLUICE flip")

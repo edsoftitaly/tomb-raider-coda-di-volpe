@@ -133,6 +133,17 @@ end
 -- Run fn after a number of frames (30 = 1 s). Not saved: use only for short visual sequences.
 local timers = {}
 function CDV.After(frames, fn) timers[#timers + 1] = { t = frames, fn = fn } end
+-- An earthquake that can be seen: strength s*5 (150 at most) held for s*2 frames, then the engine lets it die away.
+function CDV.Quake(s)
+    local n, str = s * 2, math.min(150, s * 5)
+    local function go()
+        pcall(function() TEN.Effects.MakeEarthquake(str) end)
+        n = n - 1
+        if n > 0 then CDV.After(1, go) end
+    end
+    go()
+end
+
 local function TimersTick()
     for i = #timers, 1, -1 do
         local t = timers[i]
@@ -746,7 +757,7 @@ CDV.Loop(function()
             pcall(function() m:SetRotation(TEN.Rotation(math.random(-3, 3), 0, math.random(-3, 3))) end)
         else                                                         -- it breaks: the floor is gone
             tessere[key] = nil
-            pcall(function() TEN.Effects.MakeEarthquake(10) end)
+            CDV.Quake(10)
             CDV.Sfx(67)        -- and landing below
             pcall(function() m:ShatterMesh(0) end)
             pcall(function() m:Destroy() end)
@@ -879,7 +890,7 @@ CDV.Loop(function()
             if day >= 3 then
                 CDV.Flag("gemelli_ok", true)
                 CDV.Enable("porta_pozzo")
-                pcall(function() TEN.Effects.MakeEarthquake(20) end)
+                CDV.Quake(20)
                 CDV.Cue("gemelli")
                 CDV.Say("The gate at the end of the crypt opens.", 6)
             end
