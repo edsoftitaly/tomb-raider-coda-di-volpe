@@ -699,6 +699,24 @@ function CDV.InsertItem(fn, mid, key)          -- key = true: a key is turned (1
     end
     CDV.After(1, wait)
 end
+-- A thing taken from a low pedestal: Lara's own pickup (LA_PICKUP_PEDESTAL_LOW, 425, state 39). mid() when her hand
+-- closes on it (frame 29, where the animation has its pickup command), fn() at the end.
+function CDV.PickItem(fn, mid)
+    Lara:SetAnim(425)
+    Lara:SetState(39)
+    local n = 0
+    local function wait()
+        n = n + 1
+        if mid and (n >= 36 or (Lara:GetAnim() == 425 and Lara:GetFrame() >= 29)) then
+            mid()
+            mid = nil
+        end
+        if n < 240 and (n < 20 or Lara:GetAnim() == 425) then CDV.After(1, wait); return end
+        if mid then mid() end
+        if fn then fn() end
+    end
+    CDV.After(1, wait)
+end
 function CDV.Flyby(seq)
     CDV.Log("FLYBY " .. seq)
     pcall(function() TEN.View.PlayFlyby(seq) end)
@@ -1032,7 +1050,7 @@ CDV.Loop(function()
     altarBusy = true
     FaceAltar(SOCKET_C)
     CDV.Log("ALTAR Castor " .. (on and "set" or "taken back"))
-    CDV.InsertItem(function()
+    ;(on and CDV.InsertItem or CDV.PickItem)(function()              -- set: the insert; taken back: a pickup
         CDV.Sfx(238)
         pcall(function() TEN.Effects.MakeEarthquake(on and 20 or 8) end)
         pcall(function() TEN.View.FadeOut(1.4) end)
@@ -1079,7 +1097,7 @@ end)
 -- Turi 'a Vulpi throws fire when she is above him or out of his reach and he has a clear line: a ball of flame
 -- aimed at where she stands when it leaves his hand (so it can be dodged). His death is a scene: flyby 2 in the
 -- cella, the controls taken away, bubbles.
-local balls, flameT = {}, 0
+local balls, flameT, flameN = {}, 0, 0
 CDV.Loop(function()
     for i = #balls, 1, -1 do
         local b = balls[i]
@@ -1095,6 +1113,7 @@ CDV.Loop(function()
             for j = 1, 5 do
                 pcall(function() TEN.Effects.EmitFire(TEN.Vec3(x + math.random(-150, 150), y - math.random(0, 200), z + math.random(-150, 150)), 3) end)
             end
+            pcall(function() TEN.Sound.PlaySound(368, TEN.Vec3(math.floor(x), math.floor(y), math.floor(z))) end)
             local lp = Lara:GetPosition()
             if (lp.x - x) ^ 2 + (lp.z - z) ^ 2 < 480 ^ 2 and math.abs((lp.y - 400) - y) < 800 and Lara:GetHP() > 0 then
                 Lara:SetHP(math.max(0, Lara:GetHP() - 150))
@@ -1118,6 +1137,9 @@ CDV.Loop(function()
             flameT = 0
             local d = math.sqrt(flat * flat + (tp.y - lp.y) ^ 2)
             balls[#balls + 1] = { x0 = tp.x, y0 = tp.y - 700, z0 = tp.z, x1 = lp.x, y1 = lp.y - 400, z1 = lp.z, t = 0, n = math.max(14, math.floor(d / 120)) }
+            flameN = flameN + 1
+            pcall(function() TEN.Sound.PlaySound(563, tp) end)                                   -- the roar of the flame
+            pcall(function() TEN.Sound.PlaySound(({ 737, 477, 496 })[flameN % 3 + 1], tp) end)   -- and his shout
             if not CDV.Flag("turi_fuoco") then CDV.Flag("turi_fuoco", true); CDV.Log("FLAME first, " .. math.floor(d / 1024) .. " sectors") end
         end
     end
@@ -1129,7 +1151,34 @@ CDV.Loop(function()
     if not dead then return end
     CDV.Flag("turi_scena", true)
     CDV.Log("TURI dies: the scene")
-    CDV.Flyby(2)
+    -- the camera: a sector and a half from him, on a side with a clear line, a little above, looking at him.
+    -- Its stand is a shark that is not in the water yet (nothing else in a script can hold a camera).
+    local back = nil
+    pcall(function()
+        local stand = CDV.M("squalo2")
+        if m == nil or not m:GetValid() or stand == nil or not stand:GetValid() or stand:GetActive() then return end
+        local p = m:GetPosition()
+        local home, homeRoom = stand:GetPosition(), stand:GetRoomNumber()
+        local spot = nil
+        for k = 0, 7 do
+            local a = k * math.pi / 4
+            local c = TEN.Vec3(math.floor(p.x + math.sin(a) * 1500), p.y - 1000, math.floor(p.z + math.cos(a) * 1500))
+            local ok, los = pcall(function() return TEN.Util.HasLineOfSight(m:GetRoomNumber(), TEN.Vec3(p.x, p.y - 600, p.z), c) end)
+            if ok and los == true then spot = c; break end
+        end
+        if spot == nil then return end
+        stand:SetPosition(spot, false)
+        stand:SetRoomNumber(m:GetRoomNumber())
+        stand:AttachObjCamera(0, m, 0)
+        back = function()
+            pcall(TEN.View.ResetObjCamera)
+            pcall(function() stand:SetPosition(home, false); stand:SetRoomNumber(homeRoom) end)
+        end
+        CDV.Log("TURI scene: camera at " .. spot.x .. " " .. spot.y .. " " .. spot.z)
+    end)
+    if back == nil then CDV.Flyby(2) end
+    CDV.After(180, function() if back then back() end end)
+    pcall(function() TEN.Sound.PlaySound(479, m:GetPosition()) end)
     pcall(function() TEN.Effects.MakeEarthquake(24) end)
     CDV.Say("Turi 'a Vulpi goes down with the temple he came to rob.", 6)
     local n = 0
@@ -1421,6 +1470,43 @@ CDV.Loop(function()
             end
         else
             stuck[name] = nil
+        end
+    end
+end)
+
+-- Turi climbs after her. While she is in the cella or on its stairs her steps are remembered; when he has not come
+-- closer for three seconds he is put on them, behind her and out of sight. (The engine alone cannot take a man
+-- of his kind up steps of four clicks.)
+local turiTrail, turiStuck, turiLast, turiFrame = {}, 0, nil, 0
+CDV.Loop(function()
+    turiFrame = turiFrame + 1
+    if turiFrame % 30 ~= 0 then return end
+    if not CDV.Flag("turi_sveglio") or CDV.Flag("turi_morto") or CDV.Flag("acqua") or Lara:GetHP() <= 0 then return end
+    local m = CDV.M("turi")
+    if m == nil or not m:GetValid() or not m:GetActive() or m:GetHP() <= 0 then return end
+    local lp, tp = Lara:GetPosition(), m:GetPosition()
+    local st = Lara:GetState()
+    local ok, room = pcall(function() return Lara:GetRoom():GetName() end)
+    if ok and type(room) == "string" and room:sub(1, 7) == "H_CELLA" and (st == 0 or st == 1 or st == 2) then
+        turiTrail[#turiTrail + 1] = { x = lp.x, y = lp.y, z = lp.z, room = Lara:GetRoomNumber() }
+        if #turiTrail > 30 then table.remove(turiTrail, 1) end
+    end
+    local d = Dist(tp, lp)
+    if d > 3 * 1024 and d > (turiLast or d) - 256 then turiStuck = turiStuck + 1 else turiStuck = 0 end
+    turiLast = d
+    if turiStuck < 3 or PointOnScreen(tp) then return end
+    for i = #turiTrail - 2, 1, -1 do
+        local c = turiTrail[i]
+        local cd = Dist(c, lp)
+        if cd >= 2 * 1024 and cd < d - 512 and not PointOnScreen(c) then
+            local moved = pcall(function()
+                m:SetPosition(TEN.Vec3(c.x, c.y, c.z), false)
+                m:SetRoomNumber(c.room)
+                m:SetRotation(TEN.Rotation(0, math.deg(math.atan(lp.x - c.x, lp.z - c.z)), 0))
+            end)
+            CDV.Log("TURI " .. (moved and "climbs after her, " or "could not be moved, ") .. math.floor(cd / 1024) .. " sectors behind")
+            turiStuck, turiLast = 0, cd
+            return
         end
     end
 end)
