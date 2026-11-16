@@ -1076,6 +1076,77 @@ CDV.Loop(function()
     end
 end)
 
+-- Turi 'a Vulpi throws fire when she is above him or out of his reach and he has a clear line: a ball of flame
+-- aimed at where she stands when it leaves his hand (so it can be dodged). His death is a scene: flyby 2 in the
+-- cella, the controls taken away, bubbles.
+local balls, flameT = {}, 0
+CDV.Loop(function()
+    for i = #balls, 1, -1 do
+        local b = balls[i]
+        b.t = b.t + 1
+        local k = b.t / b.n
+        local x, y, z = b.x0 + (b.x1 - b.x0) * k, b.y0 + (b.y1 - b.y0) * k - math.sin(k * math.pi) * 260, b.z0 + (b.z1 - b.z0) * k
+        pcall(function()
+            TEN.Effects.EmitFire(TEN.Vec3(x, y, z), 2)
+            TEN.Effects.EmitLight(TEN.Vec3(x, y, z), TEN.Color(255, 140, 40), 9, false, "cdv_fiamma_" .. i)
+        end)
+        if b.t >= b.n then
+            table.remove(balls, i)
+            for j = 1, 5 do
+                pcall(function() TEN.Effects.EmitFire(TEN.Vec3(x + math.random(-150, 150), y - math.random(0, 200), z + math.random(-150, 150)), 3) end)
+            end
+            local lp = Lara:GetPosition()
+            if (lp.x - x) ^ 2 + (lp.z - z) ^ 2 < 480 ^ 2 and math.abs((lp.y - 400) - y) < 800 and Lara:GetHP() > 0 then
+                Lara:SetHP(math.max(0, Lara:GetHP() - 150))
+                CDV.Log("FLAME hit")
+            end
+        end
+    end
+    if not CDV.Flag("turi_sveglio") or CDV.Flag("turi_morto") or CDV.Flag("acqua") then return end
+    local m = CDV.M("turi")
+    if m == nil or not m:GetValid() or not m:GetActive() or m:GetHP() <= 0 or Lara:GetHP() <= 0 then return end
+    flameT = flameT + 1
+    if flameT < 75 then return end
+    local tp, lp = m:GetPosition(), Lara:GetPosition()
+    local flat = math.sqrt((tp.x - lp.x) ^ 2 + (tp.z - lp.z) ^ 2)
+    if (lp.y < tp.y - 768 or flat > 4 * 1024) and flat < 16 * 1024 then
+        local clear = true
+        pcall(function()
+            clear = TEN.Util.HasLineOfSight(m:GetRoomNumber(), TEN.Vec3(tp.x, tp.y - 700, tp.z), TEN.Vec3(lp.x, lp.y - 500, lp.z)) ~= false
+        end)
+        if clear then
+            flameT = 0
+            local d = math.sqrt(flat * flat + (tp.y - lp.y) ^ 2)
+            balls[#balls + 1] = { x0 = tp.x, y0 = tp.y - 700, z0 = tp.z, x1 = lp.x, y1 = lp.y - 400, z1 = lp.z, t = 0, n = math.max(14, math.floor(d / 120)) }
+            if not CDV.Flag("turi_fuoco") then CDV.Flag("turi_fuoco", true); CDV.Log("FLAME first, " .. math.floor(d / 1024) .. " sectors") end
+        end
+    end
+end)
+CDV.Loop(function()
+    if not CDV.Flag("turi_sveglio") or CDV.Flag("turi_scena") then return end
+    local m = CDV.M("turi")
+    local dead = CDV.Flag("turi_morto") == true or (m ~= nil and m:GetValid() and m:GetHP() <= 0)
+    if not dead then return end
+    CDV.Flag("turi_scena", true)
+    CDV.Log("TURI dies: the scene")
+    CDV.Flyby(2)
+    pcall(function() TEN.Effects.MakeEarthquake(24) end)
+    CDV.Say("Turi 'a Vulpi goes down with the temple he came to rob.", 6)
+    local n = 0
+    local function scene()
+        n = n + 1
+        pcall(TEN.Input.ClearAllKeys)
+        if n % 3 == 0 and m ~= nil and m:GetValid() then
+            pcall(function()
+                local p = m:GetPosition()
+                TEN.Effects.EmitAirBubble(TEN.Vec3(p.x + math.random(-220, 220), p.y - math.random(200, 800), p.z + math.random(-220, 220)), 28, 48)
+            end)
+        end
+        if n < 190 then CDV.After(1, scene) end
+    end
+    scene()
+end)
+
 CDV.Drop({ id = "polluce", enemy = "turi", item = ID.PUZZLE_ITEM8, text = "The Star of Pollux floats up by itself." })
 
 CDV.Zone({ id = "saldo", x = 48640, y = 0, z = 28160, r = 1200, dy = 500, once = true, text = "The Star of Castor has fused with the altar. The other socket is still empty.", secs = 6, need = function() return CDV.Flag("acqua") == true and CDV.Has(ID.PUZZLE_ITEM8) end })
@@ -1095,6 +1166,8 @@ CDV.Use({ id = "altare2", item = ID.PUZZLE_ITEM8, x = 48640, y = 0, z = 28480, r
             pcall(function() TEN.Effects.MakeEarthquake(30) end)
             CDV.Cue("use_altare2")
             CDV.Enable("squalo")
+            CDV.Enable("squalo2")                       -- the twins are not alone: two more in the flooded cella
+            CDV.Enable("squalo3")
             CDV.Say("Castor and Pollux, together after two thousand years. The vault is giving way, and the twins are not alone!", 8)
         end, function() CDV.ShowModel("astro_p_posto", true) end)
     end })
@@ -1152,18 +1225,41 @@ CDV.Zone({ id = "masso_fuga", x = 66048, y = -3072, z = 25088, r = 900, dy = 900
         CDV.After(190, function()
             CDV.Log("BATS out of the niches")
             for i = 1, BATS do
-                CDV.After((i - 1) * 6, function() CDV.Enable("pip_f" .. i) end)
+                CDV.After((i - 1) * 6, function()
+                    local bat = CDV.M("pip_f" .. i)                 -- one sector above the floor of the niche, not under the vault
+                    if bat ~= nil and bat:GetValid() then
+                        pcall(function() local q = bat:GetPosition(); bat:SetPosition(TEN.Vec3(q.x, -3972 - (i % 3) * 120, q.z), false) end)
+                    end
+                    CDV.Enable("pip_f" .. i)
+                end)
             end
         end)
     end })
 
 CDV.Zone({ id = "fine", x = 75264, y = -4608, z = 25088, r = 1200, dy = 1200, once = true, text = "Air. Light. Dawn over the sand spit of Marinello, and both Stars of the Dioscuri in hand.", secs = 6, need = function() return CDV.Flag("fuga") end, fn = function()
         CDV.Flag("fuga_t", 0)
+        CDV.CreditsLock = true                              -- from here on no key reaches the game (no inventory)
         pcall(function() TEN.View.FadeOut(0.4) end)
-        CDV.After(210, function() CDV.Credits(1) end)
+        CDV.After(210, function()
+            CDV.CreditsOn = true                            -- the black sprite under the strings
+            pcall(function() TEN.View.FadeIn(2) end)        -- the engine's fade would black out the strings too
+            CDV.After(20, function() CDV.Credits(1) end)
+        end)
     end })
 
--- The end credits: one card after another over the black screen (strings are drawn over the fade), then the title.
+local blackSprite = nil
+CDV.Loop(function()
+    if CDV.CreditsLock then pcall(TEN.Input.ClearAllKeys) end
+    if not CDV.CreditsOn then return end
+    pcall(function()
+        if blackSprite == nil then
+            blackSprite = TEN.View.DisplaySprite(TEN.Objects.ObjID.DEFAULT_SPRITES, 0, TEN.Vec2(50, 50), 0, TEN.Vec2(100, 100), TEN.Color(0, 0, 0))
+        end
+        blackSprite:Draw(1, TEN.View.AlignMode.CENTER, TEN.View.ScaleMode.STRETCH, TEN.Effects.BlendID.OPAQUE)
+    end)
+end)
+
+-- The end credits: one card after another over a black sprite (the engine's fade hides strings too), then the title.
 -- Each card: a small line, then the names.
 local CREDITS = {
     { "A Tomb Raider adventure", "CODA DI VOLPE" },
@@ -1329,7 +1425,7 @@ CDV.Loop(function()
     end
 end)
 
-local HUNTERS = { "g0", "h1", "h2", "topo0", "topo1", "topo2", "c1", "g1", "g2", "turi", "squalo", "pip_f1", "pip_f2", "pip_f3", "pip_f4", "pip_f5", "pip_f6", "pip_f7", "pip_f8", "pip_f9", "pip_f10" }
+local HUNTERS = { "g0", "h1", "h2", "topo0", "topo1", "topo2", "c1", "g1", "g2", "turi", "squalo", "squalo2", "squalo3", "pip_f1", "pip_f2", "pip_f3", "pip_f4", "pip_f5", "pip_f6", "pip_f7", "pip_f8", "pip_f9", "pip_f10" }
 local HUNT_BATS = { ["pip_f1"] = true, ["pip_f2"] = true, ["pip_f3"] = true, ["pip_f4"] = true, ["pip_f5"] = true, ["pip_f6"] = true, ["pip_f7"] = true, ["pip_f8"] = true, ["pip_f9"] = true, ["pip_f10"] = true }
 local huntFrame, huntSaid = 0, false
 CDV.Loop(function()
