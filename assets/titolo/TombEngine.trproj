@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+	<Name>CodaDiVolpe</Name>
+	<GameVersion>TombEngine</GameVersion>
+	<LevelsPath>$(ProjectDirectory)\Levels</LevelsPath>
+	<ScriptPath>$(ProjectDirectory)\Engine\Scripts</ScriptPath>
+	<LaunchFilePath>$(ProjectDirectory)\PLAY.exe</LaunchFilePath>
+	<Levels>
+		<ProjectLevel>
+			<Name>Marinello</Name>
+			<FolderPath>$(ProjectDirectory)\Levels\Marinello</FolderPath>
+		</ProjectLevel>
+		<ProjectLevel>
+			<Name>Oliveri</Name>
+			<FolderPath>$(ProjectDirectory)\Levels\Oliveri</FolderPath>
+		</ProjectLevel>
+		<ProjectLevel>
+			<Name>Sommersa</Name>
+			<FolderPath>$(ProjectDirectory)\Levels\Sommersa</FolderPath>
+		</ProjectLevel>
+		<ProjectLevel>
+			<Name>Tindari</Name>
+			<FolderPath>$(ProjectDirectory)\Levels\Tindari</FolderPath>
+		</ProjectLevel>
+		<ProjectLevel>
+			<Name>Title</Name>
+			<FolderPath>$(ProjectDirectory)\Levels\Title</FolderPath>
+		</ProjectLevel>
+	</Levels>
+</Project>

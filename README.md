@@ -1,8 +1,50 @@
 # Tomb Raider: Coda di Volpe
 
-Avventura custom di Tomb Raider in un unico grande livello, ambientata a Oliveri e Tindari (Messina) in scala reale. Motore: **TombEngine (TEN)**, editor: Tomb Editor.
+Avventura custom di Tomb Raider in quattro livelli, ambientata a Oliveri, Marinello e Tindari (Messina). Motore: **TombEngine 2.0 (TEN)**, editor: Tomb Editor / TombIDE.
 
-Il design document completo è in [`docs/GDD.md`](docs/GDD.md).
+Ideata, scritta e diretta da **Edoardo Napoli**. Beta tester: Low, Attila.
+
+## Stato: beta 1 (16 novembre 2026)
+
+| # | Livello | File | Script |
+|---|---|---|---|
+| - | Titolo | `levels/Title.prj2` | `scripts/Levels/Title.lua` |
+| 1 | Oliveri - Via Amodeo | `levels/Oliveri.prj2` | `scripts/Levels/Oliveri.lua` |
+| 2 | Marinello - The witch of the lagoons | `levels/Marinello.prj2` | `scripts/Levels/Marinello.lua` |
+| 3 | Tindari | `levels/Tindari.prj2` | `scripts/Levels/Tindari.lua` |
+| 4 | The lost half (La metà sommersa) | `levels/Sommersa.prj2` | `scripts/Levels/Sommersa.lua` |
+
+I `.prj2` in `levels/` sono quelli da cui è stata compilata la beta (salvati da Tomb Editor il 16/11), gli script quelli in `Engine\Scripts` della stessa data.
+
+- `scripts/Gameflow.lua`: versione di sviluppo (`CDV_RELEASE = false`: fly cheat e selezione livello attivi).
+- `scripts/Gameflow_release.lua`: versione pubblicata (`CDV_RELEASE = true`: niente fly cheat, niente selezione livello).
+- `assets/wads/`: tutti i wad usati dai livelli (manca solo `TombEngine.wad2`, che arriva con TombIDE). `CdV_Turi.wad2` è il boss finale, `CdV_Mafiosi.wad2` la banda (modelli di MadDerek).
+- `assets/titolo/`: logo, schermata di caricamento, texture del livello titolo, `TombEngine.trproj`.
+- `assets/foto/oliveri/`: fotografie di Edoardo Napoli usate nel prologo (`tools/intro_video.py`).
+- `release/README.txt`: il README che accompagna il gioco.
+
+Non sono nel repository, per dimensione o perché non sono nostri: l'eseguibile e i file del motore, i livelli compilati (`.ten`), il video del prologo (`Engine/FMV/cdv_intro.mp4`, si rigenera con `tools/intro_video.py`) e le musiche di Tomb Raider II e III (Nathan McCree) in `Engine/Audio`.
+
+### Com'è fatta la release
+
+Cartella con `PLAY.exe` e `Engine/` (`Bin`, `Shaders`, `Scripts` con `Gameflow_release.lua` rinominato `Gameflow.lua`, `Data/*.ten`, `Audio`, `Fmv`, `Screens`, `Textures`), senza `Logs` e `Save`. Lo zip si scarica dalla pagina [Releases](../../releases).
+
+### Strumenti aggiunti il 15 e 16 novembre
+
+`lua_15nov.py`, `lua_16nov.py`, `lua_colonne.py`, `lua_caccia.py`, `lua_titoli_coda.py` (script dei livelli); `sommersa_finale.py`, `prj2_nopath.py`, `prj2_copia_suoni.py`, `appoggio.py`, `appoggio_fix.py` (livelli); `wad_suono.py`, `turi.py` (wad); `titolo_foto.py`, `intro_video.py` (titolo e prologo); `suoni_check.py` (controllo suoni).
+
+## Crediti
+
+- Ideazione, storia e regia: Edoardo Napoli
+- Fotografie di Oliveri, Marinello e Tindari: Edoardo Napoli
+- Beta tester: Low, Attila
+- Modelli della banda: MadDerek
+- Musiche da Tomb Raider II e III: Nathan McCree
+- TombEngine e Tomb Editor; costruzione dei livelli e script con Claude
+
+Avventura amatoriale, gratuita e non in vendita. Tomb Raider e Lara Croft appartengono ai rispettivi proprietari.
+
+Il design document è in [`docs/GDD.md`](docs/GDD.md). Quanto segue descrive la pipeline con cui è nato il primo livello dai dati reali.
 
 ## Struttura
 
