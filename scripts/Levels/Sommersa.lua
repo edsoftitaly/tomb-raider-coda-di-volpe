@@ -940,7 +940,25 @@ local function SetWater(on)
         end
         CDV.Enable("squalo")
     else
-        CDV.Disable("squalo")
+        for _, nm in ipairs({ "squalo", "squalo2", "squalo3" }) do
+            local q = CDV.M(nm)
+            if q ~= nil and q:GetValid() and q:GetHP() <= 0 then
+                -- a dead one: with the water gone it lies on the floor, not in mid-air
+                local ok, how = pcall(function()
+                    local qp = q:GetPosition()
+                    local fl = TEN.Collision.Probe(qp, q:GetRoomNumber()):GetFloorHeight()
+                    if fl ~= nil and fl > qp.y then
+                        q:SetPosition(TEN.Vec3(qp.x, fl - 100, qp.z), false)
+                        return "on the floor, y " .. fl
+                    end
+                    q:SetPosition(TEN.Vec3(qp.x, qp.y + 30000, qp.z), false)
+                    return "out of sight"
+                end)
+                CDV.Log("SHARK " .. nm .. " dead, water gone: " .. tostring(how))
+            elseif nm == "squalo" then
+                CDV.Disable("squalo")
+            end
+        end
         if CDV.Flag("leva_valve") and not CDV.Flag("valve_aperte") then
             CDV.Flag("valve_aperte", true)
             CDV.Enable("porta_valve")
@@ -1154,7 +1172,7 @@ CDV.Loop(function()
     CDV.Log("TURI dies: the scene")
     -- the camera: a sector and a half from him, on a side with a clear line, a little above, looking at him.
     -- Its stand is a shark that is not in the water yet (nothing else in a script can hold a camera).
-    local back = nil
+    local back, hold = nil, nil
     pcall(function()
         local stand = CDV.M("squalo2")
         if m == nil or not m:GetValid() or stand == nil or not stand:GetValid() or stand:GetActive() then return end
@@ -1171,6 +1189,7 @@ CDV.Loop(function()
         stand:SetPosition(spot, false)
         stand:SetRoomNumber(m:GetRoomNumber())
         stand:AttachObjCamera(0, m, 0)
+        hold = function() pcall(function() stand:AttachObjCamera(0, m, 0) end) end   -- every frame: one call moves it once
         back = function()
             pcall(TEN.View.ResetObjCamera)
             pcall(function() stand:SetPosition(home, false); stand:SetRoomNumber(homeRoom) end)
@@ -1178,7 +1197,6 @@ CDV.Loop(function()
         CDV.Log("TURI scene: camera at " .. spot.x .. " " .. spot.y .. " " .. spot.z)
     end)
     if back == nil then CDV.Flyby(2) end
-    CDV.After(180, function() if back then back() end end)
     pcall(function() TEN.Sound.PlaySound(479, m:GetPosition()) end)
     pcall(function() TEN.Effects.MakeEarthquake(24) end)
     CDV.Say("Turi 'a Vulpi goes down with the temple he came to rob.", 6)
@@ -1186,6 +1204,12 @@ CDV.Loop(function()
     local function scene()
         n = n + 1
         pcall(TEN.Input.ClearAllKeys)
+        if n < 180 then
+            if hold then hold() end
+        elseif n == 180 then
+            if back then back() end
+            CDV.Log("TURI scene: camera back to Lara")
+        end
         if n % 3 == 0 and m ~= nil and m:GetValid() then
             pcall(function()
                 local p = m:GetPosition()
