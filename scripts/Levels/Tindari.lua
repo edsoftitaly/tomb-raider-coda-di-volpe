@@ -381,13 +381,44 @@ function CDV.Tick()
             if d.text then CDV.Say(d.text, 6) end
         end
     end
+    -- A secret is a Star of the Dioscuri lying at its place ("stella_<index>", PUZZLE_ITEM16): it is found when she
+    -- picks the star up. The star goes out of the inventory at once; until then it glimmers when she is near.
+    -- In a level compiled without the stars a secret is still found by walking onto its place.
+    local stars = false
     for _, s in ipairs(secrets) do
-        if not S.secrets["s" .. s.index] and CDV.Near(s.x, s.y, s.z, s.r, 1024) then
-            S.secrets["s" .. s.index] = true
-            TEN.Flow.AddSecret(s.index)
-            CDV.Cue("segreto")
-            CDV.Say(s.text or "", 5)
-            if s.give then CDV.Give(s.give, 1) end
+        if CDV.M("stella_" .. s.index) ~= nil then stars = true end
+    end
+    local function found(s)
+        S.secrets["s" .. s.index] = true
+        TEN.Flow.AddSecret(s.index)
+        CDV.Cue("segreto")
+        CDV.Say(s.text or "", 5)
+        if s.give then CDV.Give(s.give, 1) end
+    end
+    if stars then
+        local lp = Lara:GetPosition()
+        local ok, got = pcall(TEN.Inventory.GetItemCount, ID.PUZZLE_ITEM16)
+        if ok and got ~= nil and got > 0 then
+            pcall(TEN.Inventory.TakeItem, ID.PUZZLE_ITEM16, got)
+            local best, bd = nil, 1e18
+            for _, s in ipairs(secrets) do
+                local d = (lp.x - s.x) ^ 2 + (lp.y - s.y) ^ 2 + (lp.z - s.z) ^ 2
+                if not S.secrets["s" .. s.index] and d < bd then best, bd = s, d end
+            end
+            if best ~= nil then found(best) end
+        end
+        CDV.starTick = (CDV.starTick or 0) + 1
+        for _, s in ipairs(secrets) do
+            if not S.secrets["s" .. s.index] and math.abs(lp.x - s.x) < 10240 and math.abs(lp.z - s.z) < 10240 then
+                local k = 0.6 + 0.4 * math.sin(CDV.starTick / 9)
+                pcall(function()
+                    TEN.Effects.EmitLight(TEN.Vec3(s.x, s.y - 160, s.z), TEN.Color(math.floor(210 * k), math.floor(225 * k), math.floor(255 * k)), 5, false, "cdv_stella_" .. s.index)
+                end)
+            end
+        end
+    else
+        for _, s in ipairs(secrets) do
+            if not S.secrets["s" .. s.index] and CDV.Near(s.x, s.y, s.z, s.r, 1024) then found(s) end
         end
     end
     for _, f in ipairs(loops) do f() end
@@ -680,7 +711,7 @@ CDV.Zone({ id = "mosaico_indizio", x = 83456, y = -24576, z = 66048, r = 1300, d
 
 CDV.Zone({ id = "peristilio", x = 83456, y = -24576, z = 74240, r = 2600, dy = 1200, once = true, text = "", secs = 6 })
 
-CDV.Secret({ index = 1, x = 76288, y = -24576, z = 54784, r = 900, give = ID.SMALLMEDI_ITEM, text = "" })
+CDV.Secret({ index = 1, x = 76728, y = -24576, z = 54784, r = 900, give = ID.SMALLMEDI_ITEM, text = "" })
 
 CDV.StartList = CDV.StartList or {}
 CDV.StartList[#CDV.StartList + 1] = function()

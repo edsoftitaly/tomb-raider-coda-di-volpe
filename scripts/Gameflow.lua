@@ -9,7 +9,7 @@ local CDV_LOGO = nil          -- es. "FMV\\cdv_logo.mp4": video all'avvio del gi
 
 Flow.SetIntroImagePath("Screens\\intro.jpg")
 if CDV_LOGO then Flow.SetIntroVideoPath(CDV_LOGO) end
-Flow.SetTotalSecretCount(10)
+Flow.SetTotalSecretCount(12)
 Flow.EnablePointFilter(false)
 Flow.EnableLoadSave(true)
 Flow.EnableFlyCheat(not CDV_RELEASE)
@@ -31,6 +31,7 @@ TEN.Flow.SetStrings({
     cdv_conchiglia = { "Singing Shell" },
     cdv_sigillo = { "Seal of the Tonnara" },
     cdv_astro_castore = { "Star of Castor" },
+    cdv_stella = { "Star of the Dioscuri" },
     cdv_astro_polluce = { "Star of Pollux" },
     cdv_manovella = { "Crank" },
     cdv_fusibile = { "Fuse" },
@@ -55,6 +56,7 @@ local function CdvObjects()
         TEN.Flow.InventoryItem("cdv_conchiglia", ID.PUZZLE_ITEM5, 0, 1.80, Rot(-30, 0, 0), Axis.Y, -1, Act.USE),
         TEN.Flow.InventoryItem("cdv_sigillo", ID.PUZZLE_ITEM6, 0, 2.60, Rot(-70, 0, 0), Axis.Y, -1, Act.USE),
         TEN.Flow.InventoryItem("cdv_astro_castore", ID.PUZZLE_ITEM7, 0, 1.80, Rot(-70, 0, 0), Axis.Y, -1, Act.USE),
+        TEN.Flow.InventoryItem("cdv_stella", ID.PUZZLE_ITEM16, 0, 1.80, Rot(-70, 0, 0), Axis.Y, -1, Act.USE),
         TEN.Flow.InventoryItem("cdv_astro_polluce", ID.PUZZLE_ITEM8, 0, 1.80, Rot(-70, 0, 0), Axis.Y, -1, Act.USE),
         TEN.Flow.InventoryItem("cdv_manovella", ID.PUZZLE_ITEM9, 0, 2.20, Rot(-70, 0, 0), Axis.Y, -1, Act.USE),
         TEN.Flow.InventoryItem("cdv_fusibile", ID.PUZZLE_ITEM12, 0, 2.60, Rot(-60, 0, 0), Axis.Y, -1, Act.USE),
