@@ -1099,6 +1099,7 @@ end)
 -- cella, the controls taken away, bubbles.
 local balls, flameT, flameN = {}, 0, 0
 CDV.Loop(function()
+    if #balls > 0 and (CDV.Flag("turi_morto") or CDV.Flag("acqua")) then balls = {} end       -- he is gone: so is his fire
     for i = #balls, 1, -1 do
         local b = balls[i]
         b.t = b.t + 1
@@ -1113,7 +1114,7 @@ CDV.Loop(function()
             for j = 1, 5 do
                 pcall(function() TEN.Effects.EmitFire(TEN.Vec3(x + math.random(-150, 150), y - math.random(0, 200), z + math.random(-150, 150)), 3) end)
             end
-            pcall(function() TEN.Sound.PlaySound(368, TEN.Vec3(math.floor(x), math.floor(y), math.floor(z))) end)
+            CDV.Sfx(105)                                         -- it bursts
             local lp = Lara:GetPosition()
             if (lp.x - x) ^ 2 + (lp.z - z) ^ 2 < 480 ^ 2 and math.abs((lp.y - 400) - y) < 800 and Lara:GetHP() > 0 then
                 Lara:SetHP(math.max(0, Lara:GetHP() - 150))
@@ -1138,8 +1139,8 @@ CDV.Loop(function()
             local d = math.sqrt(flat * flat + (tp.y - lp.y) ^ 2)
             balls[#balls + 1] = { x0 = tp.x, y0 = tp.y - 700, z0 = tp.z, x1 = lp.x, y1 = lp.y - 400, z1 = lp.z, t = 0, n = math.max(14, math.floor(d / 120)) }
             flameN = flameN + 1
-            pcall(function() TEN.Sound.PlaySound(563, tp) end)                                   -- the roar of the flame
-            pcall(function() TEN.Sound.PlaySound(({ 737, 477, 496 })[flameN % 3 + 1], tp) end)   -- and his shout
+            CDV.Sfx(563)                                         -- the roar of the flame
+            CDV.Sfx(({ 737, 477, 496 })[flameN % 3 + 1])         -- and his shout
             if not CDV.Flag("turi_fuoco") then CDV.Flag("turi_fuoco", true); CDV.Log("FLAME first, " .. math.floor(d / 1024) .. " sectors") end
         end
     end
