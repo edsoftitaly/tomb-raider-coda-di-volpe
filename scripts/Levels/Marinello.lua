@@ -1085,7 +1085,7 @@ CDV.Spirits({ id = "maga", names = { "maga", "maga2", "maga3", "maga4", "maga5" 
         CDV.Say("The last spirit is gone. A way out opens in the far wall.", 8)
     end })
 
-CDV.Zone({ id = "masso_g", x = 19968, y = 1024, z = 36352, r = 900, dy = 1200, once = true, text = "The roof is giving way. Into the niches!", secs = 6, fn = function()
+CDV.Zone({ id = "masso_g", x = 19968, y = 1024, z = 41472, r = 700, dy = 1200, once = true, text = "The roof is giving way. Into the niches!", secs = 6, fn = function()
         -- three boulders, one per lane: on flat ground the engine slows a ball down by itself and lets it
         -- drift off a step, so every frame each one gets its speed back and no sideways speed
         for i, name in ipairs({ "masso_g", "masso_g2", "masso_g3" }) do
@@ -1145,6 +1145,50 @@ CDV.Loop(function()
 end)
 
 -- Every enemy that is on its feet comes for Lara, however far away she is (tools/lua_caccia.py).
+-- Enemies come from behind. One that walks is not switched on while the place where it stands is on screen
+-- (in front of the camera, within the fog, nothing in between): CDV.Enable waits for the camera to look elsewhere,
+-- eight seconds at most. The ones waiting are in LevelVars, so a saved game does not lose them.
+local WALKERS = { ["c1"] = true, ["c2"] = true, ["t1"] = true, ["t2"] = true, ["t3"] = true, ["t4"] = true, ["t5"] = true, ["t6"] = true, ["t_chiave"] = true }
+local SIGHT = 30 * 1024
+local EnableNow = CDV.Enable
+local function OnScreen(m)
+    local ok, seen = pcall(function()
+        local cp, ct, p = TEN.View.GetCameraPosition(), TEN.View.GetCameraTarget(), m:GetPosition()
+        local fx, fz, dx, dz = ct.x - cp.x, ct.z - cp.z, p.x - cp.x, p.z - cp.z
+        local d, fl = math.sqrt(dx * dx + dz * dz), math.sqrt(fx * fx + fz * fz)
+        if d > SIGHT then return false end
+        if d > 1 and fl > 1 and (fx * dx + fz * dz) / (fl * d) < 0.42 then return false end      -- more than 65 degrees off
+        local ok2, los = pcall(function()
+            return TEN.Util.HasLineOfSight(TEN.View.GetCameraRoom():GetRoomNumber(), cp, TEN.Vec3(p.x, p.y - 700, p.z))
+        end)
+        if ok2 and los == false then return false end
+        return true
+    end)
+    return ok and seen
+end
+function CDV.Enable(name)
+    local m = CDV.M(name)
+    if not WALKERS[name] or m == nil or not m:GetValid() or m:GetActive() then return EnableNow(name) end
+    if LevelVars.CDV_wait == nil then LevelVars.CDV_wait = {} end
+    if LevelVars.CDV_wait[name] == nil then LevelVars.CDV_wait[name] = 0 end
+end
+CDV.Loop(function()
+    local w = LevelVars.CDV_wait
+    if w == nil then return end
+    for name, t in pairs(w) do
+        local m = CDV.M(name)
+        if m == nil or not m:GetValid() then
+            w[name] = nil
+        elseif t >= 240 or not OnScreen(m) then
+            w[name] = nil
+            EnableNow(name)
+            CDV.Log("ENEMY " .. name .. (t >= 240 and " in after 8 s on screen" or " in, out of sight"))
+        else
+            w[name] = t + 1
+        end
+    end
+end)
+
 local HUNTERS = { "t5", "c2", "t6", "t_chiave", "t3", "t4", "t1", "c1", "t2", "pip_g1", "pip_g2", "pip_c0", "pip_c1", "pip_c2", "pip_c3", "bestia_acqua1", "bestia_acqua2", "bestia_acqua3", "bestia_acqua4", "bestia_acqua5" }
 local HUNT_BATS = { ["pip_g1"] = true, ["pip_g2"] = true, ["pip_c0"] = true, ["pip_c1"] = true, ["pip_c2"] = true, ["pip_c3"] = true }
 local huntFrame, huntSaid = 0, false

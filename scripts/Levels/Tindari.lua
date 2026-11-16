@@ -684,12 +684,13 @@ CDV.Secret({ index = 1, x = 76288, y = -24576, z = 54784, r = 900, give = ID.SMA
 
 CDV.StartList = CDV.StartList or {}
 CDV.StartList[#CDV.StartList + 1] = function()
-    for _, k in ipairs({ "77_79", "78_79", "79_79", "80_79", "82_79", "83_79", "84_79", "85_79", "77_80", "78_80", "79_80", "80_80", "84_80", "85_80", "77_81", "78_81", "79_81", "80_81", "81_81", "82_81", "84_81", "85_81", "77_82", "78_82", "84_82", "85_82", "77_83", "78_83", "82_83", "83_83", "84_83", "85_83" }) do CDV.Enable("punte_" .. k) end
+    for _, k in ipairs({ "77_79", "78_79", "80_79", "82_79", "84_79", "85_79", "77_80", "78_80", "79_80", "80_80", "81_80", "82_80", "83_80", "84_80", "85_80", "77_81", "78_81", "80_81", "82_81", "84_81", "85_81", "77_82", "78_82", "79_82", "80_82", "81_82", "82_82", "83_82", "84_82", "85_82", "77_83", "78_83", "80_83", "82_83", "84_83", "85_83" }) do CDV.Enable("punte_" .. k) end
+    for _, k in ipairs({ "99_57", "99_58", "99_59", "100_57", "100_58", "100_59", "101_57", "101_58", "101_59", "102_57", "102_58", "102_59", "103_57", "103_58", "103_59" }) do CDV.Enable("punte_cripto_" .. k) end
 end
 CDV.Start = function() for _, f in ipairs(CDV.StartList) do f() end end
 
 local tessere = {}
-local WRONG = { ["77_79"] = true, ["78_79"] = true, ["79_79"] = true, ["80_79"] = true, ["82_79"] = true, ["83_79"] = true, ["84_79"] = true, ["85_79"] = true, ["77_80"] = true, ["78_80"] = true, ["79_80"] = true, ["80_80"] = true, ["84_80"] = true, ["85_80"] = true, ["77_81"] = true, ["78_81"] = true, ["79_81"] = true, ["80_81"] = true, ["81_81"] = true, ["82_81"] = true, ["84_81"] = true, ["85_81"] = true, ["77_82"] = true, ["78_82"] = true, ["84_82"] = true, ["85_82"] = true, ["77_83"] = true, ["78_83"] = true, ["82_83"] = true, ["83_83"] = true, ["84_83"] = true, ["85_83"] = true }
+local WRONG = { ["77_79"] = true, ["78_79"] = true, ["80_79"] = true, ["82_79"] = true, ["84_79"] = true, ["85_79"] = true, ["77_80"] = true, ["78_80"] = true, ["79_80"] = true, ["80_80"] = true, ["81_80"] = true, ["82_80"] = true, ["83_80"] = true, ["84_80"] = true, ["85_80"] = true, ["77_81"] = true, ["78_81"] = true, ["80_81"] = true, ["82_81"] = true, ["84_81"] = true, ["85_81"] = true, ["77_82"] = true, ["78_82"] = true, ["79_82"] = true, ["80_82"] = true, ["81_82"] = true, ["82_82"] = true, ["83_82"] = true, ["84_82"] = true, ["85_82"] = true, ["77_83"] = true, ["78_83"] = true, ["80_83"] = true, ["82_83"] = true, ["84_83"] = true, ["85_83"] = true }
 CDV.Loop(function()
     local p = Lara:GetPosition()
     local sx, sz = math.floor(p.x / 1024), math.floor(p.z / 1024)
@@ -709,7 +710,7 @@ CDV.Loop(function()
         local m = CDV.M("tess_" .. key)
         if m == nil or not m:GetValid() then
             tessere[key] = nil
-        elseif t < 14 then                                           -- it shakes under her feet
+        elseif t < 4 then                                            -- it shakes under her feet, and is gone
             tessere[key] = t + 1
             pcall(function() m:SetRotation(TEN.Rotation(math.random(-3, 3), 0, math.random(-3, 3))) end)
         else                                                         -- it breaks: the floor is gone
@@ -724,6 +725,17 @@ CDV.Loop(function()
     if inside and p.y > (-22528) - 96 and Lara:GetHP() > 0 then
         local n = (CDV.Flag("fossa") or 0) + 1
         CDV.Flag("fossa", n)
+        if n > 45 then Lara:SetHP(0) end
+    end
+end)
+
+-- the pit of the cryptoporticus: the spikes kill by themselves; should they ever fail, nobody walks out of it
+CDV.Loop(function()
+    local p = Lara:GetPosition()
+    local sx, sz = math.floor(p.x / 1024), math.floor(p.z / 1024)
+    if sx >= 99 and sx <= 103 and sz >= 57 and sz <= 59 and p.y > -18944 - 96 and Lara:GetHP() > 0 then
+        local n = (CDV.Flag("fossa_cripto") or 0) + 1
+        CDV.Flag("fossa_cripto", n)
         if n > 45 then Lara:SetHP(0) end
     end
 end)
@@ -748,12 +760,12 @@ CDV.Zone({ id = "grata_chiusa", x = 108032, y = -20992, z = 59904, r = 900, dy =
 
 CDV.Zone({ id = "basilica", x = 101888, y = -24576, z = 59904, r = 1800, dy = 1200, once = true, text = "The basilica. In the floor, a stair leads down into the dark.", secs = 8 })
 
-CDV.Zone({ id = "cripto", x = 101888, y = -20992, z = 59904, r = 1300, dy = 700, once = true, text = "The floor has fallen in, but a rope hangs from the vault.", secs = 8, fn = function()
+CDV.Zone({ id = "cripto", x = 101888, y = -20992, z = 59904, r = 1300, dy = 700, once = true, text = "The floor has fallen in, onto iron spikes. A rope hangs from the vault.", secs = 8, fn = function()
         CDV.Enable("pip_u1")
         CDV.Enable("pip_u2")
     end })
 
-CDV.Secret({ index = 2, x = 105984, y = -18944, z = 58880, r = 900, give = ID.SHOTGUN_AMMO1_ITEM, text = "" })
+CDV.Secret({ index = 2, x = 107008, y = -20992, z = 60928, r = 600, give = ID.SHOTGUN_AMMO1_ITEM, text = "" })
 
 CDV.Zone({ id = "terrazza", x = 119296, y = -24576, z = 59904, r = 8000, dy = 1800, once = true, text = "", secs = 8, fn = function()
         CDV.Enable("t7")
@@ -867,6 +879,50 @@ CDV.Zone({ id = "pozzo", x = 127488, y = -21504, z = 65024, r = 900, dy = 900, o
     end })
 
 -- Every enemy that is on its feet comes for Lara, however far away she is (tools/lua_caccia.py).
+-- Enemies come from behind. One that walks is not switched on while the place where it stands is on screen
+-- (in front of the camera, within the fog, nothing in between): CDV.Enable waits for the camera to look elsewhere,
+-- eight seconds at most. The ones waiting are in LevelVars, so a saved game does not lose them.
+local WALKERS = { ["b1"] = true, ["b2"] = true, ["b3"] = true, ["c1"] = true, ["c2"] = true, ["c3"] = true, ["t1"] = true, ["t2"] = true, ["t3"] = true, ["t4"] = true, ["t5"] = true, ["t6"] = true, ["t7"] = true, ["t8"] = true }
+local SIGHT = 60 * 1024
+local EnableNow = CDV.Enable
+local function OnScreen(m)
+    local ok, seen = pcall(function()
+        local cp, ct, p = TEN.View.GetCameraPosition(), TEN.View.GetCameraTarget(), m:GetPosition()
+        local fx, fz, dx, dz = ct.x - cp.x, ct.z - cp.z, p.x - cp.x, p.z - cp.z
+        local d, fl = math.sqrt(dx * dx + dz * dz), math.sqrt(fx * fx + fz * fz)
+        if d > SIGHT then return false end
+        if d > 1 and fl > 1 and (fx * dx + fz * dz) / (fl * d) < 0.42 then return false end      -- more than 65 degrees off
+        local ok2, los = pcall(function()
+            return TEN.Util.HasLineOfSight(TEN.View.GetCameraRoom():GetRoomNumber(), cp, TEN.Vec3(p.x, p.y - 700, p.z))
+        end)
+        if ok2 and los == false then return false end
+        return true
+    end)
+    return ok and seen
+end
+function CDV.Enable(name)
+    local m = CDV.M(name)
+    if not WALKERS[name] or m == nil or not m:GetValid() or m:GetActive() then return EnableNow(name) end
+    if LevelVars.CDV_wait == nil then LevelVars.CDV_wait = {} end
+    if LevelVars.CDV_wait[name] == nil then LevelVars.CDV_wait[name] = 0 end
+end
+CDV.Loop(function()
+    local w = LevelVars.CDV_wait
+    if w == nil then return end
+    for name, t in pairs(w) do
+        local m = CDV.M(name)
+        if m == nil or not m:GetValid() then
+            w[name] = nil
+        elseif t >= 240 or not OnScreen(m) then
+            w[name] = nil
+            EnableNow(name)
+            CDV.Log("ENEMY " .. name .. (t >= 240 and " in after 8 s on screen" or " in, out of sight"))
+        else
+            w[name] = t + 1
+        end
+    end
+end)
+
 local HUNTERS = { "t4", "t5", "c3", "t1", "t2", "c1", "t6", "t3", "t7", "c2", "t8", "pip_u1", "pip_u2", "pip_k0", "pip_k1", "pip_k2", "pip_e0", "pip_e1", "pip_e2", "pip_e3", "pip_e4", "pip_e5", "b1", "b2", "b3" }
 local HUNT_BATS = { ["pip_u1"] = true, ["pip_u2"] = true, ["pip_k0"] = true, ["pip_k1"] = true, ["pip_k2"] = true, ["pip_e0"] = true, ["pip_e1"] = true, ["pip_e2"] = true, ["pip_e3"] = true, ["pip_e4"] = true, ["pip_e5"] = true }
 local huntFrame, huntSaid = 0, false
