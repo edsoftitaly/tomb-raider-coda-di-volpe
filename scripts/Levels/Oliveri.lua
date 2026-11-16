@@ -984,6 +984,29 @@ CDV.Loop(function() CDV.KeyPromptAt(28160, -1280, 28160, 900, ID.PUZZLE_ITEM12, 
 
 CDV.Zone({ id = "quadro_vuoto", x = 28160, y = -1280, z = 28160, r = 800, dy = 600, once = false, text = "The fuse box: a fuse has blown. There are spares in the cellar.", secs = 5, need = function() return not CDV.Flag("corrente") and not CDV.Has(ID.PUZZLE_ITEM12) end })
 
+-- Every enemy that is on its feet comes for Lara, however far away she is (tools/lua_caccia.py).
+local HUNTERS = { "cane1", "cane2", "palo", "ladro_chiave", "ladro_terra", "ladro_primo", "ladro_ripostiglio" }
+local HUNT_BATS = {  }
+local huntFrame, huntSaid = 0, false
+CDV.Loop(function()
+    huntFrame = huntFrame + 1
+    if huntFrame % 10 ~= 0 or Lara:GetHP() <= 0 then return end
+    for _, name in ipairs(HUNTERS) do
+        local m = CDV.M(name)
+        if m ~= nil and m:GetValid() and m:GetActive() and m:GetHP() > 0 then
+            local ok = pcall(function()
+                local c = TEN.Objects.Creature(m)
+                c:SetMood(TEN.Objects.MoodType.ATTACK)
+                if HUNT_BATS[name] then c:SetHurtByPlayer(true) end
+            end)
+            if not huntSaid then
+                huntSaid = true
+                CDV.Log(ok and ("HUNT on, first " .. name) or "HUNT not available in this engine build")
+            end
+        end
+    end
+end)
+
 if CDV_TEST ~= nil then CDV_TEST(CDV, zones, uses) end
 
 -- Playtest hook: Engine\Scripts\CdvTest.lua -> return { Oliveri = { tp = {x, y, z, "ROOM", yaw}, give = {"KEY_ITEM1"} } }
