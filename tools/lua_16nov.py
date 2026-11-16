@@ -342,7 +342,9 @@ def marinello(t):
 ''')
     a = '    scala = "tr3_08_long_way_up",'
     one(t, a)
-    t = t.replace(a, '    -- dopo_massi = "...",                       -- when the three boulders have come to rest (track still to choose)\n' + a)
+    # Ed, 16/11 10:33: "Long Way Up" belongs after the boulders, not on the ladder
+    t = t.replace(a, '    dopo_massi = "tr3_08_long_way_up",           -- when the three boulders have come to rest\n'
+                  '    -- scala: no cue of its own any more, the music of the way up starts after the boulders (Ed, 16/11)')
     return t
 
 
