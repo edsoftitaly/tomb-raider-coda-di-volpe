@@ -1170,14 +1170,14 @@ CDV.Loop(function()
     if not dead then return end
     CDV.Flag("turi_scena", true)
     CDV.Log("TURI dies: the scene")
-    -- the camera: a sector and a half from him, on a side with a clear line, a little above, looking at him.
-    -- Its stand is a shark that is not in the water yet (nothing else in a script can hold a camera).
+    -- the camera: the level's fixed camera "cam_turi", put a sector and a half from him on a side with a clear line,
+    -- a little above, in his room, and played on him every frame of the scene.
     local back, hold = nil, nil
-    pcall(function()
-        local stand = CDV.M("squalo2")
-        if m == nil or not m:GetValid() or stand == nil or not stand:GetValid() or stand:GetActive() then return end
+    local okc, why = pcall(function()
+        if m == nil or not m:GetValid() then return "no Turi" end
+        local cam = TEN.Objects.GetCameraByName("cam_turi")
+        if cam == nil then return "no camera cam_turi in this build of the level" end
         local p = m:GetPosition()
-        local home, homeRoom = stand:GetPosition(), stand:GetRoomNumber()
         local spot = nil
         for k = 0, 7 do
             local a = k * math.pi / 4
@@ -1185,19 +1185,17 @@ CDV.Loop(function()
             local ok, los = pcall(function() return TEN.Util.HasLineOfSight(m:GetRoomNumber(), TEN.Vec3(p.x, p.y - 600, p.z), c) end)
             if ok and los == true then spot = c; break end
         end
-        if spot == nil then return end
-        stand:SetPosition(spot, false)
-        stand:SetRoomNumber(m:GetRoomNumber())
-        stand:AttachObjCamera(0, m, 0)
-        hold = function() pcall(function() stand:AttachObjCamera(0, m, 0) end) end   -- every frame: one call moves it once
-        back = function()
-            pcall(TEN.View.ResetObjCamera)
-            pcall(function() stand:SetPosition(home, false); stand:SetRoomNumber(homeRoom) end)
-        end
-        CDV.Log("TURI scene: camera at " .. spot.x .. " " .. spot.y .. " " .. spot.z)
+        if spot == nil then spot = TEN.Vec3(p.x + 300, p.y - 1400, p.z + 300) end
+        cam:SetPosition(spot)
+        cam:SetRoomNumber(m:GetRoomNumber())
+        hold = function() pcall(function() cam:Play(m) end) end
+        hold()
+        return "camera at " .. spot.x .. " " .. spot.y .. " " .. spot.z .. " room " .. m:GetRoomNumber()
     end)
-    if back == nil then CDV.Flyby(2) end
-    pcall(function() TEN.Sound.PlaySound(479, m:GetPosition()) end)
+    CDV.Log("TURI scene: " .. tostring(why))
+    CDV.SceneOn = true
+    CDV.Sfx(479)                                             -- his death cry, at Lara: at his place it is too far to hear
+    CDV.After(8, function() CDV.Sfx(482) end)
     pcall(function() TEN.Effects.MakeEarthquake(24) end)
     CDV.Say("Turi 'a Vulpi goes down with the temple he came to rob.", 6)
     local n = 0
@@ -1207,7 +1205,7 @@ CDV.Loop(function()
         if n < 180 then
             if hold then hold() end
         elseif n == 180 then
-            if back then back() end
+            CDV.SceneOn = false
             CDV.Log("TURI scene: camera back to Lara")
         end
         if n % 3 == 0 and m ~= nil and m:GetValid() then
@@ -1223,7 +1221,7 @@ end)
 
 CDV.Drop({ id = "polluce", enemy = "turi", item = ID.PUZZLE_ITEM8, text = "The Star of Pollux floats up by itself." })
 
-CDV.Zone({ id = "saldo", x = 48640, y = 0, z = 28160, r = 1200, dy = 500, once = true, text = "The Star of Castor has fused with the altar. The other socket is still empty.", secs = 6, need = function() return CDV.Flag("acqua") == true and CDV.Has(ID.PUZZLE_ITEM8) end })
+CDV.Zone({ id = "saldo", x = 48640, y = 0, z = 28160, r = 1200, dy = 500, once = true, text = "The Star of Castor has fused with the altar. The other socket is still empty.", secs = 6, need = function() return CDV.Flag("acqua") == true and CDV.Has(ID.PUZZLE_ITEM8) and not CDV.SceneOn end })
 
 -- The Star of Pollux in the second socket: nothing happens until Lara's hand comes away. Then the vault begins to
 -- give way and the spirits of the twins come, one at a time; the door of the way out opens when the last is gone.
@@ -1313,11 +1311,11 @@ CDV.Zone({ id = "masso_fuga", x = 66048, y = -3072, z = 25088, r = 900, dy = 900
 CDV.Zone({ id = "fine", x = 75264, y = -4608, z = 25088, r = 1200, dy = 1200, once = true, text = "Air. Light. Dawn over the sand spit of Marinello, and both Stars of the Dioscuri in hand.", secs = 6, need = function() return CDV.Flag("fuga") end, fn = function()
         CDV.Flag("fuga_t", 0)
         CDV.CreditsLock = true                              -- from here on no key reaches the game (no inventory)
-        pcall(function() TEN.View.FadeOut(0.4) end)
-        CDV.After(210, function()
+        pcall(function() TEN.View.FadeOut(1.5) end)
+        CDV.After(28, function()
             CDV.CreditsOn = true                            -- the black sprite under the strings
             pcall(function() TEN.View.FadeIn(2) end)        -- the engine's fade would black out the strings too
-            CDV.After(20, function() CDV.Credits(1) end)
+            CDV.After(30, function() CDV.Credits(1) end)
         end)
     end })
 
@@ -1331,6 +1329,7 @@ CDV.Loop(function()
         end
         blackSprite:Draw(1, TEN.View.AlignMode.CENTER, TEN.View.ScaleMode.STRETCH, TEN.Effects.BlendID.OPAQUE)
     end)
+    if not CDV.CreditsSaid then CDV.CreditsSaid = true; CDV.Log("CREDITS black screen on, sprite " .. tostring(blackSprite ~= nil)) end
 end)
 
 -- The end credits: one card after another over a black sprite (the engine's fade hides strings too), then the title.
