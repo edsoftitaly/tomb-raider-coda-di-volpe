@@ -1249,6 +1249,73 @@ CDV.Loop(function()
     end
 end)
 
+-- The hunt goes on wherever she goes. Lara's trail: where she stood on solid ground, once a second. A walker that is
+-- awake and has not come closer for four seconds is put on the trail behind her, out of sight (tools/lua_inseguimento.py).
+local MELEE = {  }
+local trail, trailFrame, stuck = {}, 0, {}
+local function PointOnScreen(p)
+    local ok, seen = pcall(function()
+        local cp, ct = TEN.View.GetCameraPosition(), TEN.View.GetCameraTarget()
+        local fx, fz, dx, dz = ct.x - cp.x, ct.z - cp.z, p.x - cp.x, p.z - cp.z
+        local d, fl = math.sqrt(dx * dx + dz * dz), math.sqrt(fx * fx + fz * fz)
+        if d > SIGHT then return false end
+        if d > 1 and fl > 1 and (fx * dx + fz * dz) / (fl * d) < 0.42 then return false end
+        local ok2, los = pcall(function()
+            return TEN.Util.HasLineOfSight(TEN.View.GetCameraRoom():GetRoomNumber(), cp, TEN.Vec3(p.x, p.y - 700, p.z))
+        end)
+        if ok2 and los == false then return false end
+        return true
+    end)
+    return ok and seen
+end
+CDV.Loop(function()
+    trailFrame = trailFrame + 1
+    if trailFrame % 30 ~= 0 or Lara:GetHP() <= 0 then return end
+    local lp = Lara:GetPosition()
+    local st = Lara:GetState()
+    if st == 0 or st == 1 or st == 2 then
+        trail[#trail + 1] = { x = lp.x, y = lp.y, z = lp.z, room = Lara:GetRoomNumber() }
+        if #trail > 40 then table.remove(trail, 1) end
+    end
+    for name, _ in pairs(WALKERS) do
+        local m = CDV.M(name)
+        if m ~= nil and m:GetValid() and m:GetActive() and m:GetHP() > 0 then
+            local p = m:GetPosition()
+            local d = math.sqrt((p.x - lp.x) ^ 2 + (p.z - lp.z) ^ 2) + math.abs(p.y - lp.y)
+            local s = stuck[name] or { d = d, n = 0 }
+            stuck[name] = s
+            if d > 5 * 1024 and d > s.d - 256 then s.n = s.n + 1 else s.n = 0 end
+            s.d = d
+            if s.n >= 4 and not PointOnScreen(p) then
+                local aiming = false
+                if not MELEE[name] and d < 8 * 1024 then
+                    pcall(function()
+                        aiming = TEN.Util.HasLineOfSight(m:GetRoomNumber(), TEN.Vec3(p.x, p.y - 700, p.z), TEN.Vec3(lp.x, lp.y - 700, lp.z)) == true
+                    end)
+                end
+                if not aiming then
+                    for i = #trail - 3, 1, -1 do                       -- the newest point at least three seconds old
+                        local c = trail[i]
+                        local cd = math.sqrt((c.x - lp.x) ^ 2 + (c.z - lp.z) ^ 2) + math.abs(c.y - lp.y)
+                        if cd >= 3 * 1024 and cd < d - 1024 and not PointOnScreen(c) then
+                            local ok = pcall(function()
+                                m:SetPosition(TEN.Vec3(c.x, c.y, c.z), false)
+                                m:SetRoomNumber(c.room)
+                                m:SetRotation(TEN.Rotation(0, math.deg(math.atan(lp.x - c.x, lp.z - c.z)), 0))
+                            end)
+                            CDV.Log("HUNT " .. name .. (ok and " put on her trail, " or " could not be moved, ") .. math.floor(cd / 1024) .. " sectors behind")
+                            s.n, s.d = 0, cd
+                            break
+                        end
+                    end
+                end
+            end
+        else
+            stuck[name] = nil
+        end
+    end
+end)
+
 local HUNTERS = { "g0", "h1", "h2", "topo0", "topo1", "topo2", "c1", "g1", "g2", "turi", "squalo", "pip_f1", "pip_f2", "pip_f3", "pip_f4", "pip_f5", "pip_f6", "pip_f7", "pip_f8", "pip_f9", "pip_f10" }
 local HUNT_BATS = { ["pip_f1"] = true, ["pip_f2"] = true, ["pip_f3"] = true, ["pip_f4"] = true, ["pip_f5"] = true, ["pip_f6"] = true, ["pip_f7"] = true, ["pip_f8"] = true, ["pip_f9"] = true, ["pip_f10"] = true }
 local huntFrame, huntSaid = 0, false
