@@ -1134,7 +1134,7 @@ local CREDITS = {
     { "A Tomb Raider adventure", "CODA DI VOLPE" },
     { "Conceived, written and directed by", "EDOARDO NAPOLI" },
     { "Photographs of Oliveri, Marinello and Tindari", "EDOARDO NAPOLI" },
-    { "Beta testers", "LOW", "ATTILA" },
+    { "Beta testers", "DARIO", "LOW", "ATTILA", "MARCO", "ANTONIO" },
     { "Models of the gang", "MADDEREK" },
     { "Music from Tomb Raider II and III", "NATHAN McCREE" },
     { "Made with TombEngine and Tomb Editor", "Level building and scripting with CLAUDE" },

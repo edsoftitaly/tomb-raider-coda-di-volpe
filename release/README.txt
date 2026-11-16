@@ -14,7 +14,7 @@ LEVELS
 CREDITS
 Conceived, written and directed by Edoardo Napoli
 Photographs of Oliveri, Marinello and Tindari: Edoardo Napoli
-Beta testers: Low, Attila
+Beta testers: Dario, Low, Attila, Marco, Antonio
 Models of the gang: MadDerek
 Music from Tomb Raider II and III: Nathan McCree
 Made with TombEngine and Tomb Editor. Level building and scripting with Claude.

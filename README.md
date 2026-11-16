@@ -2,7 +2,7 @@
 
 Avventura custom di Tomb Raider in quattro livelli, ambientata a Oliveri, Marinello e Tindari (Messina). Motore: **TombEngine 2.0 (TEN)**, editor: Tomb Editor / TombIDE.
 
-Ideata, scritta e diretta da **Edoardo Napoli**. Beta tester: Low, Attila, Marco, Dario e Antonio.
+Ideata, scritta e diretta da **Edoardo Napoli**. Beta tester: Dario, Low, Attila, Marco e Antonio.
 
 ## Stato: beta 1 (16 novembre 2026)
 
@@ -37,7 +37,7 @@ Cartella con `PLAY.exe` e `Engine/` (`Bin`, `Shaders`, `Scripts` con `Gameflow_r
 
 - Ideazione, storia e regia: Edoardo Napoli
 - Fotografie di Oliveri, Marinello e Tindari: Edoardo Napoli
-- Beta tester: Low, Attila, Marco, Dario e Antonio.
+- Beta tester: Dario, Low, Attila, Marco e Antonio.
 - Modelli della banda: MadDerek
 - Musiche da Tomb Raider II e III: Nathan McCree
 - TombEngine e Tomb Editor; costruzione dei livelli e script con Claude

@@ -12,7 +12,7 @@ Download the zip below, unpack it anywhere and start `PLAY.exe` (Windows 10/11, 
 ## Credits
 - Conceived, written and directed by **Edoardo Napoli**
 - Photographs of Oliveri, Marinello and Tindari: Edoardo Napoli
-- Beta testers: Low, Attila
+- Beta testers: Dario, Low, Attila, Marco, Antonio
 - Models of the gang: MadDerek
 - Music from Tomb Raider II and III: Nathan McCree
 - Made with TombEngine and Tomb Editor; level building and scripting with Claude
