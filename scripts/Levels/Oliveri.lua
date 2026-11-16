@@ -733,11 +733,25 @@ CDV.KickDoor("porta_galleria_cameretta1")
 CDV.KickDoor("porta_galleria_cameretta2")
 
 CDV.StartList = CDV.StartList or {}
+-- What opens the level waits for the prologue video to be over: started with it, the cue played under its music.
+function CDV.AfterVideo(fn)
+    local n = 0
+    local function wait()
+        n = n + 1
+        local playing = false
+        pcall(function() playing = TEN.View.IsVideoPlaying() end)
+        if n < 15 or (playing and n < 30 * 150) then CDV.After(1, wait); return end
+        fn()
+    end
+    CDV.After(1, wait)
+end
 CDV.StartList[#CDV.StartList + 1] = function()
-    CDV.Say("Oliveri, the dead of night. The power is out, and there are noises downstairs: someone has broken in.", 7)
+    CDV.AfterVideo(function()
+        CDV.Cue("inizio")
+        CDV.Say("Oliveri, the dead of night. The power is out, and there are noises downstairs: someone has broken in.", 7)
+    end)
 end
 CDV.StartList[#CDV.StartList + 1] = function() CDV.HideModel("blocco_cancello") end
-CDV.StartList[#CDV.StartList + 1] = function() CDV.Cue("inizio") end
 CDV.Start = function() for _, f in ipairs(CDV.StartList) do f() end end
 
 CDV.Zone({ id = "primo", x = 28160, y = -2816, z = 27136, r = 1200, dy = 700, once = true, text = "", secs = 5 })

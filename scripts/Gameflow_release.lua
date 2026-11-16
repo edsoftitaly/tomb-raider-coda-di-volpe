@@ -73,6 +73,11 @@ title.ambientTrack = "tr3_01_laras_theme"          -- Tomb Raider III, the theme
 title.levelFile = "Data\\title.ten"
 title.scriptFile = "Scripts\\Levels\\title.lua"
 title.loadScreenFile = "Screens\\main.png"
+title.farView = 130                                -- the flight goes over Tindari too
+title.horizon1.enabled = false
+title.layer1 = TEN.Flow.SkyLayer(TEN.Color(16, 20, 36), 2)   -- Title.lua changes sky and fog place by place
+title.starfield = TEN.Flow.Starfield(2500)
+title.fog = TEN.Flow.Fog(TEN.Color(16, 20, 36), 16, 36)
 Flow.AddLevel(title)
 
 --------------------------------------------------
