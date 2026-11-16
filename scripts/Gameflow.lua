@@ -69,7 +69,7 @@ end
 --------------------------------------------------
 
 title = Level.new()
-title.ambientTrack = "108"
+title.ambientTrack = "tr3_01_laras_theme"          -- Tomb Raider III, the theme of the titles
 title.levelFile = "Data\\title.ten"
 title.scriptFile = "Scripts\\Levels\\title.lua"
 title.loadScreenFile = "Screens\\main.png"
