@@ -910,15 +910,19 @@ CDV.Zone({ id = "pozzo", x = 127488, y = -21504, z = 65024, r = 900, dy = 900, o
     end })
 
 -- Every enemy that is on its feet comes for Lara, however far away she is (tools/lua_caccia.py).
--- Enemies and the camera (tools/lua_nemici3.py). Lara's trail: where she stood on solid ground, once a second.
--- A walker woken by a door is switched on at once. Any other is switched on where it stands when that place is not
--- on screen, otherwise on her trail, behind her. One that is awake and has not come closer for four seconds is put
--- on her trail too. Those waiting are in LevelVars, so a saved game does not lose them.
+-- Enemies and the camera (tools/lua_nemici4.py).
+-- Switching on: a walker woken by a door comes in at once; any other at once when the place where it stands is not
+-- on screen, otherwise as soon as the camera looks away, two seconds at most. Always where it stands.
+-- The hunt: a walker hunts once it has seen her (within SEE sectors with a clear line, or hurt). From then on it
+-- is kept in attack mood and, when it stops getting closer, put on her trail behind her and out of sight - as
+-- long as she is within LEASH sectors. Beyond that it gives up until it sees her again.
 local WALKERS = { ["b1"] = true, ["b2"] = true, ["b3"] = true, ["c1"] = true, ["c2"] = true, ["c3"] = true, ["t1"] = true, ["t2"] = true, ["t3"] = true, ["t4"] = true, ["t5"] = true, ["t6"] = true, ["t7"] = true, ["t8"] = true }
 local BY_DOOR = { ["t6"] = true }
 local SIGHT = 60 * 1024
+local SEE, LEASH = 10 * 1024, 20 * 1024
 local EnableNow = CDV.Enable
-local trail, trailFrame, stuck = {}, 0, {}
+local trail, trailFrame, stuck, lastHP = {}, 0, {}, {}
+CDV.Aware = {}
 local function PointOnScreen(p)
     local ok, seen = pcall(function()
         local cp, ct = TEN.View.GetCameraPosition(), TEN.View.GetCameraTarget()
@@ -944,13 +948,6 @@ local function TrailPoint(lp, within)
     end
     return nil
 end
-local function PutOnTrail(m, c, lp)
-    return pcall(function()
-        m:SetPosition(TEN.Vec3(c.x, c.y, c.z), false)
-        m:SetRoomNumber(c.room)
-        m:SetRotation(TEN.Rotation(0, math.deg(math.atan(lp.x - c.x, lp.z - c.z)), 0))
-    end)
-end
 function CDV.Enable(name)
     local m = CDV.M(name)
     if not WALKERS[name] or BY_DOOR[name] or m == nil or not m:GetValid() or m:GetActive() then return EnableNow(name) end
@@ -970,24 +967,12 @@ CDV.Loop(function()
             local m = CDV.M(name)
             if m == nil or not m:GetValid() then
                 w[name] = nil
-            elseif not PointOnScreen(m:GetPosition()) then
+            elseif t >= 60 or not PointOnScreen(m:GetPosition()) then
                 w[name] = nil
                 EnableNow(name)
-                CDV.Log("ENEMY " .. name .. " in, out of sight")
+                CDV.Log("ENEMY " .. name .. (t >= 60 and " in after 2 s, in sight" or " in, out of sight"))
             else
-                local c, cd = TrailPoint(lp, 1e9)
-                if c ~= nil then
-                    w[name] = nil
-                    PutOnTrail(m, c, lp)
-                    EnableNow(name)
-                    CDV.Log("ENEMY " .. name .. " in behind her, " .. math.floor(cd / 1024) .. " sectors back on her trail")
-                elseif t >= 60 then
-                    w[name] = nil
-                    EnableNow(name)
-                    CDV.Log("ENEMY " .. name .. " in where it stands, in sight (no place behind her)")
-                else
-                    w[name] = t + 1
-                end
+                w[name] = t + 1
             end
         end
     end
@@ -997,21 +982,50 @@ CDV.Loop(function()
         trail[#trail + 1] = { x = lp.x, y = lp.y, z = lp.z, room = Lara:GetRoomNumber() }
         if #trail > 40 then table.remove(trail, 1) end
     end
+    if LevelVars.CDV_aware == nil then LevelVars.CDV_aware = {} end
+    CDV.Aware = LevelVars.CDV_aware
     for name, _ in pairs(WALKERS) do
         local m = CDV.M(name)
         if m ~= nil and m:GetValid() and m:GetActive() and m:GetHP() > 0 then
             local p = m:GetPosition()
-            local d = Dist(p, lp)
-            local s = stuck[name] or { d = d, n = 0 }
-            stuck[name] = s
-            if d > 5 * 1024 and d > s.d - 256 then s.n = s.n + 1 else s.n = 0 end
-            s.d = d
-            if s.n >= 4 and not PointOnScreen(p) then
-                local c, cd = TrailPoint(lp, d - 1024)
-                if c ~= nil then
-                    local ok = PutOnTrail(m, c, lp)
-                    CDV.Log("HUNT " .. name .. (ok and " put on her trail, " or " could not be moved, ") .. math.floor(cd / 1024) .. " sectors behind")
-                    s.n, s.d = 0, cd
+            local flat = math.sqrt((p.x - lp.x) ^ 2 + (p.z - lp.z) ^ 2)
+            local d = flat + math.abs(p.y - lp.y)
+            local hp = m:GetHP()
+            if not CDV.Aware[name] then
+                local sees = false
+                if lastHP[name] ~= nil and hp < lastHP[name] then
+                    sees = true
+                elseif flat < SEE and math.abs(p.y - lp.y) < 4 * 1024 then
+                    pcall(function()
+                        sees = TEN.Util.HasLineOfSight(m:GetRoomNumber(), TEN.Vec3(p.x, p.y - 700, p.z), TEN.Vec3(lp.x, lp.y - 700, lp.z)) == true
+                    end)
+                end
+                if sees then
+                    CDV.Aware[name] = true
+                    CDV.Log("HUNT " .. name .. " has seen her, " .. math.floor(d / 1024) .. " sectors away")
+                end
+            elseif d > LEASH then
+                CDV.Aware[name] = false
+                stuck[name] = nil
+                CDV.Log("HUNT " .. name .. " gives up, " .. math.floor(d / 1024) .. " sectors away")
+            end
+            lastHP[name] = hp
+            if CDV.Aware[name] then
+                local s = stuck[name] or { d = d, n = 0 }
+                stuck[name] = s
+                if d > 5 * 1024 and d > s.d - 256 then s.n = s.n + 1 else s.n = 0 end
+                s.d = d
+                if s.n >= 4 and not PointOnScreen(p) then
+                    local c, cd = TrailPoint(lp, d - 1024)
+                    if c ~= nil then
+                        local ok = pcall(function()
+                            m:SetPosition(TEN.Vec3(c.x, c.y, c.z), false)
+                            m:SetRoomNumber(c.room)
+                            m:SetRotation(TEN.Rotation(0, math.deg(math.atan(lp.x - c.x, lp.z - c.z)), 0))
+                        end)
+                        CDV.Log("HUNT " .. name .. (ok and " put on her trail, " or " could not be moved, ") .. math.floor(cd / 1024) .. " sectors behind")
+                        s.n, s.d = 0, cd
+                    end
                 end
             end
         else
@@ -1031,7 +1045,12 @@ CDV.Loop(function()
         if m ~= nil and m:GetValid() and m:GetActive() and m:GetHP() > 0 then
             local ok = pcall(function()
                 local c = TEN.Objects.Creature(m)
-                c:SetMood(TEN.Objects.MoodType.ATTACK)
+                if WALKERS[name] and not CDV.Aware[name] then
+                    -- it has not seen her: the engine's own mood (never forced). One that gave up is let go.
+                    if CDV.Aware[name] == false then c:SetMood(TEN.Objects.MoodType.AUTO or TEN.Objects.MoodType.BORED) end
+                else
+                    c:SetMood(TEN.Objects.MoodType.ATTACK)
+                end
                 if HUNT_BATS[name] then c:SetHurtByPlayer(true) end
             end)
             if not huntSaid then
