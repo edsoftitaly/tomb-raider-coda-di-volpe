@@ -172,18 +172,35 @@ def gradinata():
     return m, cbox(2.0, 0.42, 0.8)
 
 
-@model(338, "RUOTA_CHIUSA", "Casello della chiusa: gabbiotto di ferro con il volante della paratoia")
+@model(338, "RUOTA_CHIUSA", "Casello della chiusa: armadio di ferro verde su zoccolo di pietra, il volante dietro la grata, la serratura in ottone a destra (fronte verso -Z)")
 def ruota_chiusa():
-    m = G.box(0.9, 1.2, 0.6, "m_rust")
-    m.merge(G.cylinder(0.05, 0.05, 0.3, "m_iron", n=5, base=(0, 0.75, -0.6), axis="z"))
+    """The lock of the great sluice (20 Nov: it was a brown box with a wheel stuck on it). A stone plinth, an iron
+    cabinet open at the front: on the left the wheel of the gate behind a grille of bars, on the right the door post
+    with the brass lock, where the key goes. Lara stands in front of it, on the -Z side."""
+    m = G.box(1.3, 0.25, 0.9, "m_limestone")
+    y0 = 0.25
+    m.merge(G.box(1.2, 1.5, 0.08, "m_cabinet", center=(0, y0, 0.36)))                    # back
+    for x in (-0.56, 0.56):
+        m.merge(G.box(0.08, 1.5, 0.72, "m_cabinet", center=(x, y0, 0.0)))                # sides
+    m.merge(G.box(1.36, 0.08, 0.9, "m_cabinet", center=(0, y0 + 1.5, -0.02), bottom=True))   # roof, a little wider
+    m.merge(G.box(1.2, 0.08, 0.72, "m_cabinet", center=(0, y0, 0.0)))                    # floor
+    wx, wy, wz = -0.17, y0 + 0.78, 0.05                                                  # the wheel, behind the bars
+    m.merge(G.cylinder(0.05, 0.05, 0.28, "m_iron", n=5, base=(wx, wy, wz), axis="z"))
     for k in range(8):
-        a = 2 * math.pi * k / 8
-        b = 2 * math.pi * (k + 1) / 8
-        m.merge(G.tube([(math.cos(a) * 0.4, 0.75 + math.sin(a) * 0.4, -0.5), (math.cos(b) * 0.4, 0.75 + math.sin(b) * 0.4, -0.5)], [0.03, 0.03], "m_iron", n=4))
+        a, b = 2 * math.pi * k / 8, 2 * math.pi * (k + 1) / 8
+        m.merge(G.tube([(wx + math.cos(a) * 0.36, wy + math.sin(a) * 0.36, wz), (wx + math.cos(b) * 0.36, wy + math.sin(b) * 0.36, wz)], [0.03, 0.03], "m_iron", n=4))
     for k in range(4):
-        a = math.pi / 2 * k
-        m.merge(G.tube([(0, 0.75, -0.5), (math.cos(a) * 0.4, 0.75 + math.sin(a) * 0.4, -0.5)], [0.02, 0.02], "m_iron", n=4))
-    return m, cbox(0.9, 1.2, 0.6)
+        a = math.pi / 2 * k + math.pi / 4
+        m.merge(G.tube([(wx, wy, wz), (wx + math.cos(a) * 0.36, wy + math.sin(a) * 0.36, wz)], [0.02, 0.02], "m_iron", n=4))
+    for k in range(6):                                                                   # the grille
+        x = -0.50 + 0.135 * k
+        m.merge(G.tube([(x, y0 + 0.08, -0.33), (x, y0 + 1.5, -0.33)], [0.016, 0.016], "m_iron", n=4))
+    for y in (y0 + 0.45, y0 + 1.15):
+        m.merge(G.tube([(-0.52, y, -0.33), (0.26, y, -0.33)], [0.016, 0.016], "m_iron", n=4))
+    m.merge(G.box(0.30, 1.42, 0.10, "m_cabinet", center=(0.37, y0 + 0.08, -0.31)))       # the door post
+    m.merge(G.quad((0.26, y0 + 0.62, -0.365), (0.48, y0 + 0.62, -0.365), (0.48, y0 + 1.06, -0.365), (0.26, y0 + 1.06, -0.365),
+                   "m_lockplate", uv=[(0, 1), (1, 1), (1, 0), (0, 0)], double=True))
+    return m, cbox(1.3, 1.83, 0.9)
 
 
 @model(339, "COLONNA_TEMPIO", "Colonna del tempio dei Dioscuri, 13 m, marmo: dal fondo della cella alla volta")

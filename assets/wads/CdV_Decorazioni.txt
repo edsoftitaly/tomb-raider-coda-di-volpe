@@ -61,6 +61,11 @@ Coda di Volpe - decorazioni
 160 SANTUARIO_TERRAZZA: Muro della terrazza sud (edificio sottostante) e cordolo in marmo
 161 SANTUARIO_SEGRETERIA: Segreteria del santuario: corpo basso arancio con aperture ad arco e tetto in coppi
 162 SANTUARIO_RINGHIERA: Ringhiera in ferro sulla terrazza (2.5 m, con collisione)
+481 ARCHITRAVE_PORTA_CASELLO: Architrave sopra porta_casello (Marinello), 2 click
+482 ARCHITRAVE_PORTA_RAIS: Architrave sopra porta_rais (Marinello), 3 click
+483 ARCHITRAVE_PORTA_GUARDIANO: Architrave sopra porta_guardiano (Marinello), 3 click
+484 ARCHITRAVE_PORTA_RETI: Architrave sopra porta_reti (Marinello), 11 click
+485 ARCHITRAVE_PORTA_SIGILLO: Architrave sopra porta_sigillo (Marinello), 9 click
 170 INTERNO_PAVIMENTO: Pavimenti in marmo: stelle nella navata centrale, rombi nelle navate laterali
 171 INTERNO_PARETI: Pareti: zoccolo in marmo rosso, mosaici dei Misteri, vetrate, cleristorio
 172 INTERNO_VOLTA: Volta a botte dipinta: cassettoni, scene affrescate, costoloni dorati
@@ -166,5 +171,5 @@ Coda di Volpe - decorazioni
 335 FARO_CANTIERE: Faro da cantiere su treppiede
 336 MACERIE: Mucchio di macerie e blocchi caduti
 337 GRADINATA: Sedile di pietra del teatro, 2 m
-338 RUOTA_CHIUSA: Casello della chiusa: gabbiotto di ferro con il volante della paratoia
+338 RUOTA_CHIUSA: Casello della chiusa: armadio di ferro verde su zoccolo di pietra, il volante dietro la grata, la serratura in ottone a destra (fronte verso -Z)
 339 COLONNA_TEMPIO: Colonna del tempio dei Dioscuri, 13 m, marmo: dal fondo della cella alla volta

@@ -14,7 +14,7 @@ from decor import tex  # noqa: E402
 
 tex.build()
 from decor import models, wad2  # noqa: E402
-from decor import santuario_models, santuario_interno_models, casa_models, marinello_models, mito_models  # noqa: E402,F401  (registers the sanctuary statics)
+from decor import santuario_models, santuario_interno_models, casa_models, marinello_models, mito_models, architravi_models  # noqa: E402,F401  (registers the sanctuary statics)
 import wadtool  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

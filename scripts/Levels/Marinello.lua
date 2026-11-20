@@ -264,7 +264,7 @@ function CDV.KeyPrompt(lockName, item, doneId)
     local side = dx * math.cos(a) - dz * math.sin(a)
     local ahead = dx * math.sin(a) + dz * math.cos(a)
     local dyaw = math.abs(((Lara:GetRotation().y - lock:GetRotation().y) + 540) % 360 - 180)
-    if math.abs(side) < 450 and ahead > -350 and ahead < 520 and math.abs(p.y - lp.y) < 400 and dyaw < 50 then
+    if math.abs(side) < 220 and ahead > 60 and ahead < 520 and math.abs(p.y - lp.y) < 400 and dyaw < 35 then
         if armed then CDV.Armed() return end
         TEN.Inventory.SetFocusedItem(item)
     end
@@ -276,6 +276,7 @@ function CDV.KeyPromptAt(x, y, z, r, item, doneId)
     if doneId and CDV.Done(doneId) then return end
     if not TEN.Input.IsKeyHit(TEN.Input.ActionID.ACTION) then return end
     if not CDV.Near(x, y, z, r, 700) then return end
+    if not CDV.FrontOk(doneId) then return end
     if not CDV.Has(item) then return end
     if Lara:GetState() ~= 2 then return end          -- standing still, on the ground
     if not CDV.HandsFree() then CDV.Armed() return end
@@ -300,6 +301,49 @@ function CDV.Near(x, y, z, r, dy)
     if dx * dx + dz * dz > r * r then return false end
     return math.abs(p.y - y) <= (dy or 1536)
 end
+
+
+-- 20 Nov: keys only from in front of the lock.
+CDV.FRONTS = CDV.FRONTS or {}
+local function CdvFront(f)
+    if f.lock then
+        local m = CDV.M(f.lock)
+        if m == nil or not m:GetValid() then return nil end
+        local q, yaw = m:GetPosition(), m:GetRotation().y
+        local a = math.rad(yaw)
+        return q.x + math.sin(a) * 312, q.z + math.cos(a) * 312, yaw, true
+    end
+    return f.x, f.z, f.yaw, false
+end
+function CDV.FrontOk(id)
+    local f = id and CDV.FRONTS[id]
+    if f == nil then return true end
+    local x, z, yaw, lock = CdvFront(f)
+    if x == nil then return true end
+    local p = Lara:GetPosition()
+    local turn = math.abs(((Lara:GetRotation().y - yaw) + 540) % 360 - 180)
+    if turn > (f.turn or 35) then return false end
+    if lock then                                   -- a keyhole object: the same window as CDV.KeyPrompt
+        local a = math.rad(yaw)
+        local dx, dz = p.x - (x - math.sin(a) * 312), p.z - (z - math.cos(a) * 312)
+        local side = dx * math.cos(a) - dz * math.sin(a)
+        local ahead = dx * math.sin(a) + dz * math.cos(a)
+        return math.abs(side) < 220 and ahead > 60 and ahead < 520
+    end
+    return (p.x - x) ^ 2 + (p.z - z) ^ 2 <= (f.r or 260) ^ 2
+end
+function CDV.FrontSnap(id)
+    local f = id and CDV.FRONTS[id]
+    if f == nil or f.lock then return end
+    local p = Lara:GetPosition()
+    Lara:SetPosition(TEN.Vec3(math.floor(f.x), p.y, math.floor(f.z)), false)
+    Lara:SetRotation(TEN.Rotation(0, f.yaw, 0))
+end
+CDV.FRONTS["use_chiusa"] = { x = 66636, z = 43273, yaw = 0, r = 300 }
+CDV.FRONTS["use_chiusa2"] = { x = 12989, z = 58505, yaw = 0 }
+CDV.FRONTS["use_lucchetto"] = { lock = "chiavistello" }
+CDV.STAR_REWARD = { { ID.BIGMEDI_ITEM, 1 }, { ID.SMALLMEDI_ITEM, 2 }, { ID.SHOTGUN_AMMO1_ITEM, 2 }, { ID.HARPOON_AMMO_ITEM, 2 }, { ID.CROSSBOW_AMMO1_ITEM, 1 } }
+CDV.STAR_TEXT = "All three Stars of Marinello. The Twins repay the favour: medipacks, shells, harpoons, bolts."
 
 function CDV.Done(id)
     return St().done[id] == true
@@ -419,6 +463,13 @@ function CDV.Tick()
         CDV.Cue("segreto")
         CDV.Say(s.text or "", 5)
         if s.give then CDV.Give(s.give, 1) end
+        local all = true
+        for _, q in ipairs(secrets) do if not S.secrets["s" .. q.index] then all = false end end
+        if all and CDV.STAR_REWARD and not S.done["premio_stelle"] then      -- 20 Nov: every Star of the level
+            S.done["premio_stelle"] = true
+            for _, g in ipairs(CDV.STAR_REWARD) do CDV.Give(g[1], g[2]) end
+            CDV.After(120, function() CDV.Say(CDV.STAR_TEXT, 7) end)
+        end
     end
     if stars then
         local lp = Lara:GetPosition()
@@ -472,13 +523,14 @@ function CDV.UseItem(again)
             local m = CDV.M(u.near)
             if m ~= nil and m:GetValid() then local q = m:GetPosition(); ux, uy, uz = q.x, q.y, q.z end
         end
-        if item == u.item and not S.done["use_" .. u.id] and CDV.Near(ux, uy, uz, u.r, u.dy) then
+        if item == u.item and not S.done["use_" .. u.id] and CDV.Near(ux, uy, uz, u.r, u.dy) and CDV.FrontOk("use_" .. u.id) then
             if u.need == nil or u.need() then
                 TEN.Inventory.ClearUsedItem()
                 S.done["use_" .. u.id] = true
                 if u.consume then CDV.Take(u.item) end
                 if u.text then CDV.Say(u.text, u.secs or 7) end
                 CDV.CueAfterAnim("use_" .. u.id)
+                CDV.FrontSnap("use_" .. u.id)
                 if u.fn then u.fn() end
                 return
             elseif u.fail then

@@ -288,6 +288,8 @@ def build():
     pk.new_page()
     from decor import mito_tex
     mito_tex.build(pk)
+    from decor import architravi_models
+    architravi_models.build_tex(pk)
     return pages, REG
 
 

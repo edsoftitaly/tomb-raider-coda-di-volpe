@@ -1,0 +1,57 @@
+[
+ {
+  "door": "porta_casello",
+  "room": "T_00_01",
+  "sector": [
+   18,
+   30
+  ],
+  "y0": 2048,
+  "h": 512,
+  "id": 481
+ },
+ {
+  "door": "porta_rais",
+  "room": "T_02_01",
+  "sector": [
+   2,
+   10
+  ],
+  "y0": 2048,
+  "h": 768,
+  "id": 482
+ },
+ {
+  "door": "porta_guardiano",
+  "room": "T_02_01",
+  "sector": [
+   7,
+   28
+  ],
+  "y0": 2048,
+  "h": 768,
+  "id": 483
+ },
+ {
+  "door": "porta_reti",
+  "room": "T_02_01",
+  "sector": [
+   5,
+   17
+  ],
+  "y0": 2048,
+  "h": 2816,
+  "id": 484
+ },
+ {
+  "door": "porta_sigillo",
+  "room": "T_02_01",
+  "sector": [
+   2,
+   25
+  ],
+  "y0": 2048,
+  "h": 2304,
+  "id": 485
+ }
+]
