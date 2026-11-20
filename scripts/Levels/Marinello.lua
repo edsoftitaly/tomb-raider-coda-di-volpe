@@ -932,8 +932,6 @@ CDV.Loop(function() CDV.KeyPrompt("chiavistello", ID.PUZZLE_ITEM6, "use_lucchett
 
 CDV.Zone({ id = "cancello_senza", x = 30208, y = -512, z = 46592, r = 1500, dy = 1200, once = false, text = "The way to the reed bed and the Green Lake. By the gate, an iron plate with a round recess: a tuna is engraved in it.", secs = 7, need = function() return not CDV.Done("use_lucchetto") and not CDV.Has(ID.PUZZLE_ITEM6) end })
 
-CDV.Zone({ id = "grotta_vista", x = 45568, y = -640, z = 31232, r = 2600, dy = 3000, once = true, text = "High in the cliff, a dark mouth: Donna Villa's cave. The rope ladder is broken. There must be another way up.", secs = 8 })
-
 CDV.Secret({ index = 1, x = 73216, y = -5120, z = 40448, r = 1300, give = ID.SHOTGUN_AMMO1_ITEM, text = "" })
 
 CDV.Secret({ index = 2, x = 81848, y = 544, z = 54784, r = 1000, give = ID.BIGMEDI_ITEM, text = "" })

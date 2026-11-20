@@ -817,7 +817,7 @@ CDV.Zone({ id = "terrazza", x = 119296, y = -24576, z = 59904, r = 8000, dy = 18
 
 CDV.Zone({ id = "belvedere", x = 164352, y = -24576, z = 70144, r = 1500, dy = 1500, once = true, text = "", secs = 9 })
 
-CDV.Zone({ id = "santuario", x = 129536, y = -24576, z = 53760, r = 1600, dy = 900, once = true, text = "The sanctuary of the Black Madonna. The bronze door is ajar: there is light inside.", secs = 10 })
+CDV.Zone({ id = "santuario", x = 130048, y = -24576, z = 53760, r = 4600, dy = 1500, once = true, text = "The sanctuary of the Black Madonna. The bronze door is ajar: there is light inside.", secs = 10 })
 
 -- The wheel of the day. Each turn is a day: the twins must be where the inscription says for that day.
 CDV.WHEEL_DIST = 400

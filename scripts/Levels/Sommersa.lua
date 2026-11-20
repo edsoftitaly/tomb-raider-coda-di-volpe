@@ -1104,14 +1104,47 @@ CDV.Loop(function()
         CDV.Sfx(114)
         CDV.Say("Down below, the bronze doors unlock. But they will never open against all that water.", 7)
     end
-    -- Turi wakes when Lara reaches the chamber on foot
-    if CDV.Flag("valve_aperte") and not CDV.Flag("turi_sveglio") and not CDV.Flag("acqua") and CDV.Near(58880, 4096, 25088, 1500, 700) then
-        CDV.Flag("turi_sveglio", true)
+    -- Turi (the engine's TONY_BOSS) stands at the end of the cella when Lara comes down the stair; the engine
+    -- wakes him when Lara comes within four sectors (item flag 3 leaves 0), and that is when his music starts.
+    if CDV.Flag("valve_aperte") and not CDV.Flag("turi_visto") and not CDV.Flag("acqua") then
+        local lp = Lara:GetPosition()
+        if lp.y > 1200 and lp.x > 49000 and lp.x < 62600 and lp.z > 22000 and lp.z < 27700 then      -- on her way down the stair
+        CDV.Flag("turi_visto", true)
         CDV.Enable("turi")
+        CDV.Log("TURI stands in the cella")
+        end
+    end
+    if CDV.Flag("turi_visto") and not CDV.Flag("turi_morto") then
         local m = CDV.M("turi")
-        if m ~= nil then m:SetHP(20000) end
-        CDV.Cue("turi")
-        CDV.Say("Turi 'a Vulpi, the Star of Pollux round his neck. Pollux is the immortal one: bullets will not stop him.", 8)
+        if m ~= nil and m:GetValid() and m:GetActive() then
+            local awake = false
+            pcall(function() awake = m:GetItemFlags(3) ~= 0 end)
+            if not CDV.Flag("turi_sveglio") and (awake or CDV.Near(61952, 4096, 25088, 3600, 900)) then
+                CDV.Flag("turi_sveglio", true)
+                CDV.Cue("turi")
+                CDV.Say("Turi 'a Vulpi, the Star of Pollux round his neck. Pollux is the immortal one: bullets will not stop him.", 8)
+                CDV.Log("TURI wakes")
+            end
+            -- the Star of Pollux: while the cella is dry nothing kills him
+            if not CDV.Flag("acqua") and m:GetHP() > 0 and m:GetHP() < 20000 then
+                local phase = 0
+                pcall(function() phase = m:GetItemFlags(3) end)
+                if phase == 2 then m:SetHP(30000) end
+            end
+        end
+    end
+    -- his fire sets Lara alight: it dies by itself after a second and a half (in the sea at once, as always)
+    local burning = false
+    pcall(function() burning = Lara:GetEffect() == TEN.Effects.EffectID.FIRE end)
+    if burning then
+        CDV.Burn = (CDV.Burn or 0) + 1
+        if CDV.Burn == 1 then CDV.Log("FIRE on Lara") end
+        if CDV.Burn > 45 then
+            pcall(function() Lara:SetEffect(TEN.Effects.EffectID.NONE) end)
+            CDV.Burn = 0
+        end
+    else
+        CDV.Burn = 0
     end
     -- the fall of the temple
     local t = CDV.Flag("fuga_t") or 0
@@ -1128,6 +1161,7 @@ end)
 -- cella, the controls taken away, bubbles.
 local balls, flameT, flameN = {}, 0, 0
 CDV.Loop(function()
+    if true then return end                                  -- 20 Nov: the engine's boss throws his own fire
     if #balls > 0 and (CDV.Flag("turi_morto") or CDV.Flag("acqua")) then balls = {} end       -- he is gone: so is his fire
     for i = #balls, 1, -1 do
         local b = balls[i]
@@ -1205,8 +1239,7 @@ CDV.Loop(function()
     end)
     CDV.Log("TURI scene: " .. tostring(why))
     CDV.SceneOn = true
-    CDV.Sfx(479)                                             -- his death cry, at Lara: at his place it is too far to hear
-    CDV.After(8, function() CDV.Sfx(482) end)
+    CDV.Sfx(686)                                             -- Tony's death cry, at Lara: at his place it is too far to hear
     CDV.Quake(24)
     CDV.Say("Turi 'a Vulpi goes down with the temple he came to rob.", 6)
     local n = 0
@@ -1514,6 +1547,7 @@ end)
 -- of his kind up steps of four clicks.)
 local turiTrail, turiStuck, turiLast, turiFrame = {}, 0, nil, 0
 CDV.Loop(function()
+    if true then return end                                  -- 20 Nov: the engine's boss does not walk
     turiFrame = turiFrame + 1
     if turiFrame % 30 ~= 0 then return end
     if not CDV.Flag("turi_sveglio") or CDV.Flag("turi_morto") or CDV.Flag("acqua") or Lara:GetHP() <= 0 then return end
@@ -1546,7 +1580,7 @@ CDV.Loop(function()
     end
 end)
 
-local HUNTERS = { "g0", "h1", "h2", "topo0", "topo1", "topo2", "c1", "g1", "g2", "turi", "squalo", "squalo2", "squalo3", "pip_f1", "pip_f2", "pip_f3", "pip_f4", "pip_f5", "pip_f6", "pip_f7", "pip_f8", "pip_f9", "pip_f10" }
+local HUNTERS = { "g0", "h1", "h2", "topo0", "topo1", "topo2", "c1", "g1", "g2", "squalo", "squalo2", "squalo3", "pip_f1", "pip_f2", "pip_f3", "pip_f4", "pip_f5", "pip_f6", "pip_f7", "pip_f8", "pip_f9", "pip_f10" }
 local HUNT_BATS = { ["pip_f1"] = true, ["pip_f2"] = true, ["pip_f3"] = true, ["pip_f4"] = true, ["pip_f5"] = true, ["pip_f6"] = true, ["pip_f7"] = true, ["pip_f8"] = true, ["pip_f9"] = true, ["pip_f10"] = true }
 local huntFrame, huntSaid = 0, false
 CDV.Loop(function()

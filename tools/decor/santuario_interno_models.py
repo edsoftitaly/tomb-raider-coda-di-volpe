@@ -81,7 +81,7 @@ def goverlay(m, c, n2, y0, w, h, name, nx, ny, off=0.03):
 @piece(170, "INTERNO_PAVIMENTO", (33.0, 0.0), "Pavimenti in marmo: stelle nella navata centrale, rombi nelle navate laterali")
 def pavimento():
     m = G.Mesh()
-    e = 0.02
+    e = 0.05          # 2.5 cm over the room floor (1 cm flickered from afar)
     for x0, x1 in ((0.0, PRESB),):
         hrect(m, x0, x1, -NAVE, NAVE, e, "in_stelle")
         hrect(m, x0, x1, NAVE, HW, e, "in_rombi")
@@ -102,7 +102,7 @@ def bay_list(x0, x1, w=6.0):
 @piece(171, "INTERNO_PARETI", (33.0, 0.0), "Pareti: zoccolo in marmo rosso, mosaici dei Misteri, vetrate, cleristorio")
 def pareti():
     m = G.Mesh()
-    off = 0.02
+    off = 0.10          # 5 cm in front of the room's own wall, the panels 5 cm more: 1 cm flickered from afar (20 Nov)
     for side in (-1, 1):
         zw = side * HW
         n2 = (0.0, -float(side))           # facing the inside
@@ -121,10 +121,10 @@ def pareti():
             cornice(m, (x0, zw), (x1, zw), AISLE_H - 0.5, n2, h=0.5, d=0.3, region="tn_cornice", ext=0.0)
     # aisle ceilings: coffers
     for x0, x1 in ((0.0, CROSS[0]), (CROSS[1], L)):
-        hrect(m, x0, x1, NAVE, HW, AISLE_H - 0.02, "in_cassettoni", down=True)
-        hrect(m, x0, x1, -HW, -NAVE, AISLE_H - 0.02, "in_cassettoni", down=True)
+        hrect(m, x0, x1, NAVE, HW, AISLE_H - 0.10, "in_cassettoni", down=True)
+        hrect(m, x0, x1, -HW, -NAVE, AISLE_H - 0.10, "in_cassettoni", down=True)
     for x0, x1, zs in ((CROSS[0], CROSS[1], (CROSS_HZ, HW)), (CROSS[0], CROSS[1], (-HW, -CROSS_HZ))):
-        hrect(m, x0, x1, zs[0], zs[1], AISLE_H - 0.02, "in_cassettoni", down=True)
+        hrect(m, x0, x1, zs[0], zs[1], AISLE_H - 0.10, "in_cassettoni", down=True)
     # clerestory (the walls of the nave above the arcade), both sides, outside the crossing
     for side in (-1, 1):
         zw = side * NAVE
@@ -144,11 +144,11 @@ def pareti():
         overlay(m, (0.0, zc), (1.0, 0.0), 0.0, 1.8, 3.6, "tn_porta", off=off * 2)
     wall(m, (L, HW), (L, -HW), 0.0, AISLE_H, (-1.0, 0.0), "in_parete", off=off)
     wall(m, (L, NAVE), (L, -NAVE), PRESB_H, VAULT_TOP, (-1.0, 0.0), "in_giallo", off=off * 2)
-    goverlay(m, (L, 0.0), (-1.0, 0.0), 3.2, 2.4, 4.8, "in_icona", 1, 2, off=0.12)
+    goverlay(m, (L, 0.0), (-1.0, 0.0), 3.2, 2.4, 4.8, "in_icona", 1, 2, off=0.30)
     obox(m, (L, 0.0), (-1.0, 0.0), 3.0, 0.1, 2.8, 8.4, "in_oro")
-    goverlay(m, (L, 0.0), (-1.0, 0.0), 9.2, 7.2, 3.6, "in_mosaico1", 2, 1, off=0.06)
+    goverlay(m, (L, 0.0), (-1.0, 0.0), 9.2, 7.2, 3.6, "in_mosaico1", 2, 1, off=0.26)
     for zc in (-3.6, 3.6):
-        goverlay(m, (L, zc), (-1.0, 0.0), 3.0, 1.4, 2.8, "in_vetrata%d" % (2 if zc < 0 else 4), 1, 2, off=0.06)
+        goverlay(m, (L, zc), (-1.0, 0.0), 3.0, 1.4, 2.8, "in_vetrata%d" % (2 if zc < 0 else 4), 1, 2, off=0.26)
     return m
 
 
@@ -197,7 +197,7 @@ def cupola():
                            ((CROSS[1], hz), (CROSS[1], -hz), (-1.0, 0.0), VAULT_TOP),
                            ((CROSS[0], hz), (CROSS[1], hz), (0.0, -1.0), AISLE_H),
                            ((CROSS[1], -hz), (CROSS[0], -hz), (0.0, 1.0), AISLE_H)):
-        wall(m, a, b, y0, DRUM[0], n2, "in_parete", (2.0, 2.0), off=0.02)
+        wall(m, a, b, y0, DRUM[0], n2, "in_parete", (2.0, 2.0), off=0.10)
         cornice(m, a, b, DRUM[0] - 0.6, n2, h=0.6, d=0.3, region="in_oro", ext=0.0)
     for x in CROSS:   # the arches open towards the nave: gilded band under the vault top
         n2 = (1.0, 0.0) if x == CROSS[0] else (-1.0, 0.0)
@@ -258,12 +258,12 @@ def cappella():
     m = G.Mesh()
     x0, x1, zs = CHAPEL
     for a, b, n2 in (((x0, zs), (x1, zs), (0.0, 1.0)), ((x0, -HW), (x0, zs), (1.0, 0.0)), ((x1, zs), (x1, -HW), (-1.0, 0.0))):
-        wall(m, a, b, 0.0, 1.2, n2, "in_marmo_rosso", (2.0, 1.2), off=0.02)
-        wall(m, a, b, 1.2, AISLE_H, n2, "in_giallo", (2.0, 2.0), off=0.02)
+        wall(m, a, b, 0.0, 1.2, n2, "in_marmo_rosso", (2.0, 1.2), off=0.10)
+        wall(m, a, b, 1.2, AISLE_H, n2, "in_giallo", (2.0, 2.0), off=0.10)
         cornice(m, a, b, AISLE_H - 0.5, n2, h=0.5, d=0.3, region="in_oro", ext=0.0)
-    hrect(m, x0, x1, zs, -HW, AISLE_H - 0.02, "in_cassettoni", down=True)
+    hrect(m, x0, x1, zs, -HW, AISLE_H - 0.10, "in_cassettoni", down=True)
     xc = (x0 + x1) / 2
-    goverlay(m, (xc, zs), (0.0, 1.0), 1.2, 6.0, 7.2, "in_altare_sc", 2, 2, off=0.06)      # the real altar of the chapel
+    goverlay(m, (xc, zs), (0.0, 1.0), 1.2, 6.0, 7.2, "in_altare_sc", 2, 2, off=0.20)      # the real altar of the chapel
     return m
 
 
