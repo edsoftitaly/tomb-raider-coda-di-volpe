@@ -35,7 +35,7 @@ def main():
         statics.append(W.parent("W2Static2", wadtool._chunk(b"W2Mesh", mesh), W.c_int("W2StaticAmbientLight", 128),
                                 W.c_bool("W2StaticShatter", False), W.c_int("W2StaticShatterSound", -1),
                                 W.parent("W2StaticVB", W.c_vec3("W2BBMin", lo), W.c_vec3("W2BBMax", hi)),
-                                W.parent("W2StaticCB", W.c_vec3("W2BBMin", cmin), W.c_vec3("W2BBMax", cmax)),
+                                W.parent("W2StaticCB", W.c_vec3("W2BBMin", (cmin[0], cmax[1], cmin[2])), W.c_vec3("W2BBMax", (cmax[0], cmin[1], cmax[2]))),  # top first: see decor/wad2.py
                                 raw=W.leb(sid) + W.leb(0)))
     body = W.c_int("W2SuggestedGameVersion", W.TOMB_ENGINE) + W.c_int("W2SoundSystem", W.SOUND_XML)
     body += wadtool._chunk(b"W2Textures", tex)

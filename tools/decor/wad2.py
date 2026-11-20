@@ -123,7 +123,11 @@ def static_chunk(sid, name, mesh, coll):
         c_bool("W2StaticShatter", False),
         c_int("W2StaticShatterSound", -1),
         parent("W2StaticVB", c_vec3("W2BBMin", lo), c_vec3("W2BBMax", hi)),
-        parent("W2StaticCB", c_vec3("W2BBMin", cmin), c_vec3("W2BBMax", cmax)),
+        # Tomb Editor compiles the box as Y1 = -Min.Y, Y2 = -Max.Y and TombEngine wants Y1 < Y2 (top first, as in a TR
+        # level): so in the wad Min.Y is the TOP and Max.Y the bottom. Written the other way round the box reaches the
+        # game upside down and the static does not collide at all (found on 20 Nov: no static of ours ever did).
+        parent("W2StaticCB", c_vec3("W2BBMin", (cmin[0], max(cmin[1], cmax[1]), cmin[2])),
+               c_vec3("W2BBMax", (cmax[0], min(cmin[1], cmax[1]), cmax[2]))),
         raw=leb(sid) + leb(0),
     )
 
