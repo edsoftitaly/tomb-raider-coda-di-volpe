@@ -1,0 +1,139 @@
+TOMB RAIDER - CODA DI VOLPE
+Walkthrough (release 1.0, 20 November 2026)
+
+This file gives the whole solution. Stop reading if you would rather find things out for yourself.
+
+
+GENERAL NOTES
+
+- Doors of houses are kicked open: stand facing the door and press Action. Holster your weapons first, or
+  nothing happens. The same goes for keys, cranks and anything else Lara does with her hands.
+- A key goes in only when Lara stands right in front of its lock, facing it. Press Action there and the key is
+  offered; anywhere else nothing happens.
+- The pushable crate is the wooden one. Grab it with Action, then Forward or Back.
+- Statues, furniture, cars, columns and crates are solid. Reeds and bushes are not.
+- The men of the gang drop what they carry when they die: ammunition and medipacks. Search the bodies.
+- Every level hides three Stars of the Dioscuri (the secrets, twelve in all). Find all three in a level and the
+  Twins leave you medipacks and ammunition.
+- Saving is free. A savegame belongs to the version of the level it was made in.
+
+
+WEAPONS
+
+  Pistols            from the start
+  Shotgun            Oliveri (in the house) and Marinello (on the table in the house of the rais)
+  Uzis               Oliveri, in the workshop on the ground floor
+  Harpoon gun        Marinello, on the shore of the Mergolo
+  Crossbow           Marinello, in the gallery that leads out of the witch's cave
+  Revolver           Tindari, in the dig, near the camp
+  HK                 Tindari, in the cryptoporticus, beyond the iron gate
+  Grenade launcher   Tindari, in the Roman quarter
+  Rocket launcher    The Lost Half, in the shop by the cistern
+
+Ammunition for each lies in the same level and in the next ones.
+
+
+LEVEL 1 - PROLOGUE: VIA AMODEO (Oliveri, night)
+
+Goal: get the Byzantine diary back from the thieves.
+
+1. You wake in the bedroom on the top floor. The power is out. Go down the two flights of stairs: there are
+   thieves on every floor. The one on the first floor carries the Box Room Key.
+2. The front door is barred from outside. The way out is the hatch in the ceiling of the box room, on the top
+   floor. Stand in front of the lock beside the box room door and use the key. A thief with a club waits inside:
+   he carries the Padlock Key.
+3. Before you leave the house, the power: the workshop on the ground floor has an electric lock. Take the Fuse
+   from the cellar and put it in the fuse box in the hall (north wall, beside the pantry door): stand in front
+   of the box. The lights come back and the workshop door can be kicked open.
+4. In the workshop: the Uzis, and a computer with a line on the screen: 33 2D 32 2D 35. Those are character
+   codes: 3-2-5. You will need them in the street.
+5. Back up to the box room. Stand in front of the padlock, use the Padlock Key, climb the ladder to the roof.
+6. On the roof go east over the neighbours' roofs: two running jumps over the gaps. If you fall into a gap you
+   can climb back up. At the far end a drainpipe goes down to the street.
+7. In the street the lookout runs into the courtyard and shuts the gate; his dogs come for you. Five numbered
+   switches on the wall control the gate: put 2, 3 and 5 on, 1 and 4 off.
+8. Kill the lookout in the courtyard and take the diary from where he fell. The Carabinieri have closed the
+   street: leave by the town hall end.
+
+Stars: one in the cellar; one in the street, at the east end; one up on the roofs, near the drainpipe.
+
+
+LEVEL 2 - THE WITCH OF THE LAKES (Marinello, dawn)
+
+Goal: reach Donna Villa's cave in the cliff and take the Star of Castor.
+
+1. The old tuna fishery. Kick the doors of the houses open. In the house of the rais: the ledger (the crank is
+   in the net store, the two levers of the Seal are on the lake bed) and the Shotgun on the table.
+2. The net store: push the wooden crate onto the stone slab with the iron ring. A block rises by the loft:
+   climb it. Up there, the Crank (and a man waiting).
+3. In the yellow house, the winch of the Mergolo sluice: stand in front of it and use the Crank. The lake
+   empties.
+4. Walk down onto the bed of the Mergolo. Two iron levers, far apart: pull one and you have ten seconds to
+   pull the other. Do it right and the Seal chamber opens up at the fishery. Take the Seal of the Tonnara.
+5. The gate to the reed bed has an iron plate with a round recess. Stand in front of the plate and use the Seal.
+6. Beyond the reeds the Green Lake is dry mud, and the ledge of the cave is five metres up. The gang's foreman
+   is here: he carries the Sluice House Key.
+7. The sluice house stands on the stone shoulder above the great sluice. Jump to the iron pole and climb.
+   Stand in front of the brass lock of the iron cabinet and use the key: the sea fills the Green Lake.
+8. Swim to the witch's ledge. Behind it the sinkhole: no way back from here.
+9. In the cave: the hall of the five shells. Press Action at each altar in this order: south-west, north-west,
+   south-east, north-east, and last the one that stands alone at the south end. A wrong shell starts the count
+   again. Then Donna Villa's pool: take the Star of Castor from the pedestal across the water.
+10. The spirits wake. Bullets do nothing to them: lead each one into the water and it dies. When the last is
+    gone the way out opens. In the gallery, boulders: use the niches. The Crossbow is in this gallery.
+11. Climb the iron rungs of the shaft to Tindari.
+
+Stars: one high in the fishery, on a roof; one under water at the east shore; one under water in the Mergolo.
+
+
+LEVEL 3 - TINDARI (afternoon)
+
+Goal: follow Turi through the crypt under the sanctuary.
+
+1. The grave robbers' camp. The house in the dig is locked; the keyhole is in the wall beside the door. The
+   foreman has the key and he is down in the Greek theatre, to the west.
+2. The theatre: the foreman and his men are in the arena. He drops the Dig Site Key. Go back, stand in front
+   of the keyhole and use it.
+3. Through the Roman house: the mosaic of the caps. The inscription says that Castor, the mortal, treads the
+   earth: walk only on the caps the panel gives to Castor. The others give way. In the Roman quarter beyond it:
+   the Terrace Key and the Grenade launcher.
+4. The basilica of the dig: a stair goes down into the cryptoporticus. The floor has fallen onto iron spikes:
+   swing across on the rope. The iron gate at the end takes the Terrace Key; its keyhole is in the pillar
+   beside it. Beyond the gate, the HK.
+5. Up on the headland, the sanctuary of the Black Madonna. The bronze door is ajar. Inside, behind the high
+   altar, under the golden shrine carried by the two angels: the Star of Castor. Under the dome three windows
+   are different from the others: a moon, a star, a sun, in that order.
+6. The crypt of the twins: two statues that can be pushed and a bronze wheel beside the gate. Put the Star of
+   Castor in the socket of the wheel. One day for each of them: Castor on the west pedestal and Pollux on the
+   east one, turn the wheel; swap them, turn the wheel; then both side by side on the two middle plates, turn
+   the wheel. The gate opens.
+7. Down the shaft to the sea caves.
+
+Stars: one at the top of the theatre; one in the dig, near the Roman house; one in the cryptoporticus, in the
+alcove beside the iron gate.
+
+
+LEVEL 4 - THE LOST HALF (the drowned city)
+
+Goal: stop Turi and bring both Stars out.
+
+1. The sea caves, then a Roman street under the sea. The gate at the far end has an empty pedestal either
+   side: it wants the two Caps of the Dioscuri.
+2. The baths: the pool is dry. When the water rises, go up to the loggia. The Cap of Castor is here.
+3. The cistern: a lattice of caps, dark and golden, over deep water. The same rule as at Tindari: Castor's
+   caps hold, the others give way. The Cap of
+   Pollux is beyond it. The shop beside the cistern holds the Rocket launcher.
+4. Set the two caps on the pedestals. The gate opens on the temple of the Dioscuri. The cella lies eight
+   metres below, with Turi's men in it.
+5. The altar of the Stars has two sockets. With the Star of Castor on the altar the sea fills the cella; take
+   it off and the cella drains. Use this to get down and to open the valves: pull the lever in the cella, and
+   with the weight of the water gone the bronze doors open.
+6. Turi 'a Vulpi wears the Star of Pollux and cannot be killed: he flies, throws fire and brings fire down
+   from the vault. Do not waste ammunition on him. Run back to the altar and set the Star of Castor: the sea
+   fills the cella and takes him. If you catch fire, it goes out by itself in a moment, or in the water.
+7. The Star of Pollux floats up. Set it in the second socket. The vault starts to give way and the spirits
+   come: lead them into the water, as in Donna Villa's cave.
+8. The bronze door gives. Run: boulders again, use the niches. Out into the dawn over the sand spit of
+   Marinello.
+
+Stars: one under water in the siphon of the sea caves; one in the shop by the cistern; one in the cella.
