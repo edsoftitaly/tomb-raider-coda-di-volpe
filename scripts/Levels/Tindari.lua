@@ -308,7 +308,10 @@ function CDV.FrontOk(id)
     if x == nil then return true end
     local p = Lara:GetPosition()
     local turn = math.abs(((Lara:GetRotation().y - yaw) + 540) % 360 - 180)
-    if turn > (f.turn or 35) then return false end
+    if turn > (f.turn or 40) then
+        CDV.Log("FRONT " .. tostring(id) .. ": not facing the lock, off by " .. math.floor(turn))
+        return false
+    end
     if lock then                                   -- a keyhole object: the same window as CDV.KeyPrompt
         local a = math.rad(yaw)
         local dx, dz = p.x - (x - math.sin(a) * 312), p.z - (z - math.cos(a) * 312)
@@ -316,7 +319,15 @@ function CDV.FrontOk(id)
         local ahead = dx * math.sin(a) + dz * math.cos(a)
         return math.abs(side) < 220 and ahead > 60 and ahead < 520
     end
-    return (p.x - x) ^ 2 + (p.z - z) ^ 2 <= (f.r or 260) ^ 2
+    -- 20 Nov, 14:20: a strip in front of the lock, not a circle round the spot where she is put: a player walks
+    -- right up to the wall, and that was outside the circle (the padlock of the hatch could not be opened).
+    local a = math.rad(yaw)
+    local dx, dz = p.x - x, p.z - z
+    local side = dx * math.cos(a) - dz * math.sin(a)
+    local ahead = dx * math.sin(a) + dz * math.cos(a)          -- positive: nearer the lock than the spot
+    local ok = math.abs(side) <= (f.side or 260) and ahead >= -(f.back or 300) and ahead <= 450
+    if not ok then CDV.Log("FRONT " .. tostring(id) .. ": side " .. math.floor(side) .. " ahead " .. math.floor(ahead)) end
+    return ok
 end
 function CDV.FrontSnap(id)
     local f = id and CDV.FRONTS[id]
