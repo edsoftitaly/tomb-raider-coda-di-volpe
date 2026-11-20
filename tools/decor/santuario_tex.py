@@ -219,6 +219,108 @@ def bronze_door(seed=13, arched=True):
     return from_img(im)
 
 
+def bronze_door_big(seed=13, w=512, h=1024):
+    """The bronze doors of the sanctuary, 3.2 x 6.4 m, drawn at twice the size and cut in 2 x 4 regions
+    (tn_porta_i_j): an arch of white marble on the pink stone, a lunette with rays, two leaves of five relief
+    panels each, studs, ring handles; the relief is shaded from its own height map (light from the upper left),
+    with green in the hollows as on old bronze. (No photograph of the real doors: this is a likeness.)"""
+    S = 2
+    W, H = w * S, h * S
+    r = np.random.default_rng(seed)
+    stone = tex(W, H, PINK, seed, 0.12, 60)
+    im = to_img(stone)
+    d = ImageDraw.Draw(im)
+    # marble surround: jambs and a round arch, with a moulding line
+    mx, top = int(W * 0.045), int(W * 0.045)
+    rad = W / 2 - mx
+    marble = tex(W, H, MARBLE, seed + 2, 0.10, 90)
+    mm = Image.new("L", (W, H), 0)
+    dm = ImageDraw.Draw(mm)
+    dm.rectangle([mx, top + rad, W - mx, H], fill=255)
+    dm.ellipse([mx, top, W - mx, top + 2 * rad], fill=255)
+    im.paste(to_img(marble), (0, 0), mm)
+    # the bronze: height map first
+    bx = int(W * 0.14)
+    brad = W / 2 - bx
+    btop = top + int(W * 0.095)
+    hm = Image.new("L", (W, H), 0)
+    dh = ImageDraw.Draw(hm)
+    mask = Image.new("L", (W, H), 0)
+    dk = ImageDraw.Draw(mask)
+    dk.rectangle([bx, btop + brad, W - bx, H], fill=255)
+    dk.ellipse([bx, btop, W - bx, btop + 2 * brad], fill=255)
+    dh.rectangle([bx, btop + brad, W - bx, H], fill=110)
+    dh.ellipse([bx, btop, W - bx, btop + 2 * brad], fill=110)
+    cx = W / 2
+    y_spring = btop + brad
+    # lunette: rays from a small sun, a rim
+    for k in range(13):
+        a0 = math.pi * (k + 0.5) / 13
+        x1, y1 = cx - math.cos(a0) * brad * 0.92, y_spring - math.sin(a0) * brad * 0.92
+        dh.line([(cx, y_spring - 8), (x1, y1)], fill=170, width=int(W * 0.012))
+    dh.pieslice([cx - brad * 0.3, y_spring - brad * 0.3, cx + brad * 0.3, y_spring + brad * 0.3], 180, 360, fill=200)
+    dh.rectangle([bx, y_spring - int(W * 0.012), W - bx, y_spring + int(W * 0.03)], fill=190)      # transom
+    # two leaves, five panels each
+    y0, y1 = y_spring + int(W * 0.05), H - int(W * 0.03)
+    gap = int(W * 0.012)
+    lw = (W - 2 * bx - gap) / 2
+    for leaf in (0, 1):
+        x0 = bx + leaf * (lw + gap)
+        dh.rectangle([x0, y0, x0 + lw, y1], fill=140)                    # the leaf stands out of the frame
+        ph = (y1 - y0) / 5
+        for k in range(5):
+            px0, py0 = x0 + lw * 0.12, y0 + ph * k + ph * 0.10
+            px1, py1 = x0 + lw * 0.88, y0 + ph * (k + 1) - ph * 0.10
+            dh.rectangle([px0, py0, px1, py1], fill=95)                   # sunk field
+            dh.rectangle([px0, py0, px1, py1], outline=205, width=int(W * 0.008))    # raised moulding
+            pcx, pcy = (px0 + px1) / 2, (py0 + py1) / 2
+            ww, hh = (px1 - px0), (py1 - py0)
+            if k % 2 == 0:                                               # a cross on rays
+                dh.rectangle([pcx - ww * 0.05, pcy - hh * 0.34, pcx + ww * 0.05, pcy + hh * 0.34], fill=215)
+                dh.rectangle([pcx - ww * 0.26, pcy - hh * 0.14, pcx + ww * 0.26, pcy - hh * 0.04], fill=215)
+            else:                                                        # an eight-pointed star in a ring
+                dh.ellipse([pcx - ww * 0.30, pcy - ww * 0.30, pcx + ww * 0.30, pcy + ww * 0.30], outline=190, width=int(W * 0.008))
+                pts = []
+                for q in range(16):
+                    rr = ww * (0.24 if q % 2 == 0 else 0.10)
+                    pts.append((pcx + rr * math.cos(math.pi * q / 8), pcy + rr * math.sin(math.pi * q / 8)))
+                dh.polygon(pts, fill=220)
+        for k in range(6):                                               # studs on the rails
+            sy = y0 + ph * k
+            for fx in (0.06, 0.5, 0.94):
+                sx = x0 + lw * fx
+                rr = W * 0.011
+                if y0 + 4 < sy < y1 - 4:
+                    dh.ellipse([sx - rr, sy - rr, sx + rr, sy + rr], fill=235)
+    # ring handles
+    for sgn in (-1, 1):
+        hx, hy = cx + sgn * W * 0.05, y0 + (y1 - y0) * 0.52
+        rr = W * 0.028
+        dh.ellipse([hx - rr, hy - rr, hx + rr, hy + rr], outline=240, width=int(W * 0.009))
+        dh.ellipse([hx - rr * 0.35, hy - rr * 1.35, hx + rr * 0.35, hy - rr * 0.65], fill=240)
+    hmap = np.asarray(hm.filter(ImageFilter.GaussianBlur(S * 1.6)), float)
+    gy, gx = np.gradient(hmap)
+    light = np.clip(0.5 - (gx + gy) * 0.035, 0.15, 1.25)                   # lit from the upper left
+    n1 = noise(H, W, 40, 4, seed + 5)
+    n2 = noise(H, W, 6, 2, seed + 6)
+    base = np.array((104, 78, 44), float)[None, None] * (0.80 + 0.35 * n1[..., None]) * (0.92 + 0.16 * n2[..., None])
+    hollow = np.clip((120 - hmap) / 60.0, 0, 1)[..., None] * (0.5 + 0.5 * n1[..., None])
+    base = base * (1 - 0.45 * hollow) + np.array((58, 96, 80), float)[None, None] * 0.45 * hollow          # verdigris in the hollows
+    bronze = np.clip(base * (0.55 + 0.9 * light[..., None]), 0, 255)
+    edge = np.clip((hmap - 200) / 40.0, 0, 1)[..., None]
+    bronze = np.clip(bronze + edge * np.array((60, 46, 20), float)[None, None], 0, 255)                     # rubbed high points
+    im.paste(to_img(bronze), (0, 0), mask)
+    d = ImageDraw.Draw(im)
+    d.line([(cx, y_spring + int(W * 0.03)), (cx, H)], fill=(18, 14, 10), width=max(2, int(W * 0.006)))
+    # soft shadow of the arch on the door, and of the door on the sill
+    a = np.asarray(im, float)
+    sh = np.asarray(mask.filter(ImageFilter.GaussianBlur(S * 6)), float) / 255.0
+    inner = np.asarray(mask, float) / 255.0
+    a *= (1 - 0.35 * (inner * (1 - sh)))[..., None] ** 1.0
+    out = to_img(a).resize((w, h), Image.LANCZOS)
+    return np.asarray(out, float)
+
+
 def mosaic_band(seed=14):
     """Archivolt mosaic: gold tesserae with blue and red figures, 256 x 64 (one straight band)."""
     r = np.random.default_rng(seed)
@@ -604,6 +706,10 @@ def build(pk):
     put("tn_oculo", oculus_orange())
     put("tn_finestra_arco", arch_window_orange())
     put("tn_porta", bronze_door())
+    door = bronze_door_big()
+    for i in range(2):
+        for j in range(4):
+            put("tn_porta_%d_%d" % (i, j), rgba(door[j * 256:(j + 1) * 256, i * 256:(i + 1) * 256]))
     put("tn_mosaico", mosaic_band())
     put("tn_trifora", trifora())
     put("tn_madonna", madonna_panel())

@@ -17,7 +17,7 @@ import numpy as np
 from decor import geom as G
 from decor.geom import M
 from decor.models import model
-from decor.santuario_models import UP, V, annulus, cornice, fface, frame, obox, overlay, rectf, wall
+from decor.santuario_models import UP, V, annulus, cornice, door, fface, frame, obox, overlay, rectf, wall
 
 ANCHORS = {}
 SPOTS = {}     # name -> list of (x, z, rot) for repeated pieces
@@ -116,7 +116,10 @@ def pareti():
             for i, xc in enumerate(xs):
                 if xc > PRESB - 1:
                     continue
-                goverlay(m, (xc, zw), n2, 2.2, 3.6, 1.8, "in_mosaico%d" % ((i + (side > 0)) % 4), 2, 1, off=off * 2)
+                if (i + (side > 0)) % 3 == 0:               # the real mosaic of 1954, bigger, every third bay
+                    goverlay(m, (xc, zw), n2, 1.8, 4.6, 2.3, "in_murale", 4, 2, off=off * 2)
+                else:
+                    goverlay(m, (xc, zw), n2, 2.2, 3.6, 1.8, "in_mosaico%d" % ((i + (side > 0)) % 4), 2, 1, off=off * 2)
                 goverlay(m, (xc, zw), n2, 4.8, 1.5, 3.0, "in_vetrata%d" % (i % 5), 1, 2, off=off * 2)
             cornice(m, (x0, zw), (x1, zw), AISLE_H - 0.5, n2, h=0.5, d=0.3, region="tn_cornice", ext=0.0)
     # aisle ceilings: coffers
@@ -137,11 +140,11 @@ def pareti():
     # entrance wall (inside of the facade) and the gilded apse wall
     wall(m, (0.0, -HW), (0.0, HW), 0.0, AISLE_H, (1.0, 0.0), "in_parete", off=off)
     wall(m, (0.0, -NAVE), (0.0, NAVE), AISLE_H, VAULT_TOP, (1.0, 0.0), "in_parete", off=off)
-    overlay(m, (0.0, 0.0), (1.0, 0.0), 0.0, 3.2, 6.4, "tn_porta", off=off * 2)
+    door(m, (0.0, 0.0), (1.0, 0.0), 0.0, 3.2, 6.4, off=off * 2)
     for zc in (-2.2, 0.0, 2.2):
         goverlay(m, (0.0, zc), (1.0, 0.0), 9.2, 1.8, 3.6, "in_vetrata%d" % (int(zc + 3) % 5), 1, 2, off=off * 2)
     for zc in (-8.0, 8.0):
-        overlay(m, (0.0, zc), (1.0, 0.0), 0.0, 1.8, 3.6, "tn_porta", off=off * 2)
+        door(m, (0.0, zc), (1.0, 0.0), 0.0, 1.8, 3.6, off=off * 2)
     wall(m, (L, HW), (L, -HW), 0.0, AISLE_H, (-1.0, 0.0), "in_parete", off=off)
     wall(m, (L, NAVE), (L, -NAVE), PRESB_H, VAULT_TOP, (-1.0, 0.0), "in_giallo", off=off * 2)
     goverlay(m, (L, 0.0), (-1.0, 0.0), 3.2, 2.4, 4.8, "in_icona", 1, 2, off=0.30)
@@ -271,10 +274,13 @@ def cappella():
 @model(175, "INTERNO_COLONNA", "Colonna in marmo rosa con base bianca e capitello dorato (con collisione)")
 def colonna():
     m = G.Mesh()
-    m.merge(G.box(1.0, 0.5, 1.0, "tn_marmo"))
+    # as in the church: a plinth of grey-blue marble, a white base, the shaft of pink marble, a Corinthian
+    # capital of white stone (it was a block of gold)
+    m.merge(G.box(1.1, 0.3, 1.1, "in_base"))
+    m.merge(G.cylinder(0.5, 0.44, 0.2, "tn_marmo", n=10, base=(0, 0.3, 0), top_cap=False))
     m.merge(G.cylinder(0.42, 0.38, 7.0, "in_marmo_rosa", n=10, base=(0, 0.5, 0), top_cap=False))
-    m.merge(G.cylinder(0.4, 0.62, 0.6, "in_oro", n=10, base=(0, 7.5, 0)))
-    m.merge(G.box(1.3, 0.35, 1.3, "in_oro", center=(0, 8.1, 0)))
+    m.merge(G.cylinder(0.4, 0.62, 0.6, "in_capitello", n=10, base=(0, 7.5, 0)))
+    m.merge(G.box(1.3, 0.35, 1.3, "tn_marmo", center=(0, 8.1, 0)))
     m.merge(G.box(1.0, 0.55, 1.0, "tn_marmo", center=(0, 8.45, 0)))
     return m, ((-0.5 * M, 0, -0.5 * M), (0.5 * M, 9.0 * M, 0.5 * M))
 

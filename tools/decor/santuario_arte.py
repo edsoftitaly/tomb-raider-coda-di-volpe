@@ -665,6 +665,87 @@ def _foto(name):
     return Image.open(os.path.join(FOTO, name + ".jpg")).convert("RGB")
 
 
+def _persp(im, quad, w, h):
+    """The quadrilateral quad (TL, TR, BR, BL in the photograph) straightened into w x h."""
+    dst = [(0, 0), (w, 0), (w, h), (0, h)]
+    A, B = [], []
+    for (x, y), (u, v) in zip(dst, quad):
+        A.append([x, y, 1, 0, 0, 0, -u * x, -u * y])
+        A.append([0, 0, 0, x, y, 1, -v * x, -v * y])
+        B.extend([u, v])
+    c = np.linalg.solve(np.array(A, float), np.array(B, float))
+    return im.transform((w, h), Image.PERSPECTIVE, tuple(c), Image.BICUBIC)
+
+
+def mural(w=1024, h=512):
+    """The mosaic of 1954 in the nave (the Madonna brought back to Tindari by sea), from Ed's photograph, with its
+    frame of white marble; straightened, the flash glare on the boat toned down."""
+    im = Image.open(os.path.join(FOTO, "santuario", "mosaico_1954.png")).convert("RGB")
+    a = arr(_persp(im, [(103, 277), (906, 54), (978, 694), (42, 684)], w, h))
+    return np.clip((a - 128) * 1.06 + 126, 0, 255)
+
+
+def madonna(w=256, h=512):
+    """The Madonna Nera in her golden shrine, NIGRA SUM SED FORMOSA at her feet: Ed's photograph."""
+    im = Image.open(os.path.join(FOTO, "santuario", "madonna_nera.png")).convert("RGB")
+    W, H = im.size
+    cw = int(H * w / h)
+    im = im.crop(((W - cw) // 2, 0, (W - cw) // 2 + cw, H)).resize((w, h), Image.LANCZOS)
+    return arr(im.filter(ImageFilter.UnsharpMask(2, 60, 2)))
+
+
+def capital(size=128, seed=21):
+    """A Corinthian capital of white stone, unrolled: two rows of acanthus leaves under the volutes."""
+    S = size * 4
+    im = Image.new("RGB", (S, S), (226, 220, 228))
+    d = ImageDraw.Draw(im)
+    for row, (y0, y1, n, sh) in enumerate(((S * 0.52, S * 0.98, 8, 0), (S * 0.22, S * 0.66, 8, 0.5))):
+        for k in range(-1, n + 1):
+            cx = (k + 0.5 + sh) * S / n
+            wl = S / n * 0.52
+            pts = [(cx - wl, y1), (cx - wl * 0.9, y0 + (y1 - y0) * 0.35), (cx - wl * 0.45, y0 + (y1 - y0) * 0.08), (cx, y0),
+                   (cx + wl * 0.45, y0 + (y1 - y0) * 0.08), (cx + wl * 0.9, y0 + (y1 - y0) * 0.35), (cx + wl, y1)]
+            d.polygon(pts, fill=(238, 234, 240) if row else (232, 227, 235), outline=(176, 168, 186))
+            d.line([(cx, y0 + 6), (cx, y1)], fill=(188, 180, 196), width=5)
+            for t in (0.3, 0.55, 0.8):
+                yy = y0 + (y1 - y0) * t
+                d.line([(cx, yy + wl * 0.5), (cx - wl * 0.7, yy)], fill=(198, 190, 206), width=4)
+                d.line([(cx, yy + wl * 0.5), (cx + wl * 0.7, yy)], fill=(198, 190, 206), width=4)
+    for k in range(4):                                     # volutes and abacus flowers at the top
+        cx = (k + 0.5) * S / 4
+        for sgn in (-1, 1):
+            c = cx + sgn * S / 8 * 0.62
+            for r in (S * 0.085, S * 0.055, S * 0.028):
+                d.arc([c - r, S * 0.11 - r, c + r, S * 0.11 + r], 0, 360, fill=(170, 160, 182), width=5)
+        d.ellipse([cx - S * 0.03, S * 0.03, cx + S * 0.03, S * 0.09], fill=(214, 190, 120), outline=(150, 120, 60))
+    d.rectangle([0, 0, S, S * 0.025], fill=(206, 198, 210))
+    a = arr(im.filter(ImageFilter.GaussianBlur(2.5)))
+    # light from above: each row of leaves curls out at its tip (lighter) and is in shade at its foot
+    yy = np.linspace(0, 1, S)[:, None, None]
+    shade = 0.86 + 0.16 * np.cos(yy * math.pi * 4.3) ** 2
+    a *= shade * (0.92 + 0.16 * fbm(S, S, 60, seed)[..., None])
+    return down(a, size, size)
+
+
+def marble_wall(size=256, seed=8):
+    """The wall of the aisles: a panel of warm pink marble between two strips of white marble veined with grey,
+    a thin gilded fillet round it."""
+    S = size
+    field = marble("marble010", tint=(224, 184, 160), size=S)
+    vein = marble("marble004", size=S, gain=0.98)
+    a = field * (0.93 + 0.14 * fbm(S, S, 70, seed)[..., None])
+    w = int(S * 0.085)
+    a[:, :w] = vein[:, :w]
+    a[:, S - w:] = vein[:, S - w:]
+    im = Image.fromarray(np.clip(a, 0, 255).astype(np.uint8))
+    d = ImageDraw.Draw(im)
+    for x in (w, S - w - 1):
+        d.line([(x, 0), (x, S)], fill=(120, 110, 100), width=1)
+    m = int(S * 0.14)
+    d.rectangle([w + m * 0.45, m * 0.5, S - w - m * 0.45, S - m * 0.5], outline=(196, 160, 86), width=2)
+    return arr(im)
+
+
 def vault_panel(kind):
     """One frescoed length of the nave vault seen from below, 512 px across (left = north) x 768 px along
     (top = towards the altar). 'a' is the photograph taken straight up; 'b' and 'c' put the frescoes of the
@@ -754,13 +835,16 @@ def build(put):
     put("in_oro", rgba(gilded()))
     put("in_giallo", rgba(lattice(256, 4, seed=5)))
     put("in_volta", rgba(lattice(256, 4, ground=(206, 170, 96), flower=(60, 80, 140), seed=6)))
-    put("in_parete", rgba(stucco()))
+    put("in_parete", rgba(marble_wall()))
+    put("in_capitello", rgba(capital()))
+    put("in_base", rgba(marble("marble012", tint=(132, 146, 160), size=128)))
     put("in_cassettoni", rgba(coffers()))
     for kind in "abc":                                     # the real vault and dome, from Ed's photographs
         vault_slices(put, "in_vp" + kind, vault_panel(kind))
     for q, a in enumerate(dome_quarters()):
         put("in_cupola%d" % q, rgba(a))
     grid(put, "in_altare_sc", chapel_altar(), 2, 2)
+    grid(put, "in_murale", mural(), 4, 2)                 # the real mosaic of 1954, from Ed's photograph
     for k in range(4):
         grid(put, "in_mosaico%d" % k, mosaic_panel(k, 50 + k), 2, 1)
     for k, kind in enumerate(GLASS):
@@ -770,5 +854,6 @@ def build(put):
     for k in range(4):
         put("in_scritta%d" % k, rgba(inscription(k)))
     wood = photo("wood006", 256)
-    put("in_legno", rgba(wood[:128, :] * 0.9))
-    grid(put, "in_icona", icon(), 1, 2)
+    wood = wood / wood.mean(axis=(0, 1), keepdims=True) * np.array((166, 104, 60), float)      # the warm brown of the real pews
+    put("in_legno", rgba(np.clip(wood[:128, :], 0, 255)))
+    grid(put, "in_icona", madonna(), 1, 2)

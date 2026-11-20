@@ -79,6 +79,15 @@ def overlay(m, c, n2, y0, w, h, region, tile=None, off=0.03, blend=0, double=Fal
     rectf(m, o, r, UP, w, h, region, n, tile, blend, double)
 
 
+def door(m, c, n2, y0, w, h, off=0.03):
+    """The bronze doors (tn_porta_i_j, 2 x 4 regions of santuario_tex.bronze_door_big), centred on plan point c."""
+    n, r = frame(n2)
+    o = V(c[0], y0, c[1]) - r * (w / 2) + n * off
+    for i in range(2):
+        for j in range(4):
+            rectf(m, o + r * (w * i / 2) + UP * (h * (3 - j) / 4), r, UP, w / 2, h / 4, "tn_porta_%d_%d" % (i, j), n, None)
+
+
 def obox(m, c, n2, w, d, y0, y1, region, top=None, tile=None):
     """Box standing out of a wall: back on plan point c, front at c + n * d, width w (pilasters, kerbs)."""
     n, r = frame(n2)
@@ -222,13 +231,13 @@ def facciata():
     # sagrato in marble in front of the doors
     hgrid(m, S.rect((-6.0, 0.0, -hw, hw)), 0.03, "tn_marmo")
     # ground order: bronze door, niches with St Peter and St Paul, side doors under pediments
-    overlay(m, at(0), nF, 0.0, 3.2, 6.4, "tn_porta")
+    door(m, at(0), nF, 0.0, 3.2, 6.4)
     for s in (-3.4, 3.4):
         overlay(m, at(s), nF, 1.0, 1.3, 3.2, "tn_marmo", off=0.02)
         obox(m, at(s), nF, 1.0, 0.7, 0.0, 1.1, "tn_marmo")
         statue(m, -0.4, 1.1, -s, 2.1)
     for s in (-7.7, 7.7):
-        overlay(m, at(s), nF, 0.0, 1.8, 3.6, "tn_porta")
+        door(m, at(s), nF, 0.0, 1.8, 3.6)
         obox(m, at(s), nF, 2.9, 0.3, 3.7, 4.0, "tn_marmo")
         tri(m, V(-0.06, 4.0, -(s - 1.3)), V(-0.06, 4.0, -(s + 1.3)), V(-0.06, 5.4, -s), "tn_timpano", V(-1, 0, 0))
         cornice(m, (0, -(s - 1.45)), (0, -(s + 1.45)), 5.3, nF, h=0.15, d=0.2, ext=0.0)
