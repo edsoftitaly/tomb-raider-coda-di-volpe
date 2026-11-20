@@ -97,13 +97,16 @@ def argano():
     return m, cbox(1.7, 1.4, 1.0)
 
 
-@model(330, "ALTARE_ASTRI", "Altare dei Dioscuri: due incavi rotondi, uno di bronzo e uno d'oro")
+@model(330, "ALTARE_ASTRI", "Altare dei Dioscuri: due incavi a forma di stella, bordo di bronzo (Castore) e d'oro (Polluce)")
 def altare_astri():
     m = G.box(2.6, 0.2, 1.3, "m_marble")
     m.merge(G.box(2.2, 0.75, 1.0, "m_marble", center=(0, 0.2, 0)))
     m.merge(G.box(2.5, 0.15, 1.25, "m_marble", center=(0, 0.95, 0)))
-    m.merge(G.disc(0.3, "m_bronze", center=(-0.6, 1.105, 0), n=10))
-    m.merge(G.disc(0.3, "m_gold", center=(0.6, 1.105, 0), n=10))
+    # 20 Nov: the two sockets were plain discs, black in the game. Now each is an inlay with a star-shaped hollow:
+    # bronze rim for Castor (west, -X), gold rim for Pollux.
+    for x, reg in ((-0.6, "m_socket_c"), (0.6, "m_socket_p")):
+        m.merge(G.quad((x - 0.36, 1.106, 0.36), (x + 0.36, 1.106, 0.36), (x + 0.36, 1.106, -0.36), (x - 0.36, 1.106, -0.36),
+                       reg, uv=[(0, 0), (1, 0), (1, 1), (0, 1)], blend=1, double=True))
     return m, cbox(2.6, 1.1, 1.3)
 
 

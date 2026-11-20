@@ -5,6 +5,8 @@ from decor.tex import solid
 
 def build(pk):
     pk.put("m_cabinet", cabinet())
+    pk.put("m_socket_c", socket((150, 110, 62)))
+    pk.put("m_socket_p", socket((226, 184, 70)))
     pk.put("m_lockplate", lockplate())
     pk.put("m_marble", photo("concrete005", (256, 256), tint=(1.0, 0.95, 0.84), gain=1.05))
     pk.put("m_limestone", photo("rock003", (256, 256), tint=(1.0, 0.93, 0.78), gain=0.95))
@@ -56,3 +58,31 @@ def lockplate(w=64, h=128):
     a = np.asarray(im.resize((w, h), Image.LANCZOS)).astype(float)
     a *= (np.random.default_rng(82).random((h, w)) * 0.1 + 0.95)[..., None]
     return np.dstack([np.clip(a, 0, 255).astype(np.uint8), np.full((h, w), 255, np.uint8)])
+
+
+def socket(metal, n=128):
+    """A socket of the altar of the Stars, seen from above: a ring of metal let into the marble, a disc of dark
+    stone, and in it the hollow of an eight-pointed star, lit on one rim and in shadow on the other. Outside the
+    ring the texture is empty (alpha 0): only the inlay is drawn on the altar."""
+    import math
+    import numpy as np
+    from PIL import Image, ImageDraw, ImageFilter
+    S = 4
+    N = n * S
+    c = N / 2
+    im = Image.new("RGBA", (N, N), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    d.ellipse([4, 4, N - 5, N - 5], fill=metal + (255,))
+    d.ellipse([10, 10, N - 11, N - 11], outline=tuple(int(v * 0.55) for v in metal) + (255,), width=6)
+    r0 = N * 0.43
+    d.ellipse([c - r0, c - r0, c + r0, c + r0], fill=(92, 88, 84, 255), outline=tuple(int(v * 0.6) for v in metal) + (255,), width=5)
+
+    def star(ro, ri, dx=0.0, dy=0.0):
+        return [(c + dx + (ro if k % 2 == 0 else ri) * math.sin(math.pi * k / 8), c + dy - (ro if k % 2 == 0 else ri) * math.cos(math.pi * k / 8)) for k in range(16)]
+    d.polygon(star(N * 0.39, N * 0.17), fill=tuple(min(255, int(v * 1.25)) for v in metal) + (255,))        # the lit rim
+    d.polygon(star(N * 0.365, N * 0.155, 5, 5), fill=(8, 7, 7, 255))                                        # the shadow side
+    d.polygon(star(N * 0.345, N * 0.145, 2, 2), fill=(34, 30, 28, 255))                                     # the bottom of the hollow
+    d.polygon(star(N * 0.17, N * 0.07, 2, 2), fill=(58, 52, 46, 255))
+    a = np.asarray(im.resize((n, n), Image.LANCZOS)).copy()
+    a[..., 3] = np.where(a[..., 3] > 128, 255, 0)
+    return a
