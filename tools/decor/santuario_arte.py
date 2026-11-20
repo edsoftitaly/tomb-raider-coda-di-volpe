@@ -643,7 +643,7 @@ def icon(w=256, h=512, seed=77):
 
 def inscription(k, w=256, h=32):
     """Quarter k of the band under the drum: gold capitals on blue."""
-    text = "AVE MARIA  ✦  GRATIA PLENA  ✦  DOMINVS TECVM  ✦  BENEDICTA TV  ✦  "
+    text = "AVE MARIA  ·  GRATIA PLENA  ·  DOMINVS TECVM  ·  BENEDICTA TV  ·  "
     S = 4
     f = ImageFont.truetype(SERIF, int(h * S * .58))
     tw = int(f.getlength(text))
@@ -677,21 +677,218 @@ def _persp(im, quad, w, h):
     return im.transform((w, h), Image.PERSPECTIVE, tuple(c), Image.BICUBIC)
 
 
+def _edges(a):
+    """The four edges of the mosaic in the photograph (its dark red border against the pale marble frame), found
+    column by column and row by row and smoothed into curves: top and bottom as y(x), left and right as x(y). The
+    wall is curved and the camera low, so the top edge is a bow, not a line."""
+    lum = a.mean(2)
+    dark = ndimage.binary_opening(lum < 95, structure=np.ones((3, 3)))
+
+    def et(x):
+        return 283 + (228 - 283) * (x - 112) / 328.0 if x < 440 else 228 + (62 - 228) * (x - 440) / 453.0
+
+    top, bot, lef, rig = [], [], [], []
+    for x in range(120, 890, 3):
+        y0 = int(et(x)) - 28
+        for y in range(y0, y0 + 70):
+            if dark[y:y + 5, x].all():
+                top.append((x, y))
+                break
+    for x in range(70, 955, 3):
+        y0 = int(662 + 6 * (x - 62) / 900.0) + 25
+        for y in range(y0, y0 - 70, -1):
+            if dark[y - 4:y + 1, x].all():
+                bot.append((x, y))
+                break
+    for y in range(300, 650, 3):
+        x0 = int(112 - 50 * (y - 283) / 379.0) - 25
+        for x in range(x0, x0 + 60):
+            if dark[y, x:x + 5].all():
+                lef.append((y, x))
+                break
+    for y in range(80, 650, 3):
+        x0 = int(893 + 69 * (y - 62) / 606.0) + 25
+        for x in range(x0, x0 - 60, -1):
+            if dark[y, x - 4:x + 1].all():
+                rig.append((y, x))
+                break
+
+    def fit(pts, deg):
+        p = np.array(pts, float)
+        for _ in range(3):                                    # drop the stragglers (veins of the marble, a head)
+            c = np.polyfit(p[:, 0], p[:, 1], deg)
+            r = np.abs(np.polyval(c, p[:, 0]) - p[:, 1])
+            p = p[r <= max(1.5, 2.0 * np.median(r))]
+        return np.polyfit(p[:, 0], p[:, 1], deg)
+
+    return fit(top, 4), fit(bot, 2), fit(lef, 2), fit(rig, 2)
+
+
+def _meet(ch, cv):
+    """Where a curve y(x) meets a curve x(y)."""
+    y = 400.0
+    for _ in range(30):
+        x = np.polyval(cv, y)
+        y = np.polyval(ch, x)
+    return float(x), float(y)
+
+
+def _proj(u, x0, xm, x1):
+    """x along an edge for u in 0..1 with perspective foreshortening: the ends at x0 and x1, the middle at xm."""
+    k = (xm - x0) / (x1 - xm)                                 # ratio of the two halves as seen
+    return x0 + (x1 - x0) * u * k / (u * k + (1 - u)) if abs(k - 1) > 1e-6 else x0 + (x1 - x0) * u
+
+
 def mural(w=1024, h=512):
-    """The mosaic of 1954 in the nave (the Madonna brought back to Tindari by sea), from Ed's photograph, with its
-    frame of white marble; straightened, the flash glare on the boat toned down."""
+    """The mosaic of 1954 in the nave (the Madonna brought back to Tindari by sea), from Ed's photograph. The wall it
+    hangs on is curved and the picture was taken from below and from the left, so four corners are not enough: the
+    four edges are followed as curves and the picture is laid flat between them, the bar between the two scenes on
+    the middle. Then a clean frame of pale marble around it."""
     im = Image.open(os.path.join(FOTO, "santuario", "mosaico_1954.png")).convert("RGB")
-    a = arr(_persp(im, [(103, 277), (906, 54), (978, 694), (42, 684)], w, h))
-    return np.clip((a - 128) * 1.06 + 126, 0, 255)
+    a = np.asarray(im).astype(float)
+    ct, cb, cl, cr = _edges(a)
+    tl, tr, bl, br = _meet(ct, cl), _meet(ct, cr), _meet(cb, cl), _meet(cb, cr)
+    fr = 26                                                   # frame, pixels of the texture
+    W, H = w - 2 * fr, h - 2 * fr
+    u = (np.arange(W) + 0.5) / W
+    v = (np.arange(H) + 0.5) / H
+    xt = _proj(u, tl[0], 440.5, tr[0])                        # the bar between the scenes: 440 above, 436 below
+    xb = _proj(u, bl[0], 436.0, br[0])
+    T = np.stack([xt, np.polyval(ct, xt)], 1)
+    B = np.stack([xb, np.polyval(cb, xb)], 1)
+    r = math.sqrt((br[0] - bl[0]) / (tr[0] - tl[0]))          # the top is farther: rows closer together up there
+    pv = v / (v + (1 - v) * r)
+    yl = tl[1] + (bl[1] - tl[1]) * pv
+    yr = tr[1] + (br[1] - tr[1]) * pv
+    Lc = np.stack([np.polyval(cl, yl), yl], 1)
+    Rc = np.stack([np.polyval(cr, yr), yr], 1)
+    U, V = u[None, :, None], pv[:, None, None]
+    P = (1 - V) * T[None] + V * B[None] + (1 - U) * Lc[:, None] + U * Rc[:, None] \
+        - ((1 - U) * (1 - V) * np.array(tl) + U * (1 - V) * np.array(tr) + (1 - U) * V * np.array(bl) + U * V * np.array(br))
+    core = np.stack([ndimage.map_coordinates(a[..., k], [P[..., 1], P[..., 0]], order=3, mode="nearest") for k in range(3)], 2)
+    core = np.clip((core - 128) * 1.06 + 126, 0, 255)
+    n = fbm(h, w, 40, 31)
+    vein = np.abs(fbm(h, w, 90, 32) - 0.5) < 0.035
+    out = np.empty((h, w, 3))
+    for k, c in enumerate((232, 228, 220)):
+        out[..., k] = c - 26 * n - 46 * vein
+    yy, xx = np.mgrid[0:h, 0:w]
+    d = np.minimum(np.minimum(xx, w - 1 - xx), np.minimum(yy, h - 1 - yy))
+    out *= np.where(d < 3, 0.78, np.where(d > fr - 4, 0.70, np.where(d > fr - 8, 1.05, 1.0)))[..., None]
+    out[fr:fr + H, fr:fr + W] = core
+    return np.clip(out, 0, 255)
 
 
-def madonna(w=256, h=512):
-    """The Madonna Nera in her golden shrine, NIGRA SUM SED FORMOSA at her feet: Ed's photograph."""
+def statue(w=128, h=256):
+    """The Madonna Nera alone, on her throne between the yellow curtains, NIGRA SUM SED FORMOSA at her feet: the
+    middle of Ed's photograph (the golden shrine around her is now built, not painted)."""
     im = Image.open(os.path.join(FOTO, "santuario", "madonna_nera.png")).convert("RGB")
-    W, H = im.size
-    cw = int(H * w / h)
-    im = im.crop(((W - cw) // 2, 0, (W - cw) // 2 + cw, H)).resize((w, h), Image.LANCZOS)
+    im = im.crop((75, 170, 245, 510)).resize((w, h), Image.LANCZOS)
     return arr(im.filter(ImageFilter.UnsharpMask(2, 60, 2)))
+
+
+def catino(w=512, h=256):
+    """The painting in the half dome of the apse (the Madonna over the sanctuary on its headland), from Ed's
+    photograph of the nave."""
+    im = Image.open(os.path.join(FOTO, "santuario", "navata_b.png")).convert("RGB")
+    im = im.crop((526, 468, 741, 606)).resize((w, h), Image.BICUBIC).filter(ImageFilter.UnsharpMask(3, 80, 2))
+    a = arr(im)
+    return np.clip((a - 128) * 1.12 + 142, 0, 255)
+
+
+def architrave(w=128, h=64):
+    """The beam on the columns: white marble in three bands, a gilded bead above and below."""
+    a = np.empty((h, w, 3))
+    n = fbm(h, w, 24, 41)
+    for k, c in enumerate((234, 230, 232)):
+        a[..., k] = c - 22 * n
+    for y, f in ((int(h * .30), .86), (int(h * .58), .86), (int(h * .31), 1.04), (int(h * .59), 1.04)):
+        a[y] *= f
+    a[:int(h * .10)] = np.array(GOLD) * (0.85 + 0.3 * n[:int(h * .10), :, None])
+    a[int(h * .90):] = np.array(GOLD_D) * (0.9 + 0.3 * n[int(h * .90):, :, None])
+    return a
+
+
+def brackets(w=256, h=64, n=6):
+    """The gilded cornice over the blue frieze: a row of scrolled brackets in shadow under the moulding."""
+    S = 4
+    im = Image.new("RGB", (w * S, h * S), (44, 52, 96))
+    d = ImageDraw.Draw(im)
+    d.rectangle([0, 0, w * S, h * S * .34], fill=GOLD)
+    d.rectangle([0, h * S * .10, w * S, h * S * .14], fill=GOLD_L)
+    d.rectangle([0, h * S * .30, w * S, h * S * .34], fill=GOLD_D)
+    d.rectangle([0, h * S * .92, w * S, h * S], fill=GOLD)
+    for k in range(n):
+        x0, x1 = (k + .22) * w * S / n, (k + .78) * w * S / n
+        d.rounded_rectangle([x0, h * S * .34, x1, h * S * .86], radius=int(h * S * .12), fill=GOLD, outline=GOLD_D, width=4)
+        cx = (x0 + x1) / 2
+        d.ellipse([cx - h * S * .09, h * S * .62, cx + h * S * .09, h * S * .80], outline=GOLD_D, width=4)
+        d.line([(cx, h * S * .38), (cx, h * S * .60)], fill=GOLD_L, width=5)
+    a = arr(im.resize((w, h), Image.LANCZOS))
+    return a * (0.9 + 0.2 * fbm(h, w, 30, 42)[..., None])
+
+
+def damask(w=256, h=512):
+    """A panel of the apse wall: red damask in a gilded frame, a line of the litany in gold."""
+    S = 2
+    W, H = w * S, h * S
+    yy, xx = np.mgrid[0:H, 0:W].astype(float)
+    p = 64.0 * S
+    og = np.cos(2 * math.pi * xx / p) * np.cos(2 * math.pi * yy / (p * 1.5)) \
+        + 0.5 * np.cos(2 * math.pi * (xx / p + yy / (p * 1.5))) * np.cos(2 * math.pi * (xx / p - yy / (p * 1.5)))
+    g = np.clip(og * 0.5 + 0.5, 0, 1)
+    a = np.empty((H, W, 3))
+    for k, (c0, c1) in enumerate(((118, 172), (22, 40), (30, 44))):
+        a[..., k] = c0 + (c1 - c0) * g
+    im = Image.fromarray(a.astype(np.uint8))
+    d = ImageDraw.Draw(im)
+    b = int(W * .07)
+    d.rectangle([0, 0, W - 1, H - 1], outline=GOLD, width=b)
+    d.rectangle([b, b, W - 1 - b, H - 1 - b], outline=GOLD_D, width=4)
+    d.rectangle([int(b * .35), int(b * .35), W - 1 - int(b * .35), H - 1 - int(b * .35)], outline=GOLD_L, width=3)
+    d.rectangle([b * 2, b * 2, W - 1 - b * 2, H - 1 - b * 2], outline=GOLD, width=5)
+    f = ImageFont.truetype(SERIF, int(W * .062))
+    for k, t in enumerate(("MATER", "MISERICORDIAE", "·", "VITA", "DVLCEDO", "ET SPES", "NOSTRA")):
+        d.text((W / 2, H * (.30 + .065 * k)), t, font=f, fill=GOLD_L, anchor="mm", stroke_width=2, stroke_fill=GOLD_D)
+    return arr(im.resize((w, h), Image.LANCZOS)) * (0.92 + 0.16 * fbm(h, w, 50, 43)[..., None])
+
+
+def pilaster(w=64, h=256):
+    """A pilaster of the apse: grey-green veined marble, gilded capital and base."""
+    n = fbm(h, w, 30, 44)
+    vein = np.clip(1 - np.abs(fbm(h, w, 22, 45, octaves=5) - 0.5) / 0.035, 0, 1)
+    a = np.empty((h, w, 3))
+    for k, c in enumerate((136, 158, 148)):
+        a[..., k] = c - 34 * n + 26 * vein
+    x = np.abs(np.arange(w) - (w - 1) / 2) / (w / 2)
+    a *= (1.0 - 0.28 * x ** 3)[None, :, None]
+    cap, base = int(h * .09), int(h * .04)
+    g = fbm(h, w, 12, 46)[..., None]
+    a[:cap] = np.array(GOLD) * (0.8 + 0.4 * g[:cap])
+    a[cap:cap + 3] = np.array(GOLD_D)
+    a[int(cap * .45):int(cap * .45) + 2] = np.array(GOLD_L)
+    a[h - base:] = np.array(GOLD) * (0.8 + 0.4 * g[h - base:])
+    return np.clip(a, 0, 255)
+
+
+def band(k, parts=5, w=256, h=64):
+    """Part k of the band at the top of the apse wall: MATER MEA FIDUCIA MEA, gold capitals on blue."""
+    S = 4
+    W, H = w * parts * S, h * S
+    im = Image.new("RGB", (W, H), (30, 50, 120))
+    d = ImageDraw.Draw(im)
+    d.rectangle([0, 0, W, H * .12], fill=GOLD)
+    d.rectangle([0, H * .88, W, H], fill=GOLD)
+    f = ImageFont.truetype(SERIF, int(H * .46))
+    d.text((W / 2, H * .5), "·   MATER  MEA   ·   FIDVCIA  MEA   ·", font=f, fill=GOLD_L, anchor="mm", stroke_width=3, stroke_fill=GOLD_D)
+    part = im.crop((k * W // parts, 0, (k + 1) * W // parts, H)).resize((w, h), Image.LANCZOS)
+    return arr(part) * (0.9 + 0.2 * fbm(h, w, 40, 47 + k)[..., None])
+
+
+def metal(col, size=32, seed=48, gain=0.5):
+    """Wrought iron, dark bronze: a dark ground with a worn sheen."""
+    n = fbm(size, size, 10, seed)[..., None]
+    return np.clip(np.array(col, float) * (1 - gain / 2 + gain * n), 0, 255)
 
 
 def capital(size=128, seed=21):
@@ -856,4 +1053,14 @@ def build(put):
     wood = photo("wood006", 256)
     wood = wood / wood.mean(axis=(0, 1), keepdims=True) * np.array((166, 104, 60), float)      # the warm brown of the real pews
     put("in_legno", rgba(np.clip(wood[:128, :], 0, 255)))
-    grid(put, "in_icona", madonna(), 1, 2)
+    put("in_statua", rgba(statue()))                      # 20 Nov: the apse, the shrine, the entablature, the iron
+    grid(put, "in_catino", catino(), 2, 1)
+    put("in_architrave", rgba(architrave()))
+    put("in_mensole", rgba(brackets()))
+    grid(put, "in_damasco", damask(), 2, 2)
+    put("in_pilastro", rgba(pilaster()))
+    for k in range(5):
+        put("in_fascia%d" % k, rgba(band(k)))
+    put("in_ferro", rgba(metal((38, 34, 34))))
+    put("in_bronzo", rgba(metal((62, 50, 40), size=64, seed=49, gain=0.7)))
+    put("in_fiamma", rgba(metal((255, 226, 150), size=16, seed=50, gain=0.15)))

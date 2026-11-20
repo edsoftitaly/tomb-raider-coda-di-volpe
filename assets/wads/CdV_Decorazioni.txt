@@ -69,7 +69,8 @@ Coda di Volpe - decorazioni
 175 INTERNO_COLONNA: Colonna in marmo rosa con base bianca e capitello dorato (con collisione)
 176 INTERNO_BANCO: Banco in legno, 3.2 m (con collisione)
 177 INTERNO_ALTARE: Altare maggiore in marmo con fronte dorato (con collisione)
-178 INTERNO_LAMPADARIO: Lampadario in ottone a due giri di bracci
+178 INTERNO_LAMPADARIO: Lampadario in ferro battuto a due giri di candele, appeso alla trabeazione (origine: il gancio)
+179 INTERNO_ANGELO: Angelo di bronzo che regge il baldacchino della Madonna Nera, 3.3 m (con collisione)
 190 CASA_ESTERNO: Casa di Via Gaspare Amodeo 1: facciate, balcone, portone liberty, terrazza con pergolato
 200 CASA_LETTO: Letto matrimoniale con testiera in noce
 201 CASA_COMODINO: Comodino con lampada
