@@ -34,7 +34,9 @@ def piedistallo():
     m = G.box(0.8, 0.14, 0.8, "m_marble")
     m.merge(G.box(0.56, 0.74, 0.56, "m_marble", center=(0, 0.14, 0)))
     m.merge(G.box(0.76, 0.12, 0.76, "m_marble", center=(0, 0.88, 0)))
-    return m, cbox(0.8, 1.0, 0.8)
+    # The box is the shaft only: with the plinth in it, Lara cannot reach the stand point of a wall lever
+    # mounted on the shaft (Marinello, the two levers on the bed of the Mergolo: 21/11/2026).
+    return m, cbox(0.56, 1.0, 0.56)
 
 
 def _drums(h, r0=0.46, r1=0.38, n=10, y0=0.0):
