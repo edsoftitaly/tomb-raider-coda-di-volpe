@@ -1135,6 +1135,15 @@ CDV.Loop(function()
     local on = not CDV.Flag("acqua")
     if on and not CDV.Has(ID.PUZZLE_ITEM7) then return end
     if not on and CastorFused() then return end
+    -- 23 Nov: once the bronze doors are open the Star does not go back on the altar until Turi is awake and the
+    -- fight is on. Set before that, it flooded the cella with him still asleep and the level ran on without him.
+    if on and CDV.Flag("valve_aperte") and not CDV.Flag("turi_sveglio") then
+        if not CDV.Flag("detto_astro_fermo") then
+            CDV.Flag("detto_astro_fermo", true)
+            CDV.Say("Not yet. The bronze doors are open: see what waits in the cella first.", 5)
+        end
+        return
+    end
     if not CDV.HandsFree() then CDV.Armed() return end
     altarBusy = true
     FaceAltar(SOCKET_C)
