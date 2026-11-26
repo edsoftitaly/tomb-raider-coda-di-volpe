@@ -1,5 +1,7 @@
-"""The hatch of the box room (static 236 of CdV_Decorazioni, 'botola_legno') had its two large faces on one side only:
-from the roof one looked through it. Every face lying flat gets a twin turned the other way.
+"""The hatch of the box room (static 236 of CdV_Decorazioni, 'botola_legno'): a frame of four strips at y 0, open in
+the middle, and behind it the board at y 31, drawn on one side only: from the frame side one looked through it. The
+board (the one flat face as large as the whole hatch) gets the double sided flag, which Tomb Editor turns into a
+second face when it compiles (Wad.cs, ConvertWadMesh). Nothing else changes, no face is added.
 usage: wad_botola.py <in.wad2> <out.wad2> [static id]"""
 import struct
 import sys
@@ -12,18 +14,7 @@ SID = int(sys.argv[3]) if len(sys.argv) > 3 else 236
 raw = open(src, "rb").read()
 ver = struct.unpack("<I", raw[4:8])[0]
 top = W.load(src)
-added = 0
-
-
-def uleb(v):
-    out = bytearray()
-    while True:
-        b = v & 0x7F
-        v >>= 7
-        if v == 0:
-            out.append(b)
-            return bytes(out)
-        out.append(b | 0x80)
+done = 0
 
 
 def pack(items):
@@ -31,30 +22,24 @@ def pack(items):
 
 
 def polys(payload, V):
-    global added
+    global done
+    xs = [v[0] for v in V]
+    zs = [v[2] for v in V]
+    full = (max(xs) - min(xs)) * (max(zs) - min(zs))
     out = []
     for c, p in W._chunks(payload, 0, len(payload)):
+        if c == b"W2Uq2":
+            o, idx = 0, []
+            for _ in range(4):
+                v, o = W._leb_u(p, o)
+                idx.append(v)
+            P = [V[i] for i in idx]
+            flat = max(q[1] for q in P) - min(q[1] for q in P) < 1
+            area = (max(q[0] for q in P) - min(q[0] for q in P)) * (max(q[2] for q in P) - min(q[2] for q in P))
+            if flat and area > 0.95 * full and p[-2] == 0:
+                p = p[:-2] + b"\x01" + p[-1:]
+                done += 1
         out.append((c, p))
-        if c != b"W2Uq2":
-            continue
-        o, idx = 0, []
-        for _ in range(4):
-            v, o = W._leb_u(p, o)
-            idx.append(v)
-        o_idx = o
-        _, o = W._leb_u(p, o)
-        _, o = W._leb_u(p, o)
-        a, b, d = V[idx[0]], V[idx[1]], V[idx[2]]
-        u = [b[j] - a[j] for j in range(3)]
-        w = [d[j] - a[j] for j in range(3)]
-        n = (u[1] * w[2] - u[2] * w[1], u[2] * w[0] - u[0] * w[2], u[0] * w[1] - u[1] * w[0])
-        if abs(n[1]) <= max(abs(n[0]), abs(n[2])):
-            continue
-        # after the texture index: the parent area (4 floats), then the four texture corners (8 floats)
-        uv = [p[o + 16 + 8 * k:o + 16 + 8 * k + 8] for k in range(4)]
-        new = b"".join(uleb(i) for i in reversed(idx)) + p[o_idx:o + 16] + b"".join(reversed(uv)) + p[o + 48:]
-        out.append((c, new))
-        added += 1
     return pack(out)
 
 
@@ -77,6 +62,7 @@ for cid, payload in top:
             kids.append((c2, p2))
         payload = pack(kids)
     new_top.append((cid, payload))
+assert done == 1, done
 body = pack(new_top)
 with open(dst, "wb") as f:
     if ver & 0x80000000:
@@ -84,4 +70,4 @@ with open(dst, "wb") as f:
         f.write(b"WAD2" + struct.pack("<Ii", ver, len(data)) + data)
     else:
         f.write(b"WAD2" + struct.pack("<I", ver) + body)
-print("faces added:", added)
+print("faces made double sided:", done)
