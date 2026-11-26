@@ -1641,31 +1641,6 @@ CDV.Loop(function()
                 CDV.Log("HUNT " .. name .. " gives up, " .. math.floor(d / 1024) .. " sectors away")
             end
             lastHP[name] = hp
-            if CDV.Aware[name] then
-                local s = stuck[name] or { d = d, n = 0 }
-                stuck[name] = s
-                if d > 1536 and d > s.d - 256 then s.n = s.n + 1 else s.n = 0 end
-                s.d = d
-                if s.n >= 2 and d <= 6 * 1024 and not CDV.Carry[name] and (CDV.CarryOk == nil or CDV.CarryOk(name, p, lp)) then   -- 26 Nov: near and not coming
-                    CDV.Carry[name] = true
-                    CDV.Log("HUNT " .. name .. " walked to her, " .. math.floor(d / 1024) .. " sectors away")
-                end
-                if s.n >= 4 and not PointOnScreen(p) then
-                    local c, cd = TrailPoint(lp, d - 1024)
-                    local cf = c and CDV.FloorAt(c.x, c.y, c.z, c.room)
-                    if c ~= nil and cf ~= nil and math.abs(cf - c.y) <= 64 then
-                        local ok = pcall(function()
-                            m:SetPosition(TEN.Vec3(c.x, c.y, c.z), false)
-                            m:SetRoomNumber(c.room)
-                            m:SetRotation(TEN.Rotation(0, math.deg(math.atan(lp.x - c.x, lp.z - c.z)), 0))
-                        end)
-                        CDV.Log("HUNT " .. name .. (ok and " put on her trail, " or " could not be moved, ") .. math.floor(cd / 1024) .. " sectors behind")
-                        s.n, s.d = 0, cd
-                    end
-                end
-            end
-        else
-            stuck[name] = nil
         end
     end
 end)
@@ -1708,8 +1683,7 @@ CDV.Loop(function()
     end
 end)
 
--- 26 Nov: nobody stays behind. A man or a dog that has noticed her and is not getting any closer (a doorway it will
--- not cross, a step, a corner) is walked to her by the script, along her own trail, until it is within reach.
+-- The floor under a point (nil: none, or a wall).
 function CDV.FloorAt(x, y, z, room)
     local f = nil
     pcall(function()
@@ -1718,61 +1692,6 @@ function CDV.FloorAt(x, y, z, room)
     end)
     return f
 end
-CDV.Carry = {}
-local carryAt = {}
-CDV.Loop(function()
-    if Lara:GetHP() <= 0 then return end
-    local lp = Lara:GetPosition()
-    for name, on in pairs(CDV.Carry) do
-        local m = CDV.M(name)
-        if not on or m == nil or not m:GetValid() or not m:GetActive() or m:GetHP() <= 0 then
-            CDV.Carry[name], carryAt[name] = nil, nil
-        else
-            local p = m:GetPosition()
-            local flat = math.sqrt((p.x - lp.x) ^ 2 + (p.z - lp.z) ^ 2)
-            if (flat < 1300 and math.abs(p.y - lp.y) < 600) or flat > LEASH then
-                CDV.Carry[name], carryAt[name] = nil, nil
-            else
-                local tx, ty, tz = lp.x, lp.y, lp.z
-                local clear = false
-                pcall(function()
-                    clear = TEN.Util.HasLineOfSight(m:GetRoomNumber(), TEN.Vec3(p.x, p.y - 700, p.z), TEN.Vec3(lp.x, lp.y - 700, lp.z)) == true
-                end)
-                if not clear and #trail > 0 then
-                    local k = nil
-                    for i = 1, #trail do if trail[i] == carryAt[name] then k = i end end
-                    if k == nil then                     -- start from the point of her trail nearest to him
-                        local best = nil
-                        for i = 1, #trail do
-                            local cd = (trail[i].x - p.x) ^ 2 + (trail[i].z - p.z) ^ 2
-                            if best == nil or cd < best then best, k = cd, i end
-                        end
-                    end
-                    local c = trail[k]
-                    if (c.x - p.x) ^ 2 + (c.z - p.z) ^ 2 < 220 ^ 2 and k < #trail then k = k + 1; c = trail[k] end
-                    carryAt[name] = c
-                    tx, ty, tz = c.x, c.y, c.z
-                end
-                local dx, dz = tx - p.x, tz - p.z
-                local dist = math.sqrt(dx * dx + dz * dz)
-                if dist > 1 then
-                    local step = math.min(30, dist)
-                    local nx, nz = p.x + dx / dist * step, p.z + dz / dist * step
-                    -- always on the floor: a step higher or lower than a click (she climbed, jumped, dropped) ends it
-                    local f = CDV.FloorAt(nx, p.y, nz, m:GetRoomNumber())
-                    if f == nil or math.abs(f - p.y) > 300 then
-                        CDV.Carry[name], carryAt[name] = nil, nil
-                    else
-                        pcall(function()
-                            m:SetPosition(TEN.Vec3(math.floor(nx), f, math.floor(nz)))
-                            m:SetRotation(TEN.Rotation(0, math.deg(math.atan(dx, dz)), 0))
-                        end)
-                    end
-                end
-            end
-        end
-    end
-end)
 
 -- 26 Nov: the fights were too easy (reviews). Men and dogs start with more hit points.
 CDV.TOUGH = 1.8
@@ -1794,12 +1713,8 @@ CDV.Loop(function()
         if m ~= nil and m:GetValid() and m:GetActive() and m:GetHP() > 0 then
             local ok = pcall(function()
                 local c = TEN.Objects.Creature(m)
-                if WALKERS[name] and not CDV.Aware[name] then
-                    -- it has not seen her: the engine's own mood (never forced). One that gave up is let go.
-                    if CDV.Aware[name] == false then c:SetMood(TEN.Objects.MoodType.AUTO or TEN.Objects.MoodType.BORED) end
-                else
-                    c:SetMood(TEN.Objects.MoodType.ATTACK)
-                end
+                -- the engine's own mood: a mood forced by an older script (a savegame) is released
+                if TEN.Objects.MoodType.AUTO ~= nil then c:SetMood(TEN.Objects.MoodType.AUTO) end
                 if HUNT_BATS[name] then c:SetHurtByPlayer(true) end
             end)
             if not huntSaid then

@@ -82,7 +82,7 @@ class World:
                 c = [v + py for v in s.get("ceil", [0] * 4)]
                 self.cols[(int(px) + x, int(pz) + z)].append(
                     dict(lo=min(f), hi=max(f), ceil=min(c), cmax=max(c), room=n, flags=s.get("flags", 0), water=wet,
-                         lx=x, lz=z))
+                         lx=x, lz=z, corners=f))
         # join the spaces stacked on one column: the upper one has no floor of its own there
         self.nodes = {}                               # (X, Z, k) -> dict
         for key, lst in self.cols.items():
