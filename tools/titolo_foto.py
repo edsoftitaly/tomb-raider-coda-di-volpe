@@ -3,7 +3,7 @@ wall, and a flyby (sequence 0) that breathes slowly in front of it. TombEngine c
 title by script (Flow.SetTitleScreenImagePath is not implemented in 2.0), so the picture is a wall.
 
   titolo_foto.py <picture> <installed level .prj2 (for its sound list)> <out dir>
-  -> <out>/Title.prj2, cdv_title.png (Levels\\CdV_Textures), Logo.png (Engine\\Textures), main.png (Engine\\Screens)"""
+  -> <out>/Title.prj2, cdv_title_santuario.png (Levels\\CdV_Textures), Logo.png (Engine\\Textures), main.png (Engine\\Screens)"""
 import os
 import sys
 
@@ -76,7 +76,7 @@ def loading(pic, out):
 def level(out, sounds_from):
     lv = prj2.Level()
     lv.use_tombide_ten("title.ten")
-    lv.textures.append({"path": "$(LevelDirectory)\\..\\CdV_Textures\\cdv_title.png"})
+    lv.textures.append({"path": "$(LevelDirectory)\\..\\CdV_Textures\\cdv_title_santuario.png"})
     r = prj2.Room("TITLE", 5, 6)
     r.ambient = (0.5, 0.5, 0.5)                      # 128: the picture at its own brightness, no lamp
     r.light_effect = 0
@@ -117,7 +117,7 @@ def level(out, sounds_from):
 def main():
     src, sounds_from, out = sys.argv[1:4]
     os.makedirs(out, exist_ok=True)
-    pic = texture(src, os.path.join(out, "cdv_title.png"))
+    pic = texture(src, os.path.join(out, "cdv_title_santuario.png"))
     logo(os.path.join(out, "Logo.png"))
     loading(pic, os.path.join(out, "main.png"))
     level(out, sounds_from)

@@ -9,7 +9,7 @@ local CDV_LOGO = nil          -- es. "FMV\\cdv_logo.mp4": video all'avvio del gi
 
 Flow.SetIntroImagePath("Screens\\intro.jpg")
 if CDV_LOGO then Flow.SetIntroVideoPath(CDV_LOGO) end
-Flow.SetTotalSecretCount(12)
+Flow.SetTotalSecretCount(20)
 Flow.EnablePointFilter(false)
 Flow.EnableLoadSave(true)
 Flow.EnableFlyCheat(not CDV_RELEASE)
@@ -75,11 +75,9 @@ title.ambientTrack = "tr3_01_laras_theme"          -- Tomb Raider III, the theme
 title.levelFile = "Data\\title.ten"
 title.scriptFile = "Scripts\\Levels\\title.lua"
 title.loadScreenFile = "Screens\\main.png"
-title.farView = 130                                -- the flight goes over Tindari too
+title.farView = 20                                 -- one small room: the picture of the sanctuary on a wall
 title.horizon1.enabled = false
-title.layer1 = TEN.Flow.SkyLayer(TEN.Color(16, 20, 36), 2)   -- Title.lua changes sky and fog place by place
-title.starfield = TEN.Flow.Starfield(2500)
-title.fog = TEN.Flow.Fog(TEN.Color(16, 20, 36), 16, 36)
+title.fog = TEN.Flow.Fog(TEN.Color(0, 0, 0), 30, 40)
 Flow.AddLevel(title)
 
 --------------------------------------------------
