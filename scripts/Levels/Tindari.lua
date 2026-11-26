@@ -1112,6 +1112,37 @@ CDV.Loop(function()
     end
 end)
 
+-- 26 Nov: the playable ground is three rectangles (sectors: x0, z0, x1, z1): the theatre; camp, compound and basilica;
+-- sanctuary and belvedere. The fence of the dig stands on their edge (nov26_tindari.py); where she gets past it all the
+-- same (a jump from high ground) she is put back where she was.
+CDV.AREA = { { 26, 58, 66, 92 }, { 60, 20, 122, 90 }, { 118, 42, 168, 78 } }
+local areaLast = nil
+CDV.Loop(function()
+    local p = Lara:GetPosition()
+    local X, Z = p.x / 1024, p.z / 1024
+    for _, r in ipairs(CDV.AREA) do
+        if X >= r[1] and X < r[3] + 1 and Z >= r[2] and Z < r[4] + 1 then
+            areaLast = { p.x, p.z }
+            return
+        end
+    end
+    if areaLast == nil then return end
+    Lara:SetPosition(TEN.Vec3(math.floor(areaLast[1]), p.y, math.floor(areaLast[2])), false)
+    if not CDV.Flag("detto_recinto") then
+        CDV.Flag("detto_recinto", true)
+        CDV.Say("Nothing out there but thistles. The dig is fenced for a reason.", 5)
+    end
+end)
+
+-- 26 Nov: the fights were too easy (reviews). Men and dogs start with more hit points.
+CDV.TOUGH = 1.7
+CDV.StartList[#CDV.StartList + 1] = function()
+    for _, n in ipairs({ "t1", "t2", "t3", "t4", "t5", "t6", "t7", "t8", "c1", "c2", "c3", "b1", "b2", "b3" }) do
+        local m = CDV.M(n)
+        if m ~= nil and m:GetValid() then pcall(function() m:SetHP(math.floor(m:GetHP() * CDV.TOUGH)) end) end
+    end
+end
+
 local HUNTERS = { "t4", "t5", "c3", "t1", "t2", "c1", "t6", "t3", "t7", "c2", "t8", "pip_u1", "pip_u2", "pip_k0", "pip_k1", "pip_k2", "pip_e0", "pip_e1", "pip_e2", "pip_e3", "pip_e4", "pip_e5", "b1", "b2", "b3" }
 local HUNT_BATS = { ["pip_u1"] = true, ["pip_u2"] = true, ["pip_k0"] = true, ["pip_k1"] = true, ["pip_k2"] = true, ["pip_e0"] = true, ["pip_e1"] = true, ["pip_e2"] = true, ["pip_e3"] = true, ["pip_e4"] = true, ["pip_e5"] = true }
 local huntFrame, huntSaid = 0, false

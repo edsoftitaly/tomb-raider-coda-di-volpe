@@ -89,7 +89,8 @@ class World:
             lst.sort(key=lambda d: d["lo"])
             spaces = []
             for d in lst:
-                if spaces and abs(spaces[-1]["ceil"] - d["lo"]) <= 2 and abs(spaces[-1]["cmax"] - d["hi"]) <= 2:
+                if spaces and abs(spaces[-1]["ceil"] - d["lo"]) <= 2 and abs(spaces[-1]["cmax"] - d["hi"]) <= 2 and \
+                        any((self.base(ra), self.base(d["room"])) in self.linked for ra in spaces[-1]["rooms"]):
                     sp = spaces[-1]
                     sp["surface"] = d["lo"] if sp["water"] and not d["water"] else sp.get("surface")
                     sp["ceil"], sp["cmax"] = d["ceil"], d["cmax"]
@@ -242,7 +243,7 @@ class World:
                     continue
                 for m in self.bycol.get((X + dx, Z + dz), []):
                     sq = self.nodes[m]
-                    if not (self.near(sp, sq) if (dx and dz) else self.joined(sp, sq)):
+                    if not self.joined(sp, sq):
                         continue
                     g = self.stand(m)
                     qwet = sq["water"] and sq["surface"] is not None

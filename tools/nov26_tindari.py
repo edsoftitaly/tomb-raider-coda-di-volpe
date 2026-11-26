@@ -31,5 +31,22 @@ for i, (X, Z) in enumerate(FENCE):
     rooms_p = P.add_objects(rooms_p, r["name"], [ch])
     oid += 1
     n += 1
+# The playable ground is three rectangles (theatre; camp, compound and basilica; sanctuary and belvedere): the rest of
+# the plain is fenced off with the metal fence of the dig (static 126, solid, one sector a module) wherever she could
+# have walked out. It also closes the walk round the long wall, which skipped the cryptoporticus and its key.
+# The same rectangles are in Tindari.lua (CDV.AREA). Modules found by reach.py: nov26_tindari_fences.json.
+import os
+fences = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "nov26_tindari_fences.json")))
+nf = 0
+for (wx, wy, wz, ry) in fences:
+    hit = L.room_of(rooms, int(wx // 1024), int(wz // 1024), y=wy)
+    if not hit:
+        continue
+    r, lx, lz, f = hit
+    pos = (wx - r["pos"][0] * 1024, wy - r["pos"][1], wz - r["pos"][2] * 1024)
+    rooms_p = P.add_objects(rooms_p, r["name"], [L.static_chunk(tpl, oid, 126, pos, ry=float(ry))])
+    oid += 1
+    nf += 1
+print("fence modules:", nf, "of", len(fences))
 P.save(dst, head, [(c, rooms_p if c == b"TeRooms" else p) for c, p in top])
 print("prickly pears on wall tops:", n)

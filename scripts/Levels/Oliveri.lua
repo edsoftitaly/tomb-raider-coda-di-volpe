@@ -1221,6 +1221,15 @@ CDV.Loop(function()
     end
 end)
 
+-- 26 Nov: the fights were too easy (reviews). Men and dogs start with more hit points.
+CDV.TOUGH = 1.3
+CDV.StartList[#CDV.StartList + 1] = function()
+    for _, n in ipairs({ "cane1", "cane2", "palo", "ladro_chiave", "ladro_terra", "ladro_primo", "ladro_ripostiglio" }) do
+        local m = CDV.M(n)
+        if m ~= nil and m:GetValid() then pcall(function() m:SetHP(math.floor(m:GetHP() * CDV.TOUGH)) end) end
+    end
+end
+
 local HUNTERS = { "cane1", "cane2", "palo", "ladro_chiave", "ladro_terra", "ladro_primo", "ladro_ripostiglio" }
 local HUNT_BATS = {  }
 local huntFrame, huntSaid = 0, false
