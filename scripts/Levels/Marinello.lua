@@ -1447,7 +1447,8 @@ CDV.Loop(function()
                 end
                 if s.n >= 4 and not PointOnScreen(p) then
                     local c, cd = TrailPoint(lp, d - 1024)
-                    if c ~= nil then
+                    local cf = c and CDV.FloorAt(c.x, c.y, c.z, c.room)
+                    if c ~= nil and cf ~= nil and math.abs(cf - c.y) <= 64 then
                         local ok = pcall(function()
                             m:SetPosition(TEN.Vec3(c.x, c.y, c.z), false)
                             m:SetRoomNumber(c.room)
@@ -1466,6 +1467,14 @@ end)
 
 -- 26 Nov: nobody stays behind. A man or a dog that has noticed her and is not getting any closer (a doorway it will
 -- not cross, a step, a corner) is walked to her by the script, along her own trail, until it is within reach.
+function CDV.FloorAt(x, y, z, room)
+    local f = nil
+    pcall(function()
+        local pr = TEN.Collision.Probe(TEN.Vec3(math.floor(x), math.floor(y) - 256, math.floor(z)), room)
+        if pr:IsWall() ~= true then f = pr:GetFloorHeight() end
+    end)
+    return f
+end
 CDV.Carry = {}
 CDV.CarryOk = function(name, p, lp) return (p.x > 30 * 1024) == (lp.x > 30 * 1024) or CDV.Done("use_lucchetto") end      -- the ridge and its gate
 local carryAt = {}
@@ -1506,11 +1515,17 @@ CDV.Loop(function()
                 local dist = math.sqrt(dx * dx + dz * dz)
                 if dist > 1 then
                     local step = math.min(30, dist)
-                    local ny = p.y + math.max(-40, math.min(40, ty - p.y))
-                    pcall(function()
-                        m:SetPosition(TEN.Vec3(math.floor(p.x + dx / dist * step), math.floor(ny), math.floor(p.z + dz / dist * step)))
-                        m:SetRotation(TEN.Rotation(0, math.deg(math.atan(dx, dz)), 0))
-                    end)
+                    local nx, nz = p.x + dx / dist * step, p.z + dz / dist * step
+                    -- always on the floor: a step higher or lower than a click (she climbed, jumped, dropped) ends it
+                    local f = CDV.FloorAt(nx, p.y, nz, m:GetRoomNumber())
+                    if f == nil or math.abs(f - p.y) > 300 then
+                        CDV.Carry[name], carryAt[name] = nil, nil
+                    else
+                        pcall(function()
+                            m:SetPosition(TEN.Vec3(math.floor(nx), f, math.floor(nz)))
+                            m:SetRotation(TEN.Rotation(0, math.deg(math.atan(dx, dz)), 0))
+                        end)
+                    end
                 end
             end
         end
