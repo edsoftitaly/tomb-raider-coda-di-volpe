@@ -1190,6 +1190,7 @@ CDV.Loop(function()
                         sees = TEN.Util.HasLineOfSight(m:GetRoomNumber(), TEN.Vec3(p.x, p.y - 700, p.z), TEN.Vec3(lp.x, lp.y - 700, lp.z)) == true
                     end)
                 end
+                if not sees and flat < 2560 and math.abs(p.y - lp.y) < 1024 then sees = true end      -- 26 Nov: she is heard
                 if sees then
                     CDV.Aware[name] = true
                     CDV.Log("HUNT " .. name .. " has seen her, " .. math.floor(d / 1024) .. " sectors away")
@@ -1203,8 +1204,12 @@ CDV.Loop(function()
             if CDV.Aware[name] then
                 local s = stuck[name] or { d = d, n = 0 }
                 stuck[name] = s
-                if d > 5 * 1024 and d > s.d - 256 then s.n = s.n + 1 else s.n = 0 end
+                if d > 1536 and d > s.d - 256 then s.n = s.n + 1 else s.n = 0 end
                 s.d = d
+                if s.n >= 2 and d <= 6 * 1024 and not CDV.Carry[name] and (CDV.CarryOk == nil or CDV.CarryOk(name, p, lp)) then   -- 26 Nov: near and not coming
+                    CDV.Carry[name] = true
+                    CDV.Log("HUNT " .. name .. " walked to her, " .. math.floor(d / 1024) .. " sectors away")
+                end
                 if s.n >= 4 and not PointOnScreen(p) then
                     local c, cd = TrailPoint(lp, d - 1024)
                     if c ~= nil then
@@ -1220,6 +1225,59 @@ CDV.Loop(function()
             end
         else
             stuck[name] = nil
+        end
+    end
+end)
+
+-- 26 Nov: nobody stays behind. A man or a dog that has noticed her and is not getting any closer (a doorway it will
+-- not cross, a step, a corner) is walked to her by the script, along her own trail, until it is within reach.
+CDV.Carry = {}
+CDV.CarryOk = function(name, p, lp) return name ~= "palo" or CDV.Flag("cancello_aperto") == true end
+local carryAt = {}
+CDV.Loop(function()
+    if Lara:GetHP() <= 0 then return end
+    local lp = Lara:GetPosition()
+    for name, on in pairs(CDV.Carry) do
+        local m = CDV.M(name)
+        if not on or m == nil or not m:GetValid() or not m:GetActive() or m:GetHP() <= 0 then
+            CDV.Carry[name], carryAt[name] = nil, nil
+        else
+            local p = m:GetPosition()
+            local flat = math.sqrt((p.x - lp.x) ^ 2 + (p.z - lp.z) ^ 2)
+            if (flat < 1300 and math.abs(p.y - lp.y) < 600) or flat > LEASH then
+                CDV.Carry[name], carryAt[name] = nil, nil
+            else
+                local tx, ty, tz = lp.x, lp.y, lp.z
+                local clear = false
+                pcall(function()
+                    clear = TEN.Util.HasLineOfSight(m:GetRoomNumber(), TEN.Vec3(p.x, p.y - 700, p.z), TEN.Vec3(lp.x, lp.y - 700, lp.z)) == true
+                end)
+                if not clear and #trail > 0 then
+                    local k = nil
+                    for i = 1, #trail do if trail[i] == carryAt[name] then k = i end end
+                    if k == nil then                     -- start from the point of her trail nearest to him
+                        local best = nil
+                        for i = 1, #trail do
+                            local cd = (trail[i].x - p.x) ^ 2 + (trail[i].z - p.z) ^ 2
+                            if best == nil or cd < best then best, k = cd, i end
+                        end
+                    end
+                    local c = trail[k]
+                    if (c.x - p.x) ^ 2 + (c.z - p.z) ^ 2 < 220 ^ 2 and k < #trail then k = k + 1; c = trail[k] end
+                    carryAt[name] = c
+                    tx, ty, tz = c.x, c.y, c.z
+                end
+                local dx, dz = tx - p.x, tz - p.z
+                local dist = math.sqrt(dx * dx + dz * dz)
+                if dist > 1 then
+                    local step = math.min(30, dist)
+                    local ny = p.y + math.max(-40, math.min(40, ty - p.y))
+                    pcall(function()
+                        m:SetPosition(TEN.Vec3(math.floor(p.x + dx / dist * step), math.floor(ny), math.floor(p.z + dz / dist * step)))
+                        m:SetRotation(TEN.Rotation(0, math.deg(math.atan(dx, dz)), 0))
+                    end)
+                end
+            end
         end
     end
 end)

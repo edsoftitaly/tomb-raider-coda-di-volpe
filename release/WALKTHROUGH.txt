@@ -19,7 +19,8 @@ GENERAL NOTES
 - A door that is kicked open opens from either side.
 - At Marinello the open sea is closed by the current: there is no way round the rock ridge by water.
 - At Tindari the dig is fenced; at Oliveri the Carabinieri have closed the streets round the block.
-- The men of the gang are tougher than in release 1.0.
+- The men of the gang are tougher than in release 1.0, and once they have noticed you they come for you
+  wherever you stand.
 
 
 WEAPONS
@@ -69,7 +70,8 @@ Goal: reach Donna Villa's cave in the cliff and take the Star of Castor.
 
 1. The old tuna fishery. Kick the doors of the houses open. In the house of the rais: the ledger (the crank is
    in the net store, the two levers of the Seal are on the lake bed) and the Shotgun on the table.
-2. The net store: push the wooden crate onto the stone slab with the iron ring. A tall block rises by the loft,
+2. The net store is barred. On the wall to the right of its door, a tally board of three pegs: leave the first,
+   turn the second and the third (the order is in the ledger of the rais). Inside: push the wooden crate onto the stone slab with the iron ring. A tall block rises by the loft,
    too high to climb from the floor. Pull the crate off the slab (the block stays up) and push it against the
    block: crate, block, loft. Up there, the Crank (and a man waiting).
 3. In the yellow house, the winch of the Mergolo sluice: stand in front of it and use the Crank. The lake
@@ -100,8 +102,10 @@ Goal: follow Turi through the crypt under the sanctuary.
 
 1. The grave robbers' camp. The house in the dig is locked; the keyhole is in the wall beside the door. The
    foreman has the key and he is down in the Greek theatre, to the west.
-2. The theatre: the foreman and his men are in the arena. He drops the Dig Site Key. Go back, stand in front
-   of the keyhole and use it.
+2. The theatre: the foreman and his men are in the arena. He drops the Dig Site Key, and on the stage
+   wall the order of the pegs is chalked. Go back: on the wall to the right of the door of the dig house turn
+   the first and the third of the three iron pegs (the chain drops from the bolt), then stand in front of the
+   keyhole and use the key.
 3. Through the Roman house: the mosaic of the caps. The inscription says that Castor, the mortal, treads the
    earth: walk only on the caps the panel gives to Castor. The others give way. In the Roman quarter beyond it:
    the Terrace Key and the Grenade launcher.
@@ -140,7 +144,8 @@ Goal: stop Turi and bring both Stars out.
 6. Turi 'a Vulpi wears the Star of Pollux and cannot be killed: he flies, throws fire and brings fire down
    from the vault. But he can be hurt, and the altar will not take the Star of Castor back while his Star burns
    at full strength. Shoot him with the heaviest weapons you have until he staggers and his Star flickers.
-   Then run back to the altar and set the Star of Castor: the sea fills the cella and takes him. If you catch fire, it goes out by itself in a moment, or in the water.
+   You then have thirty-five seconds to run back to the altar and set the Star of Castor: the sea fills the
+   cella and takes him. Too slow, and he recovers: wound him again (it takes half as long). If you catch fire, it goes out by itself in a moment, or in the water.
 7. The Star of Pollux floats up. Set it in the second socket. The vault starts to give way and the spirits
    come: lead them into the water, as in Donna Villa's cave.
 8. The bronze door gives. Run: boulders again, use the niches. Out into the dawn over the sand spit of

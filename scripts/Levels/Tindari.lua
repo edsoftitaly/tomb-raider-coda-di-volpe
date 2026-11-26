@@ -1081,6 +1081,7 @@ CDV.Loop(function()
                         sees = TEN.Util.HasLineOfSight(m:GetRoomNumber(), TEN.Vec3(p.x, p.y - 700, p.z), TEN.Vec3(lp.x, lp.y - 700, lp.z)) == true
                     end)
                 end
+                if not sees and flat < 2560 and math.abs(p.y - lp.y) < 1024 then sees = true end      -- 26 Nov: she is heard
                 if sees then
                     CDV.Aware[name] = true
                     CDV.Log("HUNT " .. name .. " has seen her, " .. math.floor(d / 1024) .. " sectors away")
@@ -1094,8 +1095,12 @@ CDV.Loop(function()
             if CDV.Aware[name] then
                 local s = stuck[name] or { d = d, n = 0 }
                 stuck[name] = s
-                if d > 5 * 1024 and d > s.d - 256 then s.n = s.n + 1 else s.n = 0 end
+                if d > 1536 and d > s.d - 256 then s.n = s.n + 1 else s.n = 0 end
                 s.d = d
+                if s.n >= 2 and d <= 6 * 1024 and not CDV.Carry[name] and (CDV.CarryOk == nil or CDV.CarryOk(name, p, lp)) then   -- 26 Nov: near and not coming
+                    CDV.Carry[name] = true
+                    CDV.Log("HUNT " .. name .. " walked to her, " .. math.floor(d / 1024) .. " sectors away")
+                end
                 if s.n >= 4 and not PointOnScreen(p) then
                     local c, cd = TrailPoint(lp, d - 1024)
                     if c ~= nil then
@@ -1134,6 +1139,59 @@ CDV.Loop(function()
     if not CDV.Flag("detto_recinto") then
         CDV.Flag("detto_recinto", true)
         CDV.Say("Nothing out there but thistles. The dig is fenced for a reason.", 5)
+    end
+end)
+
+-- 26 Nov: nobody stays behind. A man or a dog that has noticed her and is not getting any closer (a doorway it will
+-- not cross, a step, a corner) is walked to her by the script, along her own trail, until it is within reach.
+CDV.Carry = {}
+CDV.CarryOk = function(name, p, lp) return (p.x > 108 * 1024) == (lp.x > 108 * 1024) end      -- the long wall
+local carryAt = {}
+CDV.Loop(function()
+    if Lara:GetHP() <= 0 then return end
+    local lp = Lara:GetPosition()
+    for name, on in pairs(CDV.Carry) do
+        local m = CDV.M(name)
+        if not on or m == nil or not m:GetValid() or not m:GetActive() or m:GetHP() <= 0 then
+            CDV.Carry[name], carryAt[name] = nil, nil
+        else
+            local p = m:GetPosition()
+            local flat = math.sqrt((p.x - lp.x) ^ 2 + (p.z - lp.z) ^ 2)
+            if (flat < 1300 and math.abs(p.y - lp.y) < 600) or flat > LEASH then
+                CDV.Carry[name], carryAt[name] = nil, nil
+            else
+                local tx, ty, tz = lp.x, lp.y, lp.z
+                local clear = false
+                pcall(function()
+                    clear = TEN.Util.HasLineOfSight(m:GetRoomNumber(), TEN.Vec3(p.x, p.y - 700, p.z), TEN.Vec3(lp.x, lp.y - 700, lp.z)) == true
+                end)
+                if not clear and #trail > 0 then
+                    local k = nil
+                    for i = 1, #trail do if trail[i] == carryAt[name] then k = i end end
+                    if k == nil then                     -- start from the point of her trail nearest to him
+                        local best = nil
+                        for i = 1, #trail do
+                            local cd = (trail[i].x - p.x) ^ 2 + (trail[i].z - p.z) ^ 2
+                            if best == nil or cd < best then best, k = cd, i end
+                        end
+                    end
+                    local c = trail[k]
+                    if (c.x - p.x) ^ 2 + (c.z - p.z) ^ 2 < 220 ^ 2 and k < #trail then k = k + 1; c = trail[k] end
+                    carryAt[name] = c
+                    tx, ty, tz = c.x, c.y, c.z
+                end
+                local dx, dz = tx - p.x, tz - p.z
+                local dist = math.sqrt(dx * dx + dz * dz)
+                if dist > 1 then
+                    local step = math.min(30, dist)
+                    local ny = p.y + math.max(-40, math.min(40, ty - p.y))
+                    pcall(function()
+                        m:SetPosition(TEN.Vec3(math.floor(p.x + dx / dist * step), math.floor(ny), math.floor(p.z + dz / dist * step)))
+                        m:SetRotation(TEN.Rotation(0, math.deg(math.atan(dx, dz)), 0))
+                    end)
+                end
+            end
+        end
     end
 end)
 
@@ -1185,13 +1243,45 @@ function CDV.KickLocked(name)
     end
     return true
 end
-CDV.Use({ id = "lucchetto", item = ID.PUZZLE_ITEM13, x = 83456, y = -24832, z = 52736, r = 1500, dy = 800, consume = true, near = "porta_casa", fn = function()
+-- 26 Nov: the pegs. A chain runs from three iron pegs to the bolt of the door: first and third turned, it drops.
+local PEGS = { true, false, true }
+CDV.Loop(function()
+    if CDV.Flag("tavola_ok") then return end
+    local ok = true
+    for i = 1, 3 do
+        local n = "piolo_" .. i
+        if CDV.Used(n) then
+            CDV.Rearm(n)
+            CDV.Flag(n, not (CDV.Flag(n) == true))
+            CDV.Flag("piolo_t", 50)
+        end
+        if (CDV.Flag(n) == true) ~= PEGS[i] then ok = false end
+    end
+    local t = CDV.Flag("piolo_t") or 0
+    if t > 0 then
+        CDV.Flag("piolo_t", t - 1)
+        if t == 1 then
+            if ok then
+                CDV.Flag("tavola_ok", true)
+                CDV.Sfx(105)
+                CDV.Say("The chain drops from the bolt. Now the door only wants its key.", 6)
+            elseif not CDV.Flag("piolo_detto") then
+                CDV.Flag("piolo_detto", true)
+                CDV.Say("The chain holds. Someone at the theatre must know the order of the pegs.", 6)
+            end
+        end
+    end
+end)
+CDV.Zone({ id = "pioli_casa", x = 83456, y = -24832, z = 52224, r = 1800, dy = 800, once = true, text = "The house in the dig: a keyhole, and three iron pegs with a chain to the bolt.", secs = 7, need = function() return not CDV.Flag("tavola_ok") end })
+CDV.Zone({ id = "pioli_indizio", x = 39424, y = -25088, z = 86528, r = 2600, dy = 1500, once = true, text = "Chalked on the stage wall: 'Dig house: first peg and third.'", secs = 8 })
+
+CDV.Use({ id = "lucchetto", item = ID.PUZZLE_ITEM13, x = 83456, y = -24832, z = 52736, r = 1500, dy = 800, consume = true, near = "porta_casa", need = function() return CDV.Flag("tavola_ok") == true end, fn = function()
         Lara:SetAnim(131)          -- LA_USE_KEY with state 42, as at the seal of Marinello
         Lara:SetState(42)
         CDV.After(45, function() CDV.Sfx(114) end)
     end })
 CDV.Loop(function()
-    if CDV.Done("use_lucchetto") or not CDV.Has(ID.PUZZLE_ITEM13) then return end
+    if CDV.Done("use_lucchetto") or not CDV.Has(ID.PUZZLE_ITEM13) or not CDV.Flag("tavola_ok") then return end
     local m = CDV.M("porta_casa")
     if m == nil or not m:GetValid() then return end
     local q = m:GetPosition()
