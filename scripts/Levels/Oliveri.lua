@@ -967,7 +967,7 @@ CDV.Zone({ id = "fine_no", x = 16896, y = -1280, z = 20992, r = 2600, dy = 4000,
 
 CDV.Secret({ index = 0, x = 33280, y = -1280, z = 30208, r = 800 })
 -- 26 Nov: two more Stars (the reviews asked for more to look for)
-CDV.Secret({ index = 4, x = 53760, y = -4608, z = 32256, r = 900, give = ID.SMALLMEDI_ITEM, text = "" })
+CDV.Secret({ index = 4, x = 34304, y = -6144, z = 31232, r = 900, give = ID.SMALLMEDI_ITEM, text = "" })
 CDV.Secret({ index = 5, x = 25088, y = -1280, z = 17920, r = 900, give = ID.SHOTGUN_AMMO1_ITEM, text = "" })
 
 -- The padlock of the trapdoor: a chain hangs from the trapdoor down the north wall of the box room, to a padlock at
@@ -1226,6 +1226,119 @@ CDV.Loop(function()
         else
             stuck[name] = nil
         end
+    end
+end)
+
+-- 26 Nov: nobody stays behind. A man or a dog that has noticed her and is not getting any closer (a doorway it will
+-- not cross, a step, a corner) is walked to her by the script, along her own trail, until it is within reach.
+CDV.Carry = {}
+CDV.CarryOk = function(name, p, lp) return name ~= "palo" or CDV.Flag("cancello_aperto") == true end
+local carryAt = {}
+CDV.Loop(function()
+    if Lara:GetHP() <= 0 then return end
+    local lp = Lara:GetPosition()
+    for name, on in pairs(CDV.Carry) do
+        local m = CDV.M(name)
+        if not on or m == nil or not m:GetValid() or not m:GetActive() or m:GetHP() <= 0 then
+            CDV.Carry[name], carryAt[name] = nil, nil
+        else
+            local p = m:GetPosition()
+            local flat = math.sqrt((p.x - lp.x) ^ 2 + (p.z - lp.z) ^ 2)
+            if (flat < 1300 and math.abs(p.y - lp.y) < 600) or flat > LEASH then
+                CDV.Carry[name], carryAt[name] = nil, nil
+            else
+                local tx, ty, tz = lp.x, lp.y, lp.z
+                local clear = false
+                pcall(function()
+                    clear = TEN.Util.HasLineOfSight(m:GetRoomNumber(), TEN.Vec3(p.x, p.y - 700, p.z), TEN.Vec3(lp.x, lp.y - 700, lp.z)) == true
+                end)
+                if not clear and #trail > 0 then
+                    local k = nil
+                    for i = 1, #trail do if trail[i] == carryAt[name] then k = i end end
+                    if k == nil then                     -- start from the point of her trail nearest to him
+                        local best = nil
+                        for i = 1, #trail do
+                            local cd = (trail[i].x - p.x) ^ 2 + (trail[i].z - p.z) ^ 2
+                            if best == nil or cd < best then best, k = cd, i end
+                        end
+                    end
+                    local c = trail[k]
+                    if (c.x - p.x) ^ 2 + (c.z - p.z) ^ 2 < 220 ^ 2 and k < #trail then k = k + 1; c = trail[k] end
+                    carryAt[name] = c
+                    tx, ty, tz = c.x, c.y, c.z
+                end
+                local dx, dz = tx - p.x, tz - p.z
+                local dist = math.sqrt(dx * dx + dz * dz)
+                if dist > 1 then
+                    local step = math.min(30, dist)
+                    local ny = p.y + math.max(-40, math.min(40, ty - p.y))
+                    pcall(function()
+                        m:SetPosition(TEN.Vec3(math.floor(p.x + dx / dist * step), math.floor(ny), math.floor(p.z + dz / dist * step)))
+                        m:SetRotation(TEN.Rotation(0, math.deg(math.atan(dx, dz)), 0))
+                    end)
+                end
+            end
+        end
+    end
+end)
+
+-- 26 Nov: the fights were too easy (reviews). Men and dogs start with more hit points.
+CDV.TOUGH = 1.3
+CDV.StartList[#CDV.StartList + 1] = function()
+    for _, n in ipairs({ "cane1", "cane2", "palo", "ladro_chiave", "ladro_terra", "ladro_primo", "ladro_ripostiglio" }) do
+        local m = CDV.M(n)
+        if m ~= nil and m:GetValid() then pcall(function() m:SetHP(math.floor(m:GetHP() * CDV.TOUGH)) end) end
+    end
+end
+
+-- 26 Nov: the town is closed outside the sectors marked "o" (rows by z, first column x = 15; nov26_oliveri2.py): the
+-- house, the roofs from the hatch to the Star and down to the street, the street to the gate, the lane and the
+-- courtyard, the main street west to the town hall end. Barriers of the Carabinieri stand on every street edge;
+-- past them, and anywhere else over the roofs, she is put back where she was.
+CDV.AREA_X0 = 15
+CDV.AREA = {
+    [30] = ".........oooooooooo...............",
+    [29] = ".........oooooooooooooooooooooo...",
+    [28] = ".........oooooooooooooooooooooo...",
+    [27] = ".........oooooooooooooooooooooo...",
+    [26] = ".........oooooooooooooooo...ooo...",
+    [25] = ".........ooooooooo...oooo...ooo...",
+    [24] = ".......................oooo.ooo...",
+    [23] = ".......................oooooooo...",
+    [22] = "........................ooooooo...",
+    [21] = "ooo......................ooo......",
+    [20] = "oooo.....................oooo.....",
+    [19] = "oooooooooooooooooooooooooooooo....",
+    [18] = ".ooooooooooooooooooooooooooooo....",
+    [17] = "..oooooooooooooooooooooooooooo....",
+    [16] = "............................o.....",
+    [15] = "............................o.....",
+    [14] = "............................o.....",
+    [13] = "............................o.....",
+    [12] = "............................o.....",
+    [11] = "............................o.....",
+    [10] = "......................oooooooooooo",
+    [9] = "......................oooooooooooo",
+    [8] = "......................oooooooooooo",
+    [7] = "......................oooooooooooo",
+    [6] = "......................oooooooooooo",
+    [5] = "......................oooooooooooo"
+}
+local areaLast = nil
+CDV.Loop(function()
+    local p = Lara:GetPosition()
+    local row = CDV.AREA[math.floor(p.z / 1024)]
+    local k = math.floor(p.x / 1024) - CDV.AREA_X0 + 1
+    if row ~= nil and k >= 1 and string.sub(row, k, k) == "o" then
+        areaLast = { p.x, p.z }
+        return
+    end
+    if areaLast == nil then return end
+    Lara:SetPosition(TEN.Vec3(math.floor(areaLast[1]), p.y, math.floor(areaLast[2])), false)
+    local id = (p.y < -3000) and "detto_tetti" or "detto_recinto"
+    if not CDV.Flag(id) then
+        CDV.Flag(id, true)
+        CDV.Say((p.y < -3000) and "No way on over the roofs from here." or "The Carabinieri have closed the street. Not that way.", 5)
     end
 end)
 

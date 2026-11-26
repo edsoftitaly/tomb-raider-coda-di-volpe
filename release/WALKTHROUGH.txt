@@ -18,7 +18,8 @@ GENERAL NOTES
 - Saving is free. A savegame belongs to the version of the level it was made in.
 - A door that is kicked open opens from either side.
 - At Marinello the open sea is closed by the current: there is no way round the rock ridge by water.
-- At Tindari the dig is fenced; at Oliveri the Carabinieri have closed the streets round the block.
+- At Tindari the dig is fenced; at Oliveri the Carabinieri have closed every street but the way you need:
+  the roofs lead only to the drainpipe, the street only to the gate and then west to the town hall end.
 - The men of the gang are tougher than in release 1.0, and once they have noticed you they come for you
   wherever you stand.
 
@@ -61,7 +62,7 @@ Goal: get the Byzantine diary back from the thieves.
    street: leave by the town hall end.
 
 Stars: one in the cellar; one in the street, at the east end; one up on the roofs, near the drainpipe; one on
-the far roof at the north-east corner; one in the street west of the house, towards the town hall.
+a roof just north of the roof route, a little east of the house; one in the street west of the house, towards the town hall.
 
 
 LEVEL 2 - THE WITCH OF THE LAKES (Marinello, dawn)
