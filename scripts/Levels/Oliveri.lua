@@ -866,7 +866,12 @@ CDV.Loop(function() CDV.KeyPrompt("serratura_ripostiglio", ID.KEY_ITEM1, "use_ch
 
 CDV.Use({ id = "chiave_ripostiglio", item = ID.KEY_ITEM1, x = 30208, y = -4352, z = 28160, r = 900, dy = 600, consume = true, near = "serratura_ripostiglio", text = "", fn = function()
         CDV.InsertKey("serratura_ripostiglio", "porta_ripostiglio")
-        CDV.After(55, function()          -- the man inside comes alive as the door opens, not before
+        local tries = 0
+        local function wake()             -- the man inside comes alive once the door is open, not before
+            tries = tries + 1
+            local door = CDV.M("porta_ripostiglio")
+            if tries < 400 and (door == nil or not door:GetActive()) then CDV.After(1, wake); return end
+            if tries < 1000 then tries = 1000; CDV.After(15, wake); return end      -- the leaf has swung
             CDV.Enable("ladro_ripostiglio")
             local m = CDV.M("ladro_ripostiglio")
             if m ~= nil and m:GetValid() then pcall(function() m:SetHP(70) end) end
@@ -881,7 +886,8 @@ CDV.Use({ id = "chiave_ripostiglio", item = ID.KEY_ITEM1, x = 30208, y = -4352, 
                 if n < 40 then CDV.After(15, watch) end
             end
             watch()
-        end)
+        end
+        wake()
     end })
 
 CDV.Zone({ id = "ripostiglio_chiuso", x = 30208, y = -4352, z = 28160, r = 900, dy = 700, once = false, text = "Locked. One of the thieves must have the key.", secs = 4, need = function() return not CDV.Has(ID.KEY_ITEM1) and not CDV.Done("use_chiave_ripostiglio") end })
@@ -1239,7 +1245,7 @@ end
 -- of the town hall to the line of the Carabinieri, and the blocks east of the cross street (house, roofs, lane,
 -- courtyard). Barriers stand before the police cars and across the cross street, north and south of the main street
 -- (nov26_oliveri3.py); past them she is put back where she was.
-CDV.AREA = { { 13, 16, 20, 25 }, { 13, 17, 51, 24 }, { 21, 3, 51, 33 } }
+CDV.AREA = { { 13, 16, 20, 25 }, { 13, 17, 52, 24 }, { 21, 3, 52, 33 } }
 local areaLast = nil
 CDV.Loop(function()
     local p = Lara:GetPosition()
