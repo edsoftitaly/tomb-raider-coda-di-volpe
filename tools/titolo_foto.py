@@ -1,5 +1,5 @@
 """The title level: one small dark room with Ed's picture (Lara on the beach of Oliveri, Tindari behind) on the far
-wall, and a flyby (sequence 0) that breathes slowly in front of it. TombEngine cannot show a background image in the
+wall, and a flyby (sequence 0) whose cameras all sit on the same point: a still picture. TombEngine cannot show a background image in the
 title by script (Flow.SetTitleScreenImagePath is not implemented in 2.0), so the picture is a wall.
 
   titolo_foto.py <picture> <installed level .prj2 (for its sound list)> <out dir>
@@ -100,7 +100,7 @@ def level(out, sounds_from):
     # the wall is at z = 5120; a screen 16:9 sees the whole width of the picture from 1300 units
     cx, cy, wall = 2560.0, 1024.0, 5120.0
     loop, hide = 4, 16
-    for n, d in enumerate((1380.0, 1240.0, 1380.0)):
+    for n, d in enumerate((1200.0, 1200.0, 1200.0)):
         lv.add_flyby(r, (cx, cy, wall - d), 0, n, rot_y=0.0, rot_x=0.0, speed=0.07, fov=80.0, flags=hide | loop)          # the loop flag on every camera, as in the trailer shots
     tmp = os.path.join(out, "Title_senza_suoni.prj2")
     lv.save(tmp)
