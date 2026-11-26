@@ -676,7 +676,12 @@ function CDV.KickDoor(doorName, fn, side)
         local back, face = 917, yaw
         if side == "B" then back, face = 109, (yaw + 180) % 360 end
         local sx, sz = q.x - back * math.sin(a), q.z - back * math.cos(a)
-        if (p.x - sx) ^ 2 + (p.z - sz) ^ 2 > 520 ^ 2 then return end
+        if (p.x - sx) ^ 2 + (p.z - sz) ^ 2 > 520 ^ 2 then
+            -- 26 Nov: the other side too, so that nobody stays shut in behind a door that opened from one side only
+            if side == "B" then back, face = 917, yaw else back, face = 109, (yaw + 180) % 360 end
+            sx, sz = q.x - back * math.sin(a), q.z - back * math.cos(a)
+            if (p.x - sx) ^ 2 + (p.z - sz) ^ 2 > 520 ^ 2 then return end
+        end
         if not CDV.Flag("calcio_detto") then
             CDV.Flag("calcio_detto", true)
             CDV.Say("Face the door and press Action to kick it open.", 5)
@@ -951,7 +956,7 @@ CDV.Loop(function()
     local p = b:GetPosition()
     if math.floor(p.x / 1024) == 64 and math.floor(p.z / 1024) == 51 then
         CDV.Flag("piastra_reti", true); CDV.Enable("blocco_soppalco")
-        CDV.Say("The slab sinks under the crate. By the loft, a block rises from the floor.", 7)
+        CDV.Say("The slab sinks under the crate. By the loft, a tall block rises from the floor.", 7)
     end
 end)
 
@@ -973,6 +978,23 @@ CDV.Use({ id = "chiusa", item = ID.PUZZLE_ITEM9, x = 66048, y = -512, z = 43602,
 CDV.Loop(function() CDV.KeyPromptAt(66048, -512, 43602, 900, ID.PUZZLE_ITEM9, "use_chiusa") end)
 
 CDV.Zone({ id = "chiusa_senza", x = 66048, y = -512, z = 43602, r = 900, dy = 700, once = false, text = "The winch of the Mergolo sluice. Its crank is missing.", secs = 7, need = function() return not CDV.Done("use_chiusa") and not CDV.Has(ID.PUZZLE_ITEM9) end })
+
+-- 26 Nov: the block by the loft is two sectors high: too much from the floor. The crate, free again once the block
+-- is up, makes the step. Said once, when she stands by the block.
+CDV.Zone({ id = "blocco_alto", x = 69120, y = -512, z = 51712, r = 1300, dy = 900, once = true, text = "Too high to reach from the floor. The crate would make a step.", secs = 6, need = function() return CDV.Flag("piastra_reti") == true end })
+
+-- 26 Nov: the sea is not a way round. North of the head of the ridge and far out to the east the current takes her
+-- back: no swimming round the rock into the reed bed, no open water with nothing in it.
+local SEA_Z, SEA_X = 72 * 1024, 84 * 1024
+CDV.Loop(function()
+    local p = Lara:GetPosition()
+    if p.z <= SEA_Z and p.x <= SEA_X then return end
+    Lara:SetPosition(TEN.Vec3(math.min(p.x, SEA_X), p.y, math.min(p.z, SEA_Z)), false)
+    if not CDV.Flag("detto_corrente") then
+        CDV.Flag("detto_corrente", true)
+        CDV.Say("The current is too strong out here. There is no way round by sea.", 6)
+    end
+end)
 
 CDV.TwinLevers("fondo", "leva_fondo_0", "leva_fondo_1", 300, "The lever clicks and a chain runs under the mud. Ten seconds to pull the other.", "Too late: the chain stops and the lever springs back.", function() CDV.Enable("porta_sigillo"); CDV.Say("Both chains pull together. Up at the fishery, the Seal chamber opens.", 7) end)
 

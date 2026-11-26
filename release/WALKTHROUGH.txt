@@ -1,5 +1,5 @@
 TOMB RAIDER - CODA DI VOLPE
-Walkthrough (release 1.0, 20 November 2026)
+Walkthrough (release 1.1, 26 November 2026)
 
 This file gives the whole solution. Stop reading if you would rather find things out for yourself.
 
@@ -16,6 +16,8 @@ GENERAL NOTES
 - Every level hides three Stars of the Dioscuri (the secrets, twelve in all). Find all three in a level and the
   Twins leave you medipacks and ammunition.
 - Saving is free. A savegame belongs to the version of the level it was made in.
+- A door that is kicked open opens from either side.
+- At Marinello the open sea is closed by the current: there is no way round the rock ridge by water.
 
 
 WEAPONS
@@ -64,8 +66,9 @@ Goal: reach Donna Villa's cave in the cliff and take the Star of Castor.
 
 1. The old tuna fishery. Kick the doors of the houses open. In the house of the rais: the ledger (the crank is
    in the net store, the two levers of the Seal are on the lake bed) and the Shotgun on the table.
-2. The net store: push the wooden crate onto the stone slab with the iron ring. A block rises by the loft:
-   climb it. Up there, the Crank (and a man waiting).
+2. The net store: push the wooden crate onto the stone slab with the iron ring. A tall block rises by the loft,
+   too high to climb from the floor. Pull the crate off the slab (the block stays up) and push it against the
+   block: crate, block, loft. Up there, the Crank (and a man waiting).
 3. In the yellow house, the winch of the Mergolo sluice: stand in front of it and use the Crank. The lake
    empties.
 4. Walk down onto the bed of the Mergolo. Two iron levers, far apart: pull one and you have ten seconds to
@@ -129,8 +132,9 @@ Goal: stop Turi and bring both Stars out.
    it off and the cella drains. Use this to get down and to open the valves: pull the lever in the cella, and
    with the weight of the water gone the bronze doors open.
 6. Turi 'a Vulpi wears the Star of Pollux and cannot be killed: he flies, throws fire and brings fire down
-   from the vault. Do not waste ammunition on him. Run back to the altar and set the Star of Castor: the sea
-   fills the cella and takes him. If you catch fire, it goes out by itself in a moment, or in the water.
+   from the vault. But he can be hurt, and the altar will not take the Star of Castor back while his Star burns
+   at full strength. Shoot him with the heaviest weapons you have until he staggers and his Star flickers.
+   Then run back to the altar and set the Star of Castor: the sea fills the cella and takes him. If you catch fire, it goes out by itself in a moment, or in the water.
 7. The Star of Pollux floats up. Set it in the second socket. The vault starts to give way and the spirits
    come: lead them into the water, as in Donna Villa's cave.
 8. The bronze door gives. Run: boulders again, use the niches. Out into the dawn over the sand spit of

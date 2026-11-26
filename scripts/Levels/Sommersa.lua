@@ -706,7 +706,12 @@ function CDV.KickDoor(doorName, fn, side)
         local back, face = 917, yaw
         if side == "B" then back, face = 109, (yaw + 180) % 360 end
         local sx, sz = q.x - back * math.sin(a), q.z - back * math.cos(a)
-        if (p.x - sx) ^ 2 + (p.z - sz) ^ 2 > 520 ^ 2 then return end
+        if (p.x - sx) ^ 2 + (p.z - sz) ^ 2 > 520 ^ 2 then
+            -- 26 Nov: the other side too, so that nobody stays shut in behind a door that opened from one side only
+            if side == "B" then back, face = 917, yaw else back, face = 109, (yaw + 180) % 360 end
+            sx, sz = q.x - back * math.sin(a), q.z - back * math.cos(a)
+            if (p.x - sx) ^ 2 + (p.z - sz) ^ 2 > 520 ^ 2 then return end
+        end
         if CDV.KickLocked and CDV.KickLocked(doorName) then return end
         if not CDV.Flag("calcio_detto") then
             CDV.Flag("calcio_detto", true)
@@ -1137,10 +1142,15 @@ CDV.Loop(function()
     if not on and CastorFused() then return end
     -- 23 Nov: once the bronze doors are open the Star does not go back on the altar until Turi is awake and the
     -- fight is on. Set before that, it flooded the cella with him still asleep and the level ran on without him.
-    if on and CDV.Flag("valve_aperte") and not CDV.Flag("turi_sveglio") then
-        if not CDV.Flag("detto_astro_fermo") then
-            CDV.Flag("detto_astro_fermo", true)
-            CDV.Say("Not yet. The bronze doors are open: see what waits in the cella first.", 5)
+    if on and CDV.Flag("valve_aperte") and not CDV.Flag("turi_ferito") then
+        if not CDV.Flag("turi_sveglio") then
+            if not CDV.Flag("detto_astro_fermo") then
+                CDV.Flag("detto_astro_fermo", true)
+                CDV.Say("Not yet. The bronze doors are open: see what waits in the cella first.", 5)
+            end
+        elseif (CDV.Flag("detto_astro_forte") or 0) < 2 then
+            CDV.Flag("detto_astro_forte", (CDV.Flag("detto_astro_forte") or 0) + 1)
+            CDV.Say("The Star will not hold while the Star of Pollux burns so bright. Wound him first.", 6)
         end
         return
     end
@@ -1166,6 +1176,10 @@ CDV.Loop(function()
         CDV.ShowModel("astro_c_posto", on)
     end)
 end)
+-- 26 Nov: the fight has to be fought. Every wound is counted (he heals at once: Pollux is immortal); when they add
+-- up to TURI_WOUNDS his Star flickers, and only then does the Star of Castor go back on the altar.
+local turiHP = nil
+local TURI_WOUNDS = 240
 CDV.Loop(function()
     -- the lever of the bronze doors, on the east gallery
     if not CDV.Flag("leva_valve") and CDV.Used("leva_valve") then
@@ -1191,14 +1205,30 @@ CDV.Loop(function()
             if not CDV.Flag("turi_sveglio") and (awake or CDV.Near(61952, 4096, 25088, 3600, 900)) then
                 CDV.Flag("turi_sveglio", true)
                 CDV.Cue("turi")
-                CDV.Say("Turi 'a Vulpi, the Star of Pollux round his neck. Pollux is the immortal one: bullets will not stop him.", 8)
+                CDV.Say("Turi 'a Vulpi, the Star of Pollux round his neck. Pollux is the immortal one: bullets will not kill him. But they hurt.", 8)
                 CDV.Log("TURI wakes")
             end
+            local hp = m:GetHP()
+            if turiHP ~= nil and hp > 0 and hp < turiHP and not CDV.Flag("acqua") and not CDV.Flag("turi_ferito") then
+                local w = (CDV.Flag("turi_danni") or 0) + (turiHP - hp)
+                CDV.Flag("turi_danni", w)
+                if w >= TURI_WOUNDS / 2 and not CDV.Flag("turi_meta") then
+                    CDV.Flag("turi_meta", true)
+                    CDV.Say("He bleeds like any man, for a moment. Keep at it.", 5)
+                end
+                if w >= TURI_WOUNDS then
+                    CDV.Flag("turi_ferito", true)
+                    CDV.Sfx(105)
+                    CDV.Say("He staggers and the Star of Pollux flickers. Now: the altar!", 7)
+                    CDV.Log("TURI wounded enough: " .. w)
+                end
+            end
+            turiHP = hp
             -- the Star of Pollux: while the cella is dry nothing kills him
             if not CDV.Flag("acqua") and m:GetHP() > 0 and m:GetHP() < 20000 then
                 local phase = 0
                 pcall(function() phase = m:GetItemFlags(3) end)
-                if phase == 2 then m:SetHP(30000) end
+                if phase == 2 then m:SetHP(30000); turiHP = 30000 end
             end
         end
     end

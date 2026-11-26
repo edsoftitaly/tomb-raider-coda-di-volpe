@@ -712,7 +712,12 @@ function CDV.KickDoor(doorName, fn, side)
         local back, face = 917, yaw
         if side == "B" then back, face = 109, (yaw + 180) % 360 end
         local sx, sz = q.x - back * math.sin(a), q.z - back * math.cos(a)
-        if (p.x - sx) ^ 2 + (p.z - sz) ^ 2 > 520 ^ 2 then return end
+        if (p.x - sx) ^ 2 + (p.z - sz) ^ 2 > 520 ^ 2 then
+            -- 26 Nov: the other side too, so that nobody stays shut in behind a door that opened from one side only
+            if side == "B" then back, face = 917, yaw else back, face = 109, (yaw + 180) % 360 end
+            sx, sz = q.x - back * math.sin(a), q.z - back * math.cos(a)
+            if (p.x - sx) ^ 2 + (p.z - sz) ^ 2 > 520 ^ 2 then return end
+        end
         if CDV.KickLocked and CDV.KickLocked(doorName) then return end
         if not CDV.Flag("calcio_detto") then
             CDV.Flag("calcio_detto", true)
