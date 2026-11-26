@@ -50,8 +50,9 @@ def polys(payload, V):
         n = (u[1] * w[2] - u[2] * w[1], u[2] * w[0] - u[0] * w[2], u[0] * w[1] - u[1] * w[0])
         if abs(n[1]) <= max(abs(n[0]), abs(n[2])):
             continue
-        uv = [p[o + 8 * k:o + 8 * k + 8] for k in range(4)]
-        new = b"".join(uleb(i) for i in reversed(idx)) + p[o_idx:o] + b"".join(reversed(uv)) + p[o + 32:]
+        # after the texture index: the parent area (4 floats), then the four texture corners (8 floats)
+        uv = [p[o + 16 + 8 * k:o + 16 + 8 * k + 8] for k in range(4)]
+        new = b"".join(uleb(i) for i in reversed(idx)) + p[o_idx:o + 16] + b"".join(reversed(uv)) + p[o + 48:]
         out.append((c, new))
         added += 1
     return pack(out)
