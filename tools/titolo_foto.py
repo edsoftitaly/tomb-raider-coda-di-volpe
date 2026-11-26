@@ -101,7 +101,7 @@ def level(out, sounds_from):
     cx, cy, wall = 2560.0, 1024.0, 5120.0
     loop, hide = 4, 16
     for n, d in enumerate((1200.0, 1200.0, 1200.0)):
-        lv.add_flyby(r, (cx, cy, wall - d), 0, n, rot_y=0.0, rot_x=0.0, speed=0.07, fov=80.0, flags=hide | loop)          # the loop flag on every camera, as in the trailer shots
+        lv.add_flyby(r, (cx, cy, wall - d), 0, n, rot_y=0.0, rot_x=0.0, speed=0.07, fov=80.0, flags=hide | loop | 1)          # the loop flag on every camera, as in the trailer shots
     tmp = os.path.join(out, "Title_senza_suoni.prj2")
     lv.save(tmp)
     # the sound list of an installed level: the menu sounds are in it
