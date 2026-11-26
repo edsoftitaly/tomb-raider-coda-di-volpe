@@ -337,7 +337,7 @@ function CDV.FrontSnap(id)
     Lara:SetRotation(TEN.Rotation(0, f.yaw, 0))
 end
 CDV.STAR_REWARD = { { ID.BIGMEDI_ITEM, 2 }, { ID.SMALLMEDI_ITEM, 3 }, { ID.SHOTGUN_AMMO1_ITEM, 3 }, { ID.HK_AMMO_ITEM, 2 }, { ID.ROCKET_LAUNCHER_AMMO_ITEM, 2 } }
-CDV.STAR_TEXT = "All three Stars of the lost half. The Twins repay the favour: medipacks, shells, rounds, rockets."
+CDV.STAR_TEXT = "All five Stars of the lost half. The Twins repay the favour: medipacks, shells, rounds, rockets."
 
 function CDV.Done(id)
     return St().done[id] == true
@@ -988,6 +988,9 @@ CDV.Loop(function()
 end)
 
 CDV.Secret({ index = 3, x = 49080, y = 2048, z = 25088, r = 900, give = ID.SHOTGUN_AMMO1_ITEM, text = "" })
+-- 26 Nov: two more Stars (the reviews asked for more to look for)
+CDV.Secret({ index = 4, x = 32256, y = 2048, z = 38400, r = 900, give = ID.SMALLMEDI_ITEM, text = "" })
+CDV.Secret({ index = 5, x = 41472, y = 0, z = 19968, r = 900, give = ID.SHOTGUN_AMMO1_ITEM, text = "" })
 
 CDV.Zone({ id = "tempio", x = 48640, y = 0, z = 25088, r = 8000, dy = 1200, once = true, text = "The temple of the Dioscuri. The cella lies eight metres below, and Turi's men are down there.", secs = 8, fn = function()
         CDV.Enable("g1")

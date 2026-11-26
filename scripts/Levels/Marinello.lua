@@ -354,7 +354,7 @@ CDV.FRONTS["use_chiusa"] = { x = 66636, z = 43273, yaw = 0, r = 300 }
 CDV.FRONTS["use_chiusa2"] = { x = 12989, z = 58505, yaw = 0 }
 CDV.FRONTS["use_lucchetto"] = { lock = "chiavistello" }
 CDV.STAR_REWARD = { { ID.BIGMEDI_ITEM, 1 }, { ID.SMALLMEDI_ITEM, 2 }, { ID.SHOTGUN_AMMO1_ITEM, 2 }, { ID.HARPOON_AMMO_ITEM, 2 }, { ID.CROSSBOW_AMMO1_ITEM, 1 } }
-CDV.STAR_TEXT = "All three Stars of Marinello. The Twins repay the favour: medipacks, shells, harpoons, bolts."
+CDV.STAR_TEXT = "All five Stars of Marinello. The Twins repay the favour: medipacks, shells, harpoons, bolts."
 
 function CDV.Done(id)
     return St().done[id] == true
@@ -1062,6 +1062,9 @@ CDV.Zone({ id = "chiusa2_senza", x = 12800, y = -2560, z = 58880, r = 1300, dy =
 CDV.Zone({ id = "albero", x = 10752, y = -752, z = 57856, r = 1300, dy = 1200, once = false, text = "The sluice house is up on the stone shoulder. An iron pole leads there: jump and climb.", secs = 7, need = function() return not CDV.Done("use_chiusa2") end })
 
 CDV.Secret({ index = 3, x = 11776, y = 2176, z = 45568, r = 1100, give = ID.SHOTGUN_AMMO1_ITEM, text = "" })
+-- 26 Nov: two more Stars (the reviews asked for more to look for)
+CDV.Secret({ index = 4, x = 11776, y = -2560, z = 58880, r = 900, give = ID.SMALLMEDI_ITEM, text = "" })
+CDV.Secret({ index = 5, x = 5632, y = -512, z = 39424, r = 900, give = ID.SHOTGUN_AMMO1_ITEM, text = "" })
 
 CDV.Zone({ id = "cengia_sotto", x = 8704, y = 2432, z = 43520, r = 2300, dy = 1400, once = false, text = "Five metres above the mud, a ledge in the cliff and a black hole behind it. Too high: this needs water.", secs = 8, need = function() return not CDV.Flag("verde_pieno") end })
 

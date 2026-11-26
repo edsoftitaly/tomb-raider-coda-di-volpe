@@ -339,7 +339,7 @@ end
 CDV.FRONTS["use_grata"] = { x = 108344, z = 60716, yaw = 90 }
 CDV.FRONTS["use_lucchetto"] = { x = 84275, z = 53048, yaw = 0 }
 CDV.STAR_REWARD = { { ID.BIGMEDI_ITEM, 2 }, { ID.SMALLMEDI_ITEM, 2 }, { ID.REVOLVER_AMMO_ITEM, 2 }, { ID.HK_AMMO_ITEM, 2 }, { ID.GRENADE_AMMO1_ITEM, 1 } }
-CDV.STAR_TEXT = "All three Stars of Tindari. The Twins repay the favour: medipacks, rounds, grenades."
+CDV.STAR_TEXT = "All five Stars of Tindari. The Twins repay the favour: medipacks, rounds, grenades."
 
 function CDV.Done(id)
     return St().done[id] == true
@@ -875,6 +875,9 @@ CDV.Zone({ id = "cripto", x = 101888, y = -20992, z = 59904, r = 1300, dy = 700,
     end })
 
 CDV.Secret({ index = 2, x = 107008, y = -20992, z = 60928, r = 600, give = ID.SHOTGUN_AMMO1_ITEM, text = "" })
+-- 26 Nov: two more Stars (the reviews asked for more to look for)
+CDV.Secret({ index = 4, x = 88576, y = -24576, z = 58880, r = 900, give = ID.SMALLMEDI_ITEM, text = "" })
+CDV.Secret({ index = 5, x = 76288, y = -24576, z = 69120, r = 900, give = ID.SHOTGUN_AMMO1_ITEM, text = "" })
 
 CDV.Zone({ id = "terrazza", x = 119296, y = -24576, z = 59904, r = 8000, dy = 1800, once = true, text = "", secs = 8, fn = function()
         CDV.Enable("t7")

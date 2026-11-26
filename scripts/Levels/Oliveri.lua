@@ -335,7 +335,7 @@ CDV.FRONTS["use_chiave_ripostiglio"] = { lock = "serratura_ripostiglio" }
 CDV.FRONTS["use_lucchetto_botola"] = { x = 29398, z = 30314, yaw = 0 }
 CDV.FRONTS["use_quadro"] = { x = 28160, z = 28322, yaw = 0, r = 300 }
 CDV.STAR_REWARD = { { ID.BIGMEDI_ITEM, 1 }, { ID.SMALLMEDI_ITEM, 2 }, { ID.SHOTGUN_AMMO1_ITEM, 2 }, { ID.UZI_AMMO_ITEM, 2 } }
-CDV.STAR_TEXT = "All three Stars of Via Amodeo. The Twins repay the favour: medipacks, shells, clips."
+CDV.STAR_TEXT = "All five Stars of Via Amodeo. The Twins repay the favour: medipacks, shells, clips."
 
 function CDV.Done(id)
     return St().done[id] == true
@@ -966,6 +966,9 @@ CDV.Zone({ id = "fine", x = 16896, y = -1280, z = 20992, r = 2600, dy = 4000, on
 CDV.Zone({ id = "fine_no", x = 16896, y = -1280, z = 20992, r = 2600, dy = 4000, once = false, text = "Not yet: the lookout is in the courtyard, behind the gate.", secs = 4, need = function() return not CDV.Dead("palo") end })
 
 CDV.Secret({ index = 0, x = 33280, y = -1280, z = 30208, r = 800 })
+-- 26 Nov: two more Stars (the reviews asked for more to look for)
+CDV.Secret({ index = 4, x = 53760, y = -4608, z = 32256, r = 900, give = ID.SMALLMEDI_ITEM, text = "" })
+CDV.Secret({ index = 5, x = 25088, y = -1280, z = 17920, r = 900, give = ID.SHOTGUN_AMMO1_ITEM, text = "" })
 
 -- The padlock of the trapdoor: a chain hangs from the trapdoor down the north wall of the box room, to a padlock at
 -- hand height. Its key is on the man with the stick who waits inside the box room. Until it is open a hidden bridge
@@ -1229,6 +1232,27 @@ CDV.StartList[#CDV.StartList + 1] = function()
         if m ~= nil and m:GetValid() then pcall(function() m:SetHP(math.floor(m:GetHP() * CDV.TOUGH)) end) end
     end
 end
+
+-- 26 Nov: the town is closed outside this rectangle (sectors x0, z0, x1, z1): the barriers of the Carabinieri stand on
+-- its edge in the streets (nov26_extra.py); past them she is put back where she was.
+CDV.AREA = { { 12, 3, 52, 33 } }
+local areaLast = nil
+CDV.Loop(function()
+    local p = Lara:GetPosition()
+    local X, Z = p.x / 1024, p.z / 1024
+    for _, r in ipairs(CDV.AREA) do
+        if X >= r[1] and X < r[3] + 1 and Z >= r[2] and Z < r[4] + 1 then
+            areaLast = { p.x, p.z }
+            return
+        end
+    end
+    if areaLast == nil then return end
+    Lara:SetPosition(TEN.Vec3(math.floor(areaLast[1]), p.y, math.floor(areaLast[2])), false)
+    if not CDV.Flag("detto_recinto") then
+        CDV.Flag("detto_recinto", true)
+        CDV.Say("The Carabinieri have closed the streets beyond here.", 5)
+    end
+end)
 
 local HUNTERS = { "cane1", "cane2", "palo", "ladro_chiave", "ladro_terra", "ladro_primo", "ladro_ripostiglio" }
 local HUNT_BATS = {  }

@@ -13,11 +13,13 @@ GENERAL NOTES
 - The pushable crate is the wooden one. Grab it with Action, then Forward or Back.
 - Statues, furniture, cars, columns and crates are solid. Reeds and bushes are not.
 - The men of the gang drop what they carry when they die: ammunition and medipacks. Search the bodies.
-- Every level hides three Stars of the Dioscuri (the secrets, twelve in all). Find all three in a level and the
+- Every level hides five Stars of the Dioscuri (the secrets, twenty in all). Find all five in a level and the
   Twins leave you medipacks and ammunition.
 - Saving is free. A savegame belongs to the version of the level it was made in.
 - A door that is kicked open opens from either side.
 - At Marinello the open sea is closed by the current: there is no way round the rock ridge by water.
+- At Tindari the dig is fenced; at Oliveri the Carabinieri have closed the streets round the block.
+- The men of the gang are tougher than in release 1.0.
 
 
 WEAPONS
@@ -57,7 +59,8 @@ Goal: get the Byzantine diary back from the thieves.
 8. Kill the lookout in the courtyard and take the diary from where he fell. The Carabinieri have closed the
    street: leave by the town hall end.
 
-Stars: one in the cellar; one in the street, at the east end; one up on the roofs, near the drainpipe.
+Stars: one in the cellar; one in the street, at the east end; one up on the roofs, near the drainpipe; one on
+the far roof at the north-east corner; one in the street west of the house, towards the town hall.
 
 
 LEVEL 2 - THE WITCH OF THE LAKES (Marinello, dawn)
@@ -86,7 +89,9 @@ Goal: reach Donna Villa's cave in the cliff and take the Star of Castor.
     gone the way out opens. In the gallery, boulders: use the niches. The Crossbow is in this gallery.
 11. Climb the iron rungs of the shaft to Tindari.
 
-Stars: one high in the fishery, on a roof; one under water at the east shore; one under water in the Mergolo.
+Stars: one high in the fishery, on a roof (iron rungs lead up); one under water at the east shore; one under
+water in the Green Lake; one on the stone shoulder of the great sluice; one on the west shore of the Green Lake,
+at the foot of the cliff.
 
 
 LEVEL 3 - TINDARI (afternoon)
@@ -113,7 +118,8 @@ Goal: follow Turi through the crypt under the sanctuary.
 7. Down the shaft to the sea caves.
 
 Stars: one at the top of the theatre; one in the dig, near the Roman house; one in the cryptoporticus, in the
-alcove beside the iron gate.
+alcove beside the iron gate; one in the yard of the dig compound, east side; one inside the compound, along
+the west wall beside the Roman house.
 
 
 LEVEL 4 - THE LOST HALF (the drowned city)
@@ -140,4 +146,5 @@ Goal: stop Turi and bring both Stars out.
 8. The bronze door gives. Run: boulders again, use the niches. Out into the dawn over the sand spit of
    Marinello.
 
-Stars: one under water in the siphon of the sea caves; one in the shop by the cistern; one in the cella.
+Stars: one under water in the siphon of the sea caves; one in the shop by the cistern; one in the cella; one on
+the bottom of the pool of the baths; one in a corner of the Roman street.
