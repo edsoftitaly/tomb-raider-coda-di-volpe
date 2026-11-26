@@ -113,6 +113,11 @@ Marinello.objects = CdvObjects()
 Marinello.layer1 = TEN.Flow.SkyLayer(TEN.Color(196, 180, 170), 2)
 Marinello.starfield = TEN.Flow.Starfield(0)
 Marinello.fog = TEN.Flow.Fog(TEN.Color(196, 180, 170), 12, 30)
+-- 20 Nov: the haze under the horizon (CdV_Orizzonte.wad2), in the colour of the fog: no edge of the world in sight.
+pcall(function()
+    Marinello.horizon2.enabled = true
+    Marinello.horizon2.objectID = TEN.Objects.ObjID.ANIMATING60
+end)
 TEN.Flow.AddLevel(Marinello)
 
 --------------------------------------------------
@@ -129,6 +134,11 @@ Tindari.objects = CdvObjects()
 Tindari.layer1 = TEN.Flow.SkyLayer(TEN.Color(214, 170, 132), 2)
 Tindari.starfield = TEN.Flow.Starfield(0)
 Tindari.fog = TEN.Flow.Fog(TEN.Color(214, 170, 132), 50, 125)
+-- 20 Nov: the haze under the horizon (CdV_Orizzonte.wad2), in the colour of the fog: no edge of the world in sight.
+pcall(function()
+    Tindari.horizon2.enabled = true
+    Tindari.horizon2.objectID = TEN.Objects.ObjID.ANIMATING61
+end)
 TEN.Flow.AddLevel(Tindari)
 
 --------------------------------------------------
